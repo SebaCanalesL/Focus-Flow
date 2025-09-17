@@ -206,9 +206,7 @@ export default function ProfilePage() {
         </Card>
 
         <Card className="md:col-span-3 border-destructive">
-           <CardHeader>
-          </CardHeader>
-          <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6">
             <div>
               <p className="font-medium">Eliminar Cuenta</p>
               <p className="text-sm text-muted-foreground">
