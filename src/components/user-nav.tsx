@@ -32,9 +32,16 @@ export function UserNav() {
     return null;
   }
 
-  const getInitials = (email: string | null) => {
-    if (!email) return "U";
-    return email.charAt(0).toUpperCase();
+  const getInitials = (name: string | null, email: string | null) => {
+    if (name) {
+        const parts = name.split(" ");
+        if (parts.length > 1) {
+            return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+        }
+        return name.charAt(0).toUpperCase();
+    }
+    if(email) return email.charAt(0).toUpperCase();
+    return "U";
   }
   
   const getUsername = () => {
@@ -49,8 +56,8 @@ export function UserNav() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-9 w-9">
-            <AvatarImage src={user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`} alt={user.email || "Usuario"} />
-            <AvatarFallback>{getInitials(user.displayName || user.email)}</AvatarFallback>
+            <AvatarImage src={user.photoURL || undefined} alt={user.email || "Usuario"} />
+            <AvatarFallback>{getInitials(user.displayName, user.email)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>

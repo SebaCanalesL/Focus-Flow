@@ -1,2 +1,28 @@
-{"placeholderImages":[]
+{
+  "placeholderImages": [
+    {
+      "id": "avatar-1",
+      "description": "Blue monster avatar 1",
+      "imageUrl": "https://picsum.photos/seed/avatar1/150/150",
+      "imageHint": "blue monster"
+    },
+    {
+      "id": "avatar-2",
+      "description": "Blue monster avatar 2",
+      "imageUrl": "https://picsum.photos/seed/avatar2/150/150",
+      "imageHint": "blue monster"
+    },
+    {
+      "id": "avatar-3",
+      "description": "Blue monster avatar 3",
+      "imageUrl": "https://picsum.photos/seed/avatar3/150/150",
+      "imageHint": "blue monster"
+    },
+    {
+      "id": "avatar-4",
+      "description": "Blue monster avatar 4",
+      "imageUrl": "https://picsum.photos/seed/avatar4/150/150",
+      "imageHint": "blue monster"
+    }
+  ]
 }

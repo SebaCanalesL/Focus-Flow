@@ -28,6 +28,9 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { User, sendPasswordResetEmail, updateProfile, deleteUser } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { AvatarPlaceholders } from "@/lib/placeholder-images";
+import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 export default function ProfilePage() {
   const { user, setUser, loading } = useAppData();
@@ -146,17 +149,24 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-4">
             <Avatar className="h-32 w-32">
-              <AvatarImage src={photoURL || `https://i.pravatar.cc/150?u=${user.uid}`} alt={displayName || "Usuario"} />
+              <AvatarImage src={photoURL || undefined} alt={displayName || "Usuario"} />
               <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
             </Avatar>
             <div className="w-full space-y-2">
-                <Label htmlFor="photo-url">URL de la Foto</Label>
-                <Input
-                    id="photo-url"
-                    value={photoURL}
-                    onChange={(e) => setPhotoURL(e.target.value)}
-                    placeholder="https://ejemplo.com/foto.jpg"
-                />
+                <Label>Elige un avatar</Label>
+                <div className="grid grid-cols-4 gap-2">
+                    {AvatarPlaceholders.map(p => (
+                        <button key={p.id} onClick={() => setPhotoURL(p.imageUrl)} className={cn("rounded-full overflow-hidden border-2 transition-all", photoURL === p.imageUrl ? "border-primary" : "border-transparent hover:border-primary/50")}>
+                            <Image 
+                                src={p.imageUrl} 
+                                alt={p.description} 
+                                width={150} 
+                                height={150} 
+                                data-ai-hint={p.imageHint}
+                                className="aspect-square object-cover" />
+                        </button>
+                    ))}
+                </div>
             </div>
           </CardContent>
         </Card>

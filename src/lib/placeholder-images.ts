@@ -8,3 +8,5 @@ export type ImagePlaceholder = {
 };
 
 export const PlaceHolderImages: ImagePlaceholder[] = data.placeholderImages;
+
+export const AvatarPlaceholders = PlaceHolderImages.filter(p => p.id.startsWith('avatar-'));
