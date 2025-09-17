@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createUserWithEmailAndPassword, signInWithCredential, GoogleAuthProvider } from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,14 +18,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { NotebookPen } from "lucide-react";
-import { GoogleLogin } from "@react-oauth/google";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -57,40 +55,6 @@ export default function SignupPage() {
     }
   };
 
-  const handleGoogleSuccess = async (credentialResponse: any) => {
-     if (!credentialResponse.credential) {
-      toast({
-        title: "Error con Google",
-        description: "No se recibieron las credenciales de Google.",
-        variant: "destructive",
-      });
-      return;
-    }
-    setIsGoogleLoading(true);
-    try {
-      const credential = GoogleAuthProvider.credential(credentialResponse.credential);
-      await signInWithCredential(auth, credential);
-      router.push("/dashboard");
-    } catch (error: any)      {
-      toast({
-        title: "Error con Google",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsGoogleLoading(false);
-    }
-  };
-
-  const handleGoogleError = () => {
-    toast({
-      title: "Error con Google",
-      description: "No se pudo iniciar sesión con Google. Revisa la configuración del Client ID y los dominios autorizados.",
-      variant: "destructive",
-    });
-    setIsGoogleLoading(false);
-  }
-
   return (
     <Card>
       <CardHeader className="text-center">
@@ -101,67 +65,45 @@ export default function SignupPage() {
         <CardDescription>Crea una cuenta para empezar a registrar tus hábitos.</CardDescription>
       </CardHeader>
       <CardContent>
-         <div className="space-y-4">
-            <div className="flex justify-center">
-             { isGoogleLoading ? <Button disabled>Cargando...</Button> :
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={handleGoogleError}
-                  shape="rectangular"
-                  logo_alignment="left"
-                />
-             }
-            </div>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  O continuar con
-                </span>
-              </div>
-            </div>
-            <form onSubmit={handleSignup} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Correo</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="tu@correo.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={isLoading || isGoogleLoading}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Contraseña</Label>                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  disabled={isLoading || isGoogleLoading}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirmar Contraseña</Label>
-                <Input
-                  id="confirm-password"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  disabled={isLoading || isGoogleLoading}
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading}>
-                {isLoading ? "Creando cuenta..." : "Crear Cuenta"}
-              </Button>
-            </form>
-         </div>
+        <form onSubmit={handleSignup} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Correo</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="tu@correo.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={isLoading}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">Contraseña</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={isLoading}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirm-password">Confirmar Contraseña</Label>
+            <Input
+              id="confirm-password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              disabled={isLoading}
+            />
+          </div>
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Creando cuenta..." : "Crear Cuenta"}
+          </Button>
+        </form>
       </CardContent>
       <CardFooter className="flex justify-center text-sm">
         <p>

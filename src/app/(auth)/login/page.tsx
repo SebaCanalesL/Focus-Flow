@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { signInWithEmailAndPassword, signInWithCredential, GoogleAuthProvider } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,13 +18,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { NotebookPen } from "lucide-react";
-import { GoogleLogin } from "@react-oauth/google";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -45,40 +43,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleSuccess = async (credentialResponse: any) => {
-    if (!credentialResponse.credential) {
-      toast({
-        title: "Error con Google",
-        description: "No se recibieron las credenciales de Google.",
-        variant: "destructive",
-      });
-      return;
-    }
-    setIsGoogleLoading(true);
-    try {
-      const credential = GoogleAuthProvider.credential(credentialResponse.credential);
-      await signInWithCredential(auth, credential);
-      router.push("/dashboard");
-    } catch (error: any) {
-      toast({
-        title: "Error con Google",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsGoogleLoading(false);
-    }
-  };
-
-  const handleGoogleError = () => {
-    toast({
-      title: "Error con Google",
-      description: "No se pudo iniciar sesión con Google. Revisa la configuración del Client ID y los dominios autorizados.",
-      variant: "destructive",
-    });
-    setIsGoogleLoading(false);
-  }
-
   return (
     <Card>
       <CardHeader className="text-center">
@@ -89,58 +53,34 @@ export default function LoginPage() {
         <CardDescription>Inicia sesión para continuar en tu cuenta.</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          <div className="flex justify-center">
-             { isGoogleLoading ? <Button disabled>Cargando...</Button> :
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={handleGoogleError}
-                  shape="rectangular"
-                  logo_alignment="left"
-                />
-             }
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Correo</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="tu@correo.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={isLoading}
+            />
           </div>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                O continuar con
-              </span>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">Contraseña</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={isLoading}
+            />
           </div>
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Correo</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="tu@correo.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={isGoogleLoading || isLoading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={isGoogleLoading || isLoading}
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading}>
-              {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
-            </Button>
-          </form>
-        </div>
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
+          </Button>
+        </form>
       </CardContent>
       <CardFooter className="flex justify-center text-sm">
         <p>
