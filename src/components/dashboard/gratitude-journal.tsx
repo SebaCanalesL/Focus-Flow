@@ -171,6 +171,13 @@ export function GratitudeJournal() {
     if (user?.email) return user.email.split('@')[0];
     return 'Hola';
   }
+  
+  const handleNoteToggle = () => {
+    if (showNote) {
+      setNote("");
+    }
+    setShowNote(!showNote);
+  };
 
   return (
     <Card>
@@ -182,8 +189,8 @@ export function GratitudeJournal() {
             </CardTitle>
             <div className="flex items-center gap-2">
               {!isSaved && (
-                <Button variant="ghost" size="sm" onClick={() => setShowNote(!showNote)}>
-                    <Pencil className="h-4 w-4" />
+                <Button variant="ghost" size="sm" onClick={handleNoteToggle}>
+                    {showNote ? <X className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
                     <span className="ml-2">Nota</span>
                 </Button>
               )}
