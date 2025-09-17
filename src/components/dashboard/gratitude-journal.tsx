@@ -10,10 +10,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useAppData } from "@/contexts/app-provider"
-import { BookHeart, Sparkles, WandSparkles, Pencil } from "lucide-react"
+import { BookHeart, WandSparkles, Pencil, PlusCircle, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 function MotivationalMessage({ userName }: { userName: string }) {
@@ -58,7 +58,7 @@ function MotivationalMessage({ userName }: { userName: string }) {
 
 export function GratitudeJournal() {
   const { user, addGratitudeEntry, getGratitudeEntry } = useAppData()
-  const [content, setContent] = useState("")
+  const [gratitudeItems, setGratitudeItems] = useState<string[]>(["", "", ""]);
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
   const [isSaved, setIsSaved] = useState(false);
 
@@ -71,31 +71,56 @@ export function GratitudeJournal() {
   useEffect(() => {
     if (currentDate) {
       const entry = getGratitudeEntry(currentDate)
-      if (entry) {
-        setContent(entry.content)
+      if (entry && entry.content) {
+        setGratitudeItems(entry.content.split('\n').filter(item => item.trim() !== ''));
         setIsSaved(true);
       } else {
-        setContent("")
+        setGratitudeItems(["", "", ""]);
         setIsSaved(false);
       }
     }
   }, [getGratitudeEntry, currentDate])
 
   const handleSave = () => {
-    if (content.trim() && currentDate) {
-      addGratitudeEntry(content, currentDate)
+    const contentToSave = gratitudeItems.map(item => item.trim()).filter(item => item !== '').join('\n');
+    if (contentToSave && currentDate) {
+      addGratitudeEntry(contentToSave, currentDate)
       setIsSaved(true);
       toast({
         title: "¡Entrada guardada!",
         description: "Tu entrada de gratitud ha sido guardada.",
+      })
+    } else {
+       toast({
+        title: "Agradecimientos vacíos",
+        description: "Escribe al menos un agradecimiento para guardar.",
+        variant: "destructive"
       })
     }
   }
 
   const handleEdit = () => {
     setIsSaved(false);
+    if(gratitudeItems.length === 0) {
+      setGratitudeItems(["", "", ""]);
+    }
   }
   
+  const handleItemChange = (index: number, value: string) => {
+    const newItems = [...gratitudeItems];
+    newItems[index] = value;
+    setGratitudeItems(newItems);
+  }
+
+  const addItem = () => {
+    setGratitudeItems([...gratitudeItems, ""]);
+  }
+
+  const removeItem = (index: number) => {
+    const newItems = gratitudeItems.filter((_, i) => i !== index);
+    setGratitudeItems(newItems);
+  }
+
   const getUsername = () => {
     if (user?.displayName) return user.displayName;
     if (user?.email) return user.email.split('@')[0];
@@ -118,7 +143,7 @@ export function GratitudeJournal() {
             )}
         </div>
         {!isSaved && (
-            <CardDescription>¿Cuáles son tres cosas por las que estás agradecido hoy?</CardDescription>
+            <CardDescription>¿Cuáles son las cosas por las que estás agradecido hoy?</CardDescription>
         )}
       </CardHeader>
       <CardContent>
@@ -126,18 +151,33 @@ export function GratitudeJournal() {
             <MotivationalMessage userName={getUsername()} />
         )}
         {isSaved ? (
-          <div className="p-4 bg-primary/10 rounded-md text-sm text-card-foreground/90 whitespace-pre-line min-h-[100px]">
-            {content}
-          </div>
+           <ul className="space-y-2">
+            {gratitudeItems.map((item, index) => (
+              <li key={index} className="p-3 bg-primary/10 rounded-md text-sm text-card-foreground/90">
+                {index + 1}. {item}
+              </li>
+            ))}
+          </ul>
         ) : (
-          <Textarea
-            placeholder="1. ...
-2. ...
-3. ..."
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows={5}
-          />
+          <div className="space-y-3">
+            {gratitudeItems.map((item, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <span className="text-muted-foreground font-medium">{index + 1}.</span>
+                <Input
+                    placeholder={`Agradecimiento #${index + 1}`}
+                    value={item}
+                    onChange={(e) => handleItemChange(index, e.target.value)}
+                />
+                <Button variant="ghost" size="icon" onClick={() => removeItem(index)} className="h-9 w-9 shrink-0">
+                    <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+            <Button variant="outline" size="sm" onClick={addItem} className="w-full">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Agregar agradecimiento
+            </Button>
+          </div>
         )}
       </CardContent>
       {!isSaved && (
