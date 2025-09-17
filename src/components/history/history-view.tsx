@@ -8,7 +8,7 @@ import { useAppData } from "@/contexts/app-provider"
 import { format, addDays, subDays, isToday } from "date-fns"
 import { es } from "date-fns/locale"
 import * as LucideIcons from "lucide-react";
-import { Target, ChevronLeft, ChevronRight, StickyNote } from "lucide-react"
+import { Target, ChevronLeft, ChevronRight, BookHeart } from "lucide-react"
 import { Button } from "../ui/button"
 
 type IconName = keyof typeof LucideIcons;
@@ -122,7 +122,7 @@ export function HistoryView() {
                         </ul>
                         {gratitudeNote && (
                             <div>
-                                <h4 className="font-semibold text-sm mb-2 flex items-center gap-2"><StickyNote className="h-4 w-4" /> Otras reflexiones</h4>
+                                <h4 className="font-semibold text-sm mb-2 flex items-center gap-2"><BookHeart className="h-4 w-4" /> Otras reflexiones</h4>
                                 <p className="p-3 bg-secondary/50 rounded-md text-sm text-card-foreground/90 whitespace-pre-wrap">{gratitudeNote}</p>
                             </div>
                         )}

@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { useAppData } from "@/contexts/app-provider"
-import { BookHeart, WandSparkles, Pencil, PlusCircle, X, StickyNote } from "lucide-react"
+import { BookHeart, WandSparkles, Pencil, PlusCircle, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 
@@ -222,7 +222,7 @@ export function GratitudeJournal() {
                 </ul>
                 {note && (
                     <div>
-                        <h4 className="font-semibold text-sm mb-2 flex items-center gap-2"><StickyNote className="h-4 w-4" /> Otras reflexiones</h4>
+                        <h4 className="font-semibold text-sm mb-2 flex items-center gap-2"><BookHeart className="h-4 w-4" /> Otras reflexiones</h4>
                         <p className="p-3 bg-secondary/50 rounded-md text-sm text-card-foreground/90 whitespace-pre-wrap">{note}</p>
                     </div>
                 )}
