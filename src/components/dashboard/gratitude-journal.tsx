@@ -102,7 +102,7 @@ export function GratitudeJournal() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <BookHeart className="text-primary" />
-          Gratitud Diaria
+          Gratitud diaria
         </CardTitle>
         <CardDescription>¿Cuáles son tres cosas por las que estás agradecido hoy?</CardDescription>
       </CardHeader>
