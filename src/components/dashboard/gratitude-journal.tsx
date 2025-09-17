@@ -12,7 +12,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { useAppData } from "@/contexts/app-provider"
-import { BookHeart, Sparkles, WandSparkles } from "lucide-react"
+import { BookHeart, Sparkles, WandSparkles, Pencil } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 function MotivationalMessage({ userName }: { userName: string }) {
@@ -90,6 +90,10 @@ export function GratitudeJournal() {
       })
     }
   }
+
+  const handleEdit = () => {
+    setIsSaved(false);
+  }
   
   const getUsername = () => {
     if (user?.displayName) return user.displayName;
@@ -100,10 +104,18 @@ export function GratitudeJournal() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <BookHeart className="text-primary" />
-          Gratitud diaria
-        </CardTitle>
+        <div className="flex justify-between items-center">
+            <CardTitle className="flex items-center gap-2">
+            <BookHeart className="text-primary" />
+            Gratitud diaria
+            </CardTitle>
+             {isSaved && (
+                <Button variant="ghost" size="icon" onClick={handleEdit} className="h-8 w-8">
+                    <Pencil className="h-4 w-4" />
+                    <span className="sr-only">Editar</span>
+                </Button>
+            )}
+        </div>
         {!isSaved && (
             <CardDescription>¿Cuáles son tres cosas por las que estás agradecido hoy?</CardDescription>
         )}
