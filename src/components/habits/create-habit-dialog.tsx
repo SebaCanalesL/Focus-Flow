@@ -69,21 +69,21 @@ export function CreateHabitDialog() {
   const daysPerWeek = form.watch("daysPerWeek");
 
   useEffect(() => {
-    if(daysPerWeek === 7) {
-        form.setValue("frequency", "daily");
+    if (daysPerWeek === 7) {
+      form.setValue("frequency", "daily");
     }
   }, [daysPerWeek, form]);
-  
+
   useEffect(() => {
-    if(frequency === "daily") {
-        form.setValue("daysPerWeek", 7);
+    if (frequency === "daily") {
+      form.setValue("daysPerWeek", 7);
     } else if (frequency === 'weekly' && daysPerWeek === 7) {
-        form.setValue("daysPerWeek", 6);
+      form.setValue("daysPerWeek", 6);
     }
   }, [frequency, daysPerWeek, form]);
 
 
-  const onSubmit = async (values: z.infer<typeof formSchema>>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
       const { iconName } = await suggestHabitIcon({ habitName: values.name });
@@ -106,21 +106,21 @@ export function CreateHabitDialog() {
         frequency: "daily",
       });
     } catch (error) {
-        console.error("Error creating habit:", error);
-        // Fallback for when AI fails
-        addHabit({
-            name: values.name,
-            frequency: values.frequency,
-            daysPerWeek: values.frequency === 'weekly' ? values.daysPerWeek : undefined,
-            icon: "Target",
-        });
-        toast({
-            title: "¡Hábito Creado!",
-            description: `El hábito "${values.name}" fue creado (no se pudo sugerir un ícono).`,
-            variant: "default",
-        });
+      console.error("Error creating habit:", error);
+      // Fallback for when AI fails
+      addHabit({
+        name: values.name,
+        frequency: values.frequency,
+        daysPerWeek: values.frequency === 'weekly' ? values.daysPerWeek : undefined,
+        icon: "Target",
+      });
+      toast({
+        title: "¡Hábito Creado!",
+        description: `El hábito "${values.name}" fue creado (no se pudo sugerir un ícono).`,
+        variant: "default",
+      });
     } finally {
-        setIsSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -128,8 +128,8 @@ export function CreateHabitDialog() {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Crear Hábito
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Crear Hábito
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
@@ -192,11 +192,11 @@ export function CreateHabitDialog() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Días a la semana</FormLabel>
-                     <FormControl>
+                    <FormControl>
                       <RadioGroup
                         onValueChange={(value) => field.onChange(parseInt(value))}
                         value={field.value?.toString()}
-                        className="grid grid-cols-6 sm:flex sm:flex-wrap gap-2 pt-2 justify-center sm:justify-start"
+                        className="grid grid-cols-6 sm:flex sm:flex-wrap gap-2 pt-2 justify-center"
                       >
                         {[...Array(6)].map((_, i) => (
                           <FormItem key={i + 1}>
@@ -223,7 +223,7 @@ export function CreateHabitDialog() {
 
             <DialogFooter>
               <Button type="submit" disabled={isSubmitting}>
-                 {isSubmitting ? (
+                {isSubmitting ? (
                   <>
                     <WandSparkles className="mr-2 h-4 w-4 animate-spin" />
                     Creando...
