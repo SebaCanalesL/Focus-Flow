@@ -17,10 +17,13 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useAppData } from "@/contexts/app-provider";
 import Link from "next/link";
+import { useTheme } from "next-themes";
+import { Moon, Sun } from "lucide-react";
 
 export function UserNav() {
   const { user, clearTodaysMotivation } = useAppData();
   const router = useRouter();
+  const { setTheme, theme } = useTheme();
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -78,6 +81,10 @@ export function UserNav() {
               <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
             </DropdownMenuItem>
           </Link>
+          <DropdownMenuItem onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+            {theme === "dark" ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
+            Modo {theme === "dark" ? "Claro" : "Oscuro"}
+          </DropdownMenuItem>
           <DropdownMenuItem disabled>
             Ajustes
             <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
