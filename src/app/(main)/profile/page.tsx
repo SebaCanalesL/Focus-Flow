@@ -30,7 +30,6 @@ import { User, sendPasswordResetEmail, updateProfile, deleteUser } from "firebas
 import { auth } from "@/lib/firebase";
 import { AvatarPlaceholders } from "@/lib/placeholder-images";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 
 export default function ProfilePage() {
   const { user, setUser, loading } = useAppData();
@@ -157,11 +156,11 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-4 gap-2">
                     {AvatarPlaceholders.map(p => (
                         <button key={p.id} onClick={() => setPhotoURL(p.imageUrl)} className={cn("rounded-full overflow-hidden border-2 transition-all", photoURL === p.imageUrl ? "border-primary" : "border-transparent hover:border-primary/50")}>
-                            <Image 
+                            <img 
                                 src={p.imageUrl} 
                                 alt={p.description} 
-                                width={150} 
-                                height={150} 
+                                width="150" 
+                                height="150" 
                                 data-ai-hint={p.imageHint}
                                 className="aspect-square object-cover" />
                         </button>
