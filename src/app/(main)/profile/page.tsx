@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -241,7 +242,7 @@ export default function ProfilePage() {
                 <Input id="email" value={user.email || ""} disabled className="sm:text-sm" />
               </div>
                <div className="space-y-2">
-                <Label htmlFor="birthday">Fecha de Cumpleaños</Label>
+                <Label htmlFor="birthday">Fecha de nacimiento</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
