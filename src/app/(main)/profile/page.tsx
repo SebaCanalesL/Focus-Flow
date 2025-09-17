@@ -207,7 +207,6 @@ export default function ProfilePage() {
 
         <Card className="md:col-span-3 border-destructive">
            <CardHeader>
-            <CardTitle className="text-destructive">Zona de Peligro</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
