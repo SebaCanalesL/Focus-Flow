@@ -30,35 +30,30 @@ import { useToast } from "@/hooks/use-toast";
 import { User, sendPasswordResetEmail, updateProfile, deleteUser } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { cn } from "@/lib/utils";
-import AvatarRosa from "../../../../public/avatars/spark1-rosa.png";
-import AvatarVerde from "../../../../public/avatars/spark2-verde.png";
-import AvatarNaranjo from "../../../../public/avatars/spark3-naranjo.png";
-import AvatarAzul from "../../../../public/avatars/spark4-azul.png";
-
 
 const AvatarPlaceholders = [
     {
       id: "avatar-1",
       description: "Avatar Rosa",
-      imageUrl: AvatarRosa.src,
+      imageUrl: "/avatars/spark1-rosa.png",
       imageHint: "rosa"
     },
     {
       id: "avatar-2",
       description: "Avatar Verde",
-      imageUrl: AvatarVerde.src,
+      imageUrl: "/avatars/spark2-verde.png",
       imageHint: "verde"
     },
     {
       id: "avatar-3",
       description: "Avatar Naranjo",
-      imageUrl: AvatarNaranjo.src,
+      imageUrl: "/avatars/spark3-naranjo.png",
       imageHint: "naranjo"
     },
     {
       id: "avatar-4",
       description: "Avatar Azul",
-      imageUrl: AvatarAzul.src,
+      imageUrl: "/avatars/spark4-azul.png",
       imageHint: "azul"
     }
 ]
@@ -281,5 +276,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    
