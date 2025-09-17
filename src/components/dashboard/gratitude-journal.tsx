@@ -112,15 +112,20 @@ export function GratitudeJournal() {
         {isSaved && (
             <MotivationalMessage userName={getUsername()} />
         )}
-        <Textarea
-          placeholder="1. ...
+        {isSaved ? (
+          <div className="p-4 bg-primary/10 rounded-md text-sm text-card-foreground/90 whitespace-pre-line min-h-[100px]">
+            {content}
+          </div>
+        ) : (
+          <Textarea
+            placeholder="1. ...
 2. ...
 3. ..."
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          rows={5}
-          disabled={isSaved}
-        />
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            rows={5}
+          />
+        )}
       </CardContent>
       {!isSaved && (
         <CardFooter>
