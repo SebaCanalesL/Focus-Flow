@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect } from "react"
@@ -142,8 +143,7 @@ export function GratitudeJournal() {
       {!isSaved && (
         <CardFooter>
             <Button onClick={handleSave}>
-              <Sparkles className="mr-2 h-4 w-4" />
-              Guardar lo bonito de hoy
+              🙏Agradecimiento y Abundancia ✨️
             </Button>
         </CardFooter>
       )}
