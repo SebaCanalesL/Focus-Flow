@@ -84,7 +84,7 @@ export default function ProfilePage() {
         // The birthday string is in 'yyyy-MM-dd' format.
         // We need to parse it as UTC to avoid timezone issues.
         const [year, month, day] = birthday.split('-').map(Number);
-        setBirthdayState(new Date(year, month - 1, day));
+        setBirthdayState(new Date(Date.UTC(year, month - 1, day)));
     } else {
         setBirthdayState(undefined);
     }
@@ -201,7 +201,7 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-4">
             <Avatar className="h-32 w-32">
-              <AvatarImage src={photoURL || undefined} alt={displayName || "Usuario"} />
+              <AvatarImage src={photoURL || undefined} alt={displayName || "Usuario"} className="scale-150" />
               <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
             </Avatar>
             <div className="w-full space-y-2">
