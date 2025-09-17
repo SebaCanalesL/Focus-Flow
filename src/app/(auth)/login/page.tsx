@@ -102,7 +102,7 @@ export default function LoginPage() {
           <NotebookPen className="h-8 w-8 text-primary" />
           FocusFlow
         </CardTitle>
-        <CardDescription>Inicia sesión para continuar en tu cuenta.</CardDescription>
+        <CardDescription>Inicia sesión para ordenar tu mente.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleLogin} className="space-y-4">
