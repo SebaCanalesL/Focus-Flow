@@ -83,7 +83,7 @@ export default function SignupPage() {
                 <Input
                 id="display-name"
                 type="text"
-                placeholder="Tu apodo"
+                placeholder="Apodo"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 required
