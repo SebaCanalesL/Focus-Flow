@@ -98,7 +98,7 @@ export function HistoryView() {
               <CardHeader>
                 <CardTitle className="flex justify-between items-center">
                   <span>
-                    Entrada del {date ? format(date, "d 'de' MMMM, yyyy", { locale: es }) : "..."}
+                    Entrada del {date ? format(date, "d 'de' MMMM, yyyy", { locale: es }) : "..."} 🙏✨️
                   </span>
                    <div className="flex items-center gap-2">
                     <Button variant="outline" size="icon" onClick={handlePrevDay}>
@@ -181,7 +181,7 @@ export function HistoryView() {
                     ))}
                   </ul>
                 ) : (
-                  "No se completaron hábitos este día."
+                  <p className="text-sm text-muted-foreground">No se completaron hábitos este día.</p>
                 )}
               </CardContent>
             </Card>

@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { useAppData } from "@/contexts/app-provider"
-import { BookHeart, WandSparkles, Pencil, PlusCircle, X } from "lucide-react"
+import { BookHeart, WandSparkles, Pencil, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 
@@ -262,7 +262,7 @@ export function GratitudeJournal() {
       {!isSaved && (
         <CardFooter>
             <Button onClick={handleSave}>
-              🙏 Agradecimiento y Abundancia ✨️
+              Agradecimiento y Abundancia 🙏✨️
             </Button>
         </CardFooter>
       )}
