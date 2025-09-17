@@ -35,7 +35,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const gratitudeHabitTemplate: Habit = {
   id: 'gratitude-habit',
-  name: 'Agradecer',
+  name: 'Agradecer 3 aspectos de mi vida',
   icon: 'BookHeart',
   frequency: 'daily',
   createdAt: new Date().toISOString(),
@@ -80,9 +80,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         let storedEntries: GratitudeEntry[] = [];
         
         try {
-          const habitsStr = localStorage.getItem(`focusflow-habits-${user.uid}`);
-          const entriesStr = localStorage.getItem(`focusflow-gratitudeEntries-${user.uid}`);
-          const motivationStr = localStorage.getItem(`focusflow-motivation-${user.uid}`);
+          const habitsStr = localStorage.getItem(`focusflow-habits-${'\'\'\''}${user.uid}'\'\'\'`);
+          const entriesStr = localStorage.getItem(`focusflow-gratitudeEntries-${'\'\'\''}${user.uid}'\'\'\'`);
+          const motivationStr = localStorage.getItem(`focusflow-motivation-${'\'\'\''}${user.uid}'\'\'\'`);
 
           if (habitsStr) {
             storedHabits = JSON.parse(habitsStr);
@@ -130,19 +130,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (isClient && user && habits.length > 0) {
-      localStorage.setItem(`focusflow-habits-${user.uid}`, JSON.stringify(habits));
+      localStorage.setItem(`focusflow-habits-${'\'\'\''}${user.uid}'\'\'\'`, JSON.stringify(habits));
     }
   }, [habits, isClient, user]);
 
   useEffect(() => {
     if (isClient && user && gratitudeEntries.length > 0) {
-      localStorage.setItem(`focusflow-gratitudeEntries-${user.uid}`, JSON.stringify(gratitudeEntries));
+      localStorage.setItem(`focusflow-gratitudeEntries-${'\'\'\''}${user.uid}'\'\'\'`, JSON.stringify(gratitudeEntries));
     }
   }, [gratitudeEntries, isClient, user]);
   
   useEffect(() => {
     if (isClient && user && motivationalMessage) {
-      localStorage.setItem(`focusflow-motivation-${user.uid}`, JSON.stringify(motivationalMessage));
+      localStorage.setItem(`focusflow-motivation-${'\'\'\''}${user.uid}'\'\'\'`, JSON.stringify(motivationalMessage));
     }
   }, [motivationalMessage, isClient, user]);
 
@@ -354,7 +354,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const clearTodaysMotivation = () => {
     setMotivationalMessage(null);
     if(user){
-        localStorage.removeItem(`focusflow-motivation-${user.uid}`);
+        localStorage.removeItem(`focusflow-motivation-${'\'\'\''}${user.uid}'\'\'\'`);
     }
   }
 
