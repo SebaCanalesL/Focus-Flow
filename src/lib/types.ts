@@ -15,10 +15,3 @@ export interface GratitudeEntry {
   date: string; // ISO string 'YYYY-MM-DD'
   content: string;
 }
-
-export interface FeedbackEntry {
-  id: string;
-  date: string; // ISO string 'YYYY-MM-DD'
-  content: string;
-  userId: string;
-}

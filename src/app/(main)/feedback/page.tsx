@@ -13,14 +13,11 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { useAppData } from "@/contexts/app-provider";
 import { Send } from "lucide-react";
 
 export default function FeedbackPage() {
   const [feedback, setFeedback] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { addFeedbackEntry } = useAppData();
 
   const handleSendFeedback = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,24 +30,16 @@ export default function FeedbackPage() {
       return;
     }
 
-    setIsLoading(true);
-    
-    try {
-        addFeedbackEntry(feedback);
-        toast({
-            title: "¡Gracias por tu feedback!",
-            description: "Tu comentario ha sido enviado y nos ayudará a mejorar.",
-        });
-        setFeedback("");
-    } catch (error) {
-        toast({
-            title: "Error al enviar",
-            description: "No se pudo guardar tu comentario. Por favor, intenta de nuevo.",
-            variant: "destructive",
-        });
-    } finally {
-        setIsLoading(false);
-    }
+    const subject = encodeURIComponent("Feedback para FocusFlow");
+    const body = encodeURIComponent(feedback);
+    window.location.href = `mailto:s.canales123@gmail.com?subject=${subject}&body=${body}`;
+
+    toast({
+      title: "¡Gracias por tu feedback!",
+      description: "Se abrirá tu aplicación de correo para que puedas enviarnos tu comentario.",
+    });
+
+    setFeedback("");
   };
 
   return (
@@ -73,20 +62,15 @@ export default function FeedbackPage() {
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
                 rows={8}
-                disabled={isLoading}
               />
             </div>
           </CardContent>
           <CardFooter>
-            <Button type="submit" className="w-full sm:w-auto" disabled={isLoading}>
-              {isLoading ? (
-                "Enviando..."
-              ) : (
+            <Button type="submit" className="w-full sm:w-auto">
                 <>
                   <Send className="mr-2 h-4 w-4" />
                   Enviar Feedback
                 </>
-              )}
             </Button>
           </CardFooter>
         </form>
