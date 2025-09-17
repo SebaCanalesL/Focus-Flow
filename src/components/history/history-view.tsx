@@ -21,7 +21,7 @@ export function HistoryView() {
   const { gratitudeEntries, habits, isClient } = useAppData()
   const [date, setDate] = useState<Date | undefined>(new Date())
 
-  const selectedDateString = date ? date.toISOString().split("T")[0] : ""
+  const selectedDateString = date ? format(date, "yyyy-MM-dd") : ""
 
   const selectedGratitudeEntry = gratitudeEntries.find(
     (entry) => entry.date === selectedDateString
@@ -31,8 +31,19 @@ export function HistoryView() {
     habit.completedDates.includes(selectedDateString)
   )
 
-  const gratitudeDays = gratitudeEntries.map((entry) => new Date(entry.date))
-  const habitDays = habits.flatMap((habit) => habit.completedDates.map((d) => new Date(d)))
+  // Fix: Parse dates safely to avoid timezone issues
+  const gratitudeDays = (gratitudeEntries || []).map(entry => {
+    const [year, month, day] = entry.date.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  });
+
+  const habitDays = (habits || []).flatMap(habit => 
+    (habit.completedDates || []).map(d => {
+        const [year, month, day] = d.split('-').map(Number);
+        return new Date(year, month - 1, day);
+    })
+  );
+
 
   if (!isClient) {
     return <div className="h-96 bg-muted rounded-md w-full animate-pulse" />;
