@@ -71,7 +71,7 @@ export default function FeedbackPage() {
                 id="feedback-textarea"
                 placeholder="Escribe aquí lo que piensas, alguna idea o un problema que encontraste..."
                 value={feedback}
-                onChange={(e) => setFeedback(e.g.et.value)}
+                onChange={(e) => setFeedback(e.target.value)}
                 rows={8}
                 disabled={isLoading}
               />
