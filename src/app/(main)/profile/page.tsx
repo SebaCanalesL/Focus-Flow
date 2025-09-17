@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useAppData } from "@/contexts/app-provider";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +32,9 @@ import { useToast } from "@/hooks/use-toast";
 import { User, sendPasswordResetEmail, updateProfile, deleteUser } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { cn } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Calendar as CalendarIcon } from "lucide-react";
 
 const AvatarPlaceholders = [
     {
@@ -64,6 +69,9 @@ export default function ProfilePage() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState(user?.displayName || "");
   const [photoURL, setPhotoURL] = useState(user?.photoURL || "");
+  const [birthday, setBirthday] = useState<Date | undefined>(
+    user?.photoURL ? new Date(user.photoURL) : undefined
+  );
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
@@ -88,6 +96,7 @@ export default function ProfilePage() {
       });
 
       // We need to manually update the user object in our context
+      // Note: birthday is not saved to Firebase Auth by default
       const updatedUser = { ...user, displayName, photoURL } as User;
       setUser(updatedUser);
 
@@ -219,6 +228,34 @@ export default function ProfilePage() {
               <div className="space-y-2">
                 <Label htmlFor="email">Correo</Label>
                 <Input id="email" value={user.email || ""} disabled />
+              </div>
+               <div className="space-y-2">
+                <Label htmlFor="birthday">Fecha de Cumpleaños</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !birthday && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {birthday ? format(birthday, "d 'de' MMMM, yyyy", { locale: es }) : <span>Elige una fecha</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={birthday}
+                      onSelect={setBirthday}
+                      initialFocus
+                      captionLayout="dropdown-buttons"
+                      fromYear={1900}
+                      toYear={new Date().getFullYear()}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
               <div className="flex justify-end">
                 <Button type="submit" disabled={isSaving} className="w-full sm:w-auto">
