@@ -9,12 +9,17 @@ export const metadata: Metadata = {
   description: 'Cultivate gratitude and build positive habits.',
 };
 
+// IMPORTANT: Replace this with your actual Google Client ID
+const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const clientId = process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '';
+  if (GOOGLE_CLIENT_ID.startsWith("YOUR_GOOGLE_CLIENT_ID")) {
+     console.error("ERROR: Please replace 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com' in src/app/layout.tsx with your actual Google Client ID.");
+  }
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -23,7 +28,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <GoogleOAuthProvider clientId={clientId}>
+        <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
           <AppProvider>
             {children}
             <Toaster />

@@ -73,7 +73,7 @@ export default function LoginPage() {
   const handleGoogleError = () => {
     toast({
       title: "Error con Google",
-      description: "No se pudo iniciar sesión con Google.",
+      description: "No se pudo iniciar sesión con Google. Revisa la configuración del Client ID.",
       variant: "destructive",
     });
   }
@@ -90,10 +90,12 @@ export default function LoginPage() {
       <CardContent>
         <div className="space-y-4">
           <div className="flex justify-center">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={handleGoogleError}
-            />
+             { isGoogleLoading ? <Button disabled>Cargando...</Button> :
+                <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                />
+             }
           </div>
 
           <div className="relative">
