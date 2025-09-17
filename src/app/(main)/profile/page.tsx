@@ -79,7 +79,7 @@ export default function ProfilePage() {
     if (birthday) {
       try {
         const date = parse(birthday, 'yyyy-MM-dd', new Date());
-        setBirthdayInput(format(date, 'dd/MM/yy'));
+        setBirthdayInput(format(date, 'dd/MM/yyyy'));
       } catch (e) {
         setBirthdayInput(birthday); // fallback to raw value if parsing fails
       }
@@ -104,7 +104,7 @@ export default function ProfilePage() {
       value = value.slice(0,2) + '/' + value.slice(2);
     }
     if (value.length > 5) {
-      value = value.slice(0,5) + '/' + value.slice(5, 7);
+      value = value.slice(0,5) + '/' + value.slice(5,9);
     }
     setBirthdayInput(value);
   }
@@ -125,15 +125,32 @@ export default function ProfilePage() {
       
       let birthdayToSave: Date | undefined = undefined;
       if (birthdayInput) {
-        try {
-          const parsedDate = parse(birthdayInput, 'dd/MM/yy', new Date());
-          if (!isNaN(parsedDate.getTime())) {
-            birthdayToSave = parsedDate;
+        const dateParts = birthdayInput.split('/');
+        if (dateParts.length === 3) {
+          const day = parseInt(dateParts[0], 10);
+          const month = parseInt(dateParts[1], 10);
+          const year = parseInt(dateParts[2], 10);
+
+          if (day < 1 || day > 31) {
+            toast({ title: "Día inválido", description: "El día debe estar entre 1 y 31.", variant: "destructive" });
+          } else if (month < 1 || month > 12) {
+            toast({ title: "Mes inválido", description: "El mes debe estar entre 1 y 12.", variant: "destructive" });
+          } else if (year < 1900 || dateParts[2].length !== 4) {
+            toast({ title: "Año inválido", description: "El año debe ser de 4 dígitos y mayor o igual a 1900.", variant: "destructive" });
           } else {
-            toast({ title: "Fecha de nacimiento inválida", description: "Por favor usa el formato DD/MM/AA.", variant: "destructive" });
+             try {
+                const parsedDate = parse(birthdayInput, 'dd/MM/yyyy', new Date());
+                if (!isNaN(parsedDate.getTime())) {
+                  birthdayToSave = parsedDate;
+                } else {
+                   toast({ title: "Fecha de nacimiento inválida", description: "La fecha no es válida. Por favor, revísala.", variant: "destructive" });
+                }
+             } catch (error) {
+                 toast({ title: "Error en fecha", description: "El formato de la fecha no es correcto.", variant: "destructive" });
+             }
           }
-        } catch (error) {
-           toast({ title: "Error en fecha", description: "El formato de la fecha no es correcto.", variant: "destructive" });
+        } else if (birthdayInput.length > 0) {
+           toast({ title: "Formato incorrecto", description: "Por favor usa el formato DD/MM/AAAA.", variant: "destructive" });
         }
       }
       setAppBirthday(birthdayToSave);
@@ -272,10 +289,10 @@ export default function ProfilePage() {
                 <Label htmlFor="birthday">Fecha de nacimiento</Label>
                 <Input
                   id="birthday"
-                  placeholder="DD/MM/AA"
+                  placeholder="DD/MM/AAAA"
                   value={birthdayInput}
                   onChange={handleBirthdayChange}
-                  maxLength={8}
+                  maxLength={10}
                 />
               </div>
               <div className="flex justify-end">
@@ -334,3 +351,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+
