@@ -81,6 +81,9 @@ export function HabitTracker() {
             {habitsToShow.map((habit) => {
               const isCompleted = habit.completedDates.includes(todayString)
               const streak = getStreak(habit)
+              const isWeekly = habit.frequency === 'weekly';
+              const streakUnit = isWeekly ? (streak === 1 ? "semana" : "semanas") : (streak === 1 ? "día" : "días");
+
               return (
                 <div
                   key={habit.id}
@@ -103,7 +106,7 @@ export function HabitTracker() {
                   {streak > 0 && (
                     <Badge variant="secondary" className="flex items-center gap-1">
                       <Flame className="h-4 w-4 text-orange-500" />
-                      {streak}
+                      {streak} {streakUnit}
                     </Badge>
                   )}
                 </div>
