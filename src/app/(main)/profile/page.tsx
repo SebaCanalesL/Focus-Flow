@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAppData } from "@/contexts/app-provider";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,8 +29,40 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { User, sendPasswordResetEmail, updateProfile, deleteUser } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { AvatarPlaceholders } from "@/lib/placeholder-images";
 import { cn } from "@/lib/utils";
+import AvatarRosa from "../../../../public/avatars/spark1-rosa.png";
+import AvatarVerde from "../../../../public/avatars/spark2-verde.png";
+import AvatarNaranjo from "../../../../public/avatars/spark3-naranjo.png";
+import AvatarAzul from "../../../../public/avatars/spark4-azul.png";
+
+
+const AvatarPlaceholders = [
+    {
+      id: "avatar-1",
+      description: "Avatar Rosa",
+      imageUrl: AvatarRosa.src,
+      imageHint: "rosa"
+    },
+    {
+      id: "avatar-2",
+      description: "Avatar Verde",
+      imageUrl: AvatarVerde.src,
+      imageHint: "verde"
+    },
+    {
+      id: "avatar-3",
+      description: "Avatar Naranjo",
+      imageUrl: AvatarNaranjo.src,
+      imageHint: "naranjo"
+    },
+    {
+      id: "avatar-4",
+      description: "Avatar Azul",
+      imageUrl: AvatarAzul.src,
+      imageHint: "azul"
+    }
+]
+
 
 export default function ProfilePage() {
   const { user, setUser, loading } = useAppData();
@@ -156,7 +189,7 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-4 gap-2">
                     {AvatarPlaceholders.map(p => (
                         <button key={p.id} onClick={() => setPhotoURL(p.imageUrl)} className={cn("rounded-full overflow-hidden border-2 transition-all", photoURL === p.imageUrl ? "border-primary" : "border-transparent hover:border-primary/50")}>
-                            <img 
+                            <Image 
                                 src={p.imageUrl} 
                                 alt={p.description} 
                                 width="150" 
@@ -248,3 +281,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    
