@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createUserWithEmailAndPassword, signInWithCredential, GoogleAuthProvider as FirebaseGoogleAuthProvider } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithCredential, GoogleAuthProvider } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import {
@@ -68,7 +68,7 @@ export default function SignupPage() {
     }
     setIsGoogleLoading(true);
     try {
-      const credential = FirebaseGoogleAuthProvider.credential(credentialResponse.credential);
+      const credential = GoogleAuthProvider.credential(credentialResponse.credential);
       await signInWithCredential(auth, credential);
       router.push("/dashboard");
     } catch (error: any)      {
