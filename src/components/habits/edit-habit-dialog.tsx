@@ -192,7 +192,7 @@ export function EditHabitDialog({ habit, children }: { habit: Habit, children: R
                       <RadioGroup
                         onValueChange={(value) => field.onChange(parseInt(value))}
                         value={field.value?.toString()}
-                        className="grid grid-cols-6 sm:flex sm:flex-wrap gap-2 pt-2 justify-center sm:justify-start"
+                        className="grid grid-cols-6 gap-2 pt-2 justify-center"
                       >
                         {[...Array(6)].map((_, i) => (
                           <FormItem key={i + 1}>
@@ -220,7 +220,7 @@ export function EditHabitDialog({ habit, children }: { habit: Habit, children: R
             <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between w-full gap-2">
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
-                        <Button variant="destructive">Eliminar Hábito</Button>
+                        <Button variant="destructive" className="w-full sm:w-auto">Eliminar Hábito</Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader>
@@ -231,11 +231,11 @@ export function EditHabitDialog({ habit, children }: { habit: Habit, children: R
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete}>Continuar</AlertDialogAction>
+                        <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">Continuar</AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
-              <Button type="submit">Guardar Cambios</Button>
+              <Button type="submit" className="w-full sm:w-auto">Guardar Cambios</Button>
             </DialogFooter>
           </form>
         </Form>

@@ -68,8 +68,8 @@ export function HabitCardWithGrid({
         {...listenerProps}
     >
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-start gap-3">
             <div className={cn("p-2 rounded-lg bg-primary/20", habit.id === 'gratitude-habit' && 'ml-4')}>
               <Icon name={habit.icon as IconName} className="h-6 w-6 text-primary" />
             </div>
@@ -77,11 +77,11 @@ export function HabitCardWithGrid({
               <CardTitle className="text-lg font-semibold">{habit.name}</CardTitle>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             {habit.id !== 'gratitude-habit' && (
                 <EditHabitDialog habit={habit}>
-                    <Button variant="outline" size="icon" className="h-9 w-9" onClick={(e) => e.stopPropagation()}>
-                        <Pencil className="h-5 w-5" />
+                    <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={(e) => e.stopPropagation()}>
+                        <Pencil className="h-4 w-4 sm:h-5 sm:w-5" />
                         <span className="sr-only">Editar</span>
                     </Button>
                 </EditHabitDialog>
@@ -89,8 +89,8 @@ export function HabitCardWithGrid({
 
             <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="icon" className="h-9 w-9" onClick={(e) => e.stopPropagation()}>
-                  <CalendarDays className="h-5 w-5" />
+                <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={(e) => e.stopPropagation()}>
+                  <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5" />
                    <span className="sr-only">Ver</span>
                 </Button>
               </PopoverTrigger>
@@ -106,28 +106,28 @@ export function HabitCardWithGrid({
             </Popover>
             <Button
               size="icon"
-              className={cn("h-9 w-9 md:h-10 md:w-10", isCompletedToday && "bg-green-600 text-white hover:bg-green-600/90")}
+              className={cn("h-8 w-8 sm:h-9 sm:w-9", isCompletedToday && "bg-green-600 text-white hover:bg-green-600/90")}
               variant={isCompletedToday ? "default" : "outline"}
               onClick={(e) => {
                 e.stopPropagation();
                 toggleHabitCompletion(habit.id, new Date());
               }}
             >
-              {isCompletedToday ? <CheckCheck className="h-5 w-5" /> : <Check className="h-5 w-5" />}
+              {isCompletedToday ? <CheckCheck className="h-4 w-4 sm:h-5 sm:w-5" /> : <Check className="h-4 w-4 sm:h-5 sm:w-5" />}
             </Button>
           </div>
         </div>
       </CardHeader>
       <CardContent className="flex-grow flex items-end justify-between gap-4">
         <HabitCompletionGrid habit={habit} />
-        <div className="flex flex-col items-center justify-center p-4 rounded-lg bg-secondary/50 shrink-0">
-            <div className="flex items-center gap-2 text-2xl font-bold">
-                 <Flame className={cn("h-7 w-7", streak > 0 ? "text-orange-500" : "text-muted-foreground")} />
+        <div className="flex flex-col items-center justify-center p-2 sm:p-4 rounded-lg bg-secondary/50 shrink-0">
+            <div className="flex items-center gap-2 text-xl sm:text-2xl font-bold">
+                 <Flame className={cn("h-6 w-6 sm:h-7 sm:w-7", streak > 0 ? "text-orange-500" : "text-muted-foreground")} />
                  <span>{streak}</span>
             </div>
-            <p className="text-sm text-muted-foreground">{streakUnit}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">{streakUnit}</p>
              {isWeekly && (
-                <p className="text-xs font-medium text-muted-foreground mt-2">({weekCompletion.completed}/{weekCompletion.total} esta semana)</p>
+                <p className="text-xs font-medium text-muted-foreground mt-1 sm:mt-2">({weekCompletion.completed}/{weekCompletion.total} esta semana)</p>
             )}
         </div>
       </CardContent>

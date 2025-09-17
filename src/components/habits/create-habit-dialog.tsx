@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
@@ -196,7 +196,7 @@ export function CreateHabitDialog() {
                       <RadioGroup
                         onValueChange={(value) => field.onChange(parseInt(value))}
                         value={field.value?.toString()}
-                        className="grid grid-cols-6 sm:flex sm:flex-wrap gap-2 pt-2 justify-center"
+                        className="grid grid-cols-6 gap-2 pt-2 justify-center"
                       >
                         {[...Array(6)].map((_, i) => (
                           <FormItem key={i + 1}>

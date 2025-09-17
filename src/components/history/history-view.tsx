@@ -74,8 +74,8 @@ export function HistoryView() {
         <TabsTrigger value="habits">Historial de Hábitos</TabsTrigger>
       </TabsList>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <TabsContent value="gratitude" className="mt-0 lg:col-span-3 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <div className="lg:col-span-1">
+        <TabsContent value="gratitude" className="mt-0 lg:col-span-3 grid gap-6 md:grid-cols-1 lg:grid-cols-3">
+            <div className="md:col-span-1">
                 <Card>
                     <CardContent className="p-0 flex justify-center">
                          <Calendar
@@ -93,7 +93,7 @@ export function HistoryView() {
                     </CardContent>
                 </Card>
             </div>
-          <div className="lg:col-span-2">
+          <div className="md:col-span-1 lg:col-span-2">
             <Card>
               <CardHeader>
                 <CardTitle className="flex justify-between items-center">
@@ -134,8 +134,8 @@ export function HistoryView() {
             </Card>
           </div>
         </TabsContent>
-        <TabsContent value="habits" className="mt-0 lg:col-span-3 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <div className="lg:col-span-1">
+        <TabsContent value="habits" className="mt-0 lg:col-span-3 grid gap-6 md:grid-cols-1 lg:grid-cols-3">
+            <div className="md:col-span-1">
                  <Card>
                     <CardContent className="p-0 flex justify-center">
                         <Calendar
@@ -153,7 +153,7 @@ export function HistoryView() {
                     </CardContent>
                 </Card>
             </div>
-           <div className="lg:col-span-2">
+           <div className="md:col-span-1 lg:col-span-2">
             <Card>
               <CardHeader>
                 <CardTitle className="flex justify-between items-center">

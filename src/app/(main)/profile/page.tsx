@@ -221,7 +221,7 @@ export default function ProfilePage() {
                 <Input id="email" value={user.email || ""} disabled />
               </div>
               <div className="flex justify-end">
-                <Button type="submit" disabled={isSaving}>
+                <Button type="submit" disabled={isSaving} className="w-full sm:w-auto">
                   {isSaving ? "Guardando..." : "Guardar Cambios"}
                 </Button>
               </div>
