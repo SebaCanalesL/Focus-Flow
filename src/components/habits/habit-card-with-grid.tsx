@@ -3,7 +3,7 @@
 import type { Habit } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import * as LucideIcons from "lucide-react";
-import { Target, Flame, Check, CalendarDays, CheckCheck } from "lucide-react";
+import { Target, Flame, Check, CalendarDays, CheckCheck, Pencil } from "lucide-react";
 import { useAppData } from "@/contexts/app-provider";
 import { cn } from "@/lib/utils";
 import { HabitCompletionGrid } from "./habit-completion-grid";
@@ -12,6 +12,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Button } from "../ui/button";
 import { useState } from "react";
 import { format } from "date-fns";
+import { EditHabitDialog } from "./edit-habit-dialog";
 
 type IconName = keyof typeof LucideIcons;
 
@@ -58,6 +59,12 @@ export function HabitCardWithGrid({ habit }: { habit: Habit }) {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <EditHabitDialog habit={habit}>
+                <Button variant="outline" size="icon">
+                    <Pencil className="h-5 w-5" />
+                </Button>
+            </EditHabitDialog>
+
             <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
                 <Button variant="outline" size="icon">

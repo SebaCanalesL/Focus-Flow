@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import type { User } from 'firebase/auth';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import type { Habit, GratitudeEntry } from '@/lib/types';
+import type { Habit, GratitudeEntry, Frequency } from '@/lib/types';
 import { INITIAL_HABITS, INITIAL_GRATITUDE_ENTRIES } from '@/lib/data';
 import { format, subDays, differenceInCalendarDays, parseISO, startOfWeek, endOfWeek, isWithinInterval, getWeek } from 'date-fns';
 
@@ -13,7 +13,9 @@ interface AppContextType {
   loading: boolean;
   habits: Habit[];
   gratitudeEntries: GratitudeEntry[];
-  addHabit: (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates'>) => void;
+  addHabit: (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates' | 'icon'>) => void;
+  updateHabit: (habitId: string, habitData: { name: string; frequency: Frequency; daysPerWeek?: number }) => void;
+  deleteHabit: (habitId: string) => void;
   toggleHabitCompletion: (habitId: string, date: Date) => void;
   getHabitById: (habitId: string) => Habit | undefined;
   getStreak: (habit: Habit) => number;
@@ -81,15 +83,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [gratitudeEntries, isClient, user]);
 
-  const addHabit = (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates'>) => {
+  const addHabit = (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates' | 'icon'>) => {
     const newHabit: Habit = {
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
       completedDates: [],
+      icon: "Target", // Default icon
       ...habitData,
     };
     setHabits(prev => [...prev, newHabit]);
   };
+
+  const updateHabit = (habitId: string, habitData: { name: string; frequency: Frequency; daysPerWeek?: number }) => {
+    setHabits(prev =>
+      prev.map(habit =>
+        habit.id === habitId ? { ...habit, ...habitData } : habit
+      )
+    );
+  };
+  
+  const deleteHabit = (habitId: string) => {
+    setHabits(prev => prev.filter(habit => habit.id !== habitId));
+  }
 
   const toggleHabitCompletion = (habitId: string, date: Date) => {
     const dateString = format(date, 'yyyy-MM-dd');
@@ -231,6 +246,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     habits,
     gratitudeEntries,
     addHabit,
+    updateHabit,
+    deleteHabit,
     toggleHabitCompletion,
     getHabitById,
     getStreak,
