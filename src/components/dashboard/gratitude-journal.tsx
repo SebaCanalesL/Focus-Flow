@@ -1,5 +1,3 @@
-
-
 "use client"
 
 import React, { useState, useEffect, useRef } from "react"
@@ -269,7 +267,7 @@ export function GratitudeJournal() {
         )}
       </CardContent>
       {!isSaved && (
-        <CardFooter>
+        <CardFooter className="justify-center">
             <Button onClick={handleSave}>
               Agradecimiento y Abundancia 🙏✨️
             </Button>
