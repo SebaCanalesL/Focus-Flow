@@ -17,7 +17,7 @@ interface AppContextType {
   habits: Habit[];
   setHabits: React.Dispatch<React.SetStateAction<Habit[]>>;
   gratitudeEntries: GratitudeEntry[];
-  addHabit: (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates' | 'icon'>) => void;
+  addHabit: (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates'>) => void;
   updateHabit: (habitId: string, habitData: { name: string; frequency: Frequency; daysPerWeek?: number }) => void;
   deleteHabit: (habitId: string) => void;
   toggleHabitCompletion: (habitId: string, date: Date) => void;
@@ -146,12 +146,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [motivationalMessage, isClient, user]);
 
-  const addHabit = (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates' | 'icon'>) => {
+  const addHabit = (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates'>) => {
     const newHabit: Habit = {
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
       completedDates: [],
-      icon: "Target", // Default icon
       ...habitData,
     };
     setHabits(prev => [...prev, newHabit]);

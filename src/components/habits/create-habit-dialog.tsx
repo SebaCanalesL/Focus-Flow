@@ -25,9 +25,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAppData } from "@/contexts/app-provider";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, WandSparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { suggestHabitIcon } from "@/ai/flows/suggest-habit-icon-flow";
 
 const formSchema = z
   .object({
@@ -52,6 +53,7 @@ const formSchema = z
 
 export function CreateHabitDialog() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { addHabit } = useAppData();
   const { toast } = useToast();
 
@@ -65,25 +67,45 @@ export function CreateHabitDialog() {
 
   const frequency = form.watch("frequency");
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    addHabit({
-      name: values.name,
-      frequency: values.frequency,
-      daysPerWeek: values.daysPerWeek,
-      // Icon is assigned automatically for now
-      icon: "Target",
-    });
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setIsSubmitting(true);
+    try {
+      const { iconName } = await suggestHabitIcon({ habitName: values.name });
 
-    toast({
-      title: "¡Hábito Creado!",
-      description: `El hábito "${values.name}" ha sido añadido a tu lista.`,
-    });
-    
-    setIsOpen(false);
-    form.reset({
-      name: "",
-      frequency: "daily",
-    });
+      addHabit({
+        name: values.name,
+        frequency: values.frequency,
+        daysPerWeek: values.daysPerWeek,
+        icon: iconName,
+      });
+
+      toast({
+        title: "¡Hábito Creado!",
+        description: `El hábito "${values.name}" ha sido añadido a tu lista.`,
+      });
+
+      setIsOpen(false);
+      form.reset({
+        name: "",
+        frequency: "daily",
+      });
+    } catch (error) {
+        console.error("Error creating habit:", error);
+        // Fallback for when AI fails
+        addHabit({
+            name: values.name,
+            frequency: values.frequency,
+            daysPerWeek: values.daysPerWeek,
+            icon: "Target",
+        });
+        toast({
+            title: "¡Hábito Creado!",
+            description: `El hábito "${values.name}" fue creado (no se pudo sugerir un ícono).`,
+            variant: "default",
+        });
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
   return (
@@ -98,7 +120,7 @@ export function CreateHabitDialog() {
         <DialogHeader>
           <DialogTitle>Crear un nuevo hábito</DialogTitle>
           <DialogDescription>
-            Completa los detalles de tu nuevo hábito.
+            Completa los detalles de tu nuevo hábito y la IA sugerirá un ícono para ti.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -186,7 +208,16 @@ export function CreateHabitDialog() {
             )}
 
             <DialogFooter>
-              <Button type="submit">Crear Hábito</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                 {isSubmitting ? (
+                  <>
+                    <WandSparkles className="mr-2 h-4 w-4 animate-spin" />
+                    Creando...
+                  </>
+                ) : (
+                  "Crear Hábito"
+                )}
+              </Button>
             </DialogFooter>
           </form>
         </Form>
