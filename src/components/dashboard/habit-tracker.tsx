@@ -37,7 +37,7 @@ export function HabitTracker() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Target className="text-primary" />
-            Hábitos de Hoy
+            Tus hábitos de hoy
           </CardTitle>
           <CardDescription>Completa tus hábitos de hoy.</CardDescription>
         </CardHeader>
@@ -71,7 +71,7 @@ export function HabitTracker() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Target className="text-primary" />
-          Hábitos Pendientes
+          Tus hábitos de hoy
         </CardTitle>
         <CardDescription>Completa tus hábitos para aumentar tu racha.</CardDescription>
       </CardHeader>
