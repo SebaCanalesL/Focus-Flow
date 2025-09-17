@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useAppData } from "@/contexts/app-provider";
+import Link from "next/link";
 
 export function UserNav() {
   const { user } = useAppData();
@@ -34,22 +35,28 @@ export function UserNav() {
     if (!email) return "U";
     return email.charAt(0).toUpperCase();
   }
+  
+  const getUsername = () => {
+    if (user?.displayName) return user.displayName;
+    if (user?.email) return user.email.split('@')[0];
+    return 'Usuario';
+  }
+
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-9 w-9">
-            {/* Using a placeholder image, can be replaced with user.photoURL if available */}
             <AvatarImage src={user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`} alt={user.email || "Usuario"} />
-            <AvatarFallback>{getInitials(user.email)}</AvatarFallback>
+            <AvatarFallback>{getInitials(user.displayName || user.email)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">Usuario</p>
+            <p className="text-sm font-medium leading-none">{getUsername()}</p>
             <p className="text-xs leading-none text-muted-foreground">
               {user.email}
             </p>
@@ -57,10 +64,12 @@ export function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem disabled>
-            Perfil
-            <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-          </DropdownMenuItem>
+          <Link href="/profile">
+            <DropdownMenuItem>
+              Perfil
+              <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+            </DropdownMenuItem>
+          </Link>
           <DropdownMenuItem disabled>
             Ajustes
             <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>

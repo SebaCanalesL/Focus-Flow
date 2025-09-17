@@ -10,6 +10,7 @@ import { format, subDays, differenceInCalendarDays, parseISO, startOfWeek, endOf
 
 interface AppContextType {
   user: User | null;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
   loading: boolean;
   habits: Habit[];
   gratitudeEntries: GratitudeEntry[];
@@ -272,6 +273,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   
   const value = {
     user,
+    setUser,
     loading,
     habits,
     gratitudeEntries,
