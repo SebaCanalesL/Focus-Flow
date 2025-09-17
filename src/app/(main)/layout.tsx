@@ -8,7 +8,7 @@ import {
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { MainNav } from "@/components/main-nav"
 import { UserNav } from "@/components/user-nav"
 import { useAppData } from "@/contexts/app-provider";
@@ -73,6 +73,9 @@ export default function MainLayout({
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="flex flex-col">
+              <SheetHeader className="text-left">
+                  <SheetTitle className="sr-only">Menú de Navegación</SheetTitle>
+              </SheetHeader>
               <nav className="grid gap-2 text-lg font-medium">
                 <Link
                   href="#"
