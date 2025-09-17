@@ -29,7 +29,7 @@ export function MainNav({ onLinkClick }: { onLinkClick?: () => void }) {
             href={link.href}
             className={cn(
               "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-              isActive && "bg-accent text-primary"
+              isActive && "bg-accent text-accent-foreground"
             )}
             onClick={onLinkClick}
           >
@@ -49,7 +49,7 @@ export function MainNav({ onLinkClick }: { onLinkClick?: () => void }) {
             href={link.href}
             className={cn(
               "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-              isActive && "bg-accent text-primary"
+              isActive && "bg-accent text-accent-foreground"
             )}
             onClick={onLinkClick}
           >
