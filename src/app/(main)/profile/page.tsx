@@ -69,9 +69,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState(user?.displayName || "");
   const [photoURL, setPhotoURL] = useState(user?.photoURL || "");
-  const [birthday, setBirthday] = useState<Date | undefined>(
-    user?.photoURL ? new Date(user.photoURL) : undefined
-  );
+  const [birthday, setBirthday] = useState<Date | undefined>(undefined);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
@@ -223,11 +221,12 @@ export default function ProfilePage() {
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   placeholder="Tu nombre"
+                  className="sm:text-sm"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Correo</Label>
-                <Input id="email" value={user.email || ""} disabled />
+                <Input id="email" value={user.email || ""} disabled className="sm:text-sm" />
               </div>
                <div className="space-y-2">
                 <Label htmlFor="birthday">Fecha de Cumpleaños</Label>
@@ -236,7 +235,7 @@ export default function ProfilePage() {
                     <Button
                       variant={"outline"}
                       className={cn(
-                        "w-full justify-start text-left font-normal",
+                        "w-full justify-start text-left font-normal sm:text-sm",
                         !birthday && "text-muted-foreground"
                       )}
                     >
