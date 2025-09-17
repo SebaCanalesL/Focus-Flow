@@ -1,15 +1,21 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
+import 'dotenv/config';
 
-// Replace this with your actual Firebase configuration
+// Firebase configuration is now loaded from environment variables
 const firebaseConfig = {
-  apiKey: "AIzaSyBJqudC8uilNGktrFFHxI8YVmd-DprZxXY",
-  authDomain: "studio-808864941-b51ba.firebaseapp.com",
-  projectId: "studio-808864941-b51ba",
-  storageBucket: "studio-808864941-b51ba.firebasestorage.app",
-  messagingSenderId: "444464760523",
-  appId: "1:444464760523:web:4e3ec710d3d56e23747d4e",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
+
+// Check if all required environment variables are set
+if (!firebaseConfig.apiKey || !firebaseConfig.authDomain || !firebaseConfig.projectId) {
+  console.error("Firebase configuration is missing. Make sure to set up your .env.local file");
+}
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
