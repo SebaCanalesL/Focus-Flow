@@ -114,6 +114,7 @@ export default function ProfilePage() {
       const updatedUser = { ...user, displayName, photoURL } as User;
       setUser(updatedUser);
       
+      // Now save the birthday
       setAppBirthday(birthdayState);
 
       toast({
