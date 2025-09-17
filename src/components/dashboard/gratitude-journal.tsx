@@ -157,6 +157,15 @@ export function GratitudeJournal() {
                 nextInput.focus();
             }
         }
+    } else if (e.key === 'Backspace') {
+        if (gratitudeItems[index] === "" && index > 2) {
+            e.preventDefault();
+            removeItem(index);
+            const prevInput = inputRefs.current[index - 1];
+            if (prevInput) {
+                prevInput.focus();
+            }
+        }
     }
   };
 
