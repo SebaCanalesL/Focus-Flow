@@ -156,12 +156,12 @@ export default function ProfilePage() {
           <CardHeader>
             <CardTitle>Seguridad</CardTitle>
           </CardHeader>
-          <CardContent className="flex items-center justify-between">
+          <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <p className="font-medium">Cambiar Contraseña</p>
               <p className="text-sm text-muted-foreground">Te enviaremos un correo para que puedas cambiar tu contraseña.</p>
             </div>
-            <Button variant="outline" onClick={handlePasswordReset}>Enviar Correo</Button>
+            <Button variant="outline" onClick={handlePasswordReset} className="w-full sm:w-auto">Enviar Correo</Button>
           </CardContent>
         </Card>
       </div>

@@ -61,16 +61,18 @@ export function HabitCardWithGrid({ habit }: { habit: Habit }) {
           <div className="flex items-center gap-2">
             {habit.id !== 'gratitude-habit' && (
                 <EditHabitDialog habit={habit}>
-                    <Button variant="outline" size="icon">
-                        <Pencil className="h-5 w-5" />
+                    <Button variant="outline" size="icon" className="h-9 w-9 md:h-10 md:w-auto md:px-4">
+                        <Pencil className="h-5 w-5 md:mr-2" />
+                        <span className="hidden md:inline">Editar</span>
                     </Button>
                 </EditHabitDialog>
             )}
 
             <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <CalendarDays className="h-5 w-5" />
+                <Button variant="outline" size="icon" className="h-9 w-9 md:h-10 md:w-auto md:px-4">
+                  <CalendarDays className="h-5 w-5 md:mr-2" />
+                   <span className="hidden md:inline">Ver</span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
@@ -85,7 +87,7 @@ export function HabitCardWithGrid({ habit }: { habit: Habit }) {
             </Popover>
             <Button
               size="icon"
-              className={cn(isCompletedToday && "bg-primary text-white hover:bg-primary/90")}
+              className={cn("h-9 w-9 md:h-10 md:w-10", isCompletedToday && "bg-primary text-white hover:bg-primary/90")}
               variant={isCompletedToday ? "default" : "outline"}
               onClick={() => toggleHabitCompletion(habit.id, new Date())}
             >

@@ -179,7 +179,7 @@ export function EditHabitDialog({ habit, children }: { habit: Habit, children: R
                       <RadioGroup
                         onValueChange={(value) => field.onChange(parseInt(value))}
                         value={field.value?.toString()}
-                        className="flex flex-wrap gap-2 pt-2"
+                        className="grid grid-cols-4 sm:flex sm:flex-wrap gap-2 pt-2"
                       >
                         {[...Array(7)].map((_, i) => (
                           <FormItem key={i + 1}>
@@ -187,7 +187,7 @@ export function EditHabitDialog({ habit, children }: { habit: Habit, children: R
                               <RadioGroupItem value={(i + 1).toString()} className="sr-only" />
                             </FormControl>
                             <FormLabel className={cn(
-                              "cursor-pointer rounded-full border-2 border-transparent px-3 py-1 transition-colors",
+                              "cursor-pointer rounded-full border-2 border-transparent px-3 py-1 transition-colors flex items-center justify-center",
                               field.value === i + 1
                                 ? "bg-primary text-primary-foreground border-primary"
                                 : "bg-muted hover:bg-muted/80"
@@ -204,7 +204,7 @@ export function EditHabitDialog({ habit, children }: { habit: Habit, children: R
               />
             )}
             
-            <DialogFooter className="flex-row justify-between items-center w-full">
+            <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between w-full gap-2">
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
                         <Button variant="destructive">Eliminar Hábito</Button>

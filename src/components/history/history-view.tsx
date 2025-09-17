@@ -51,15 +51,15 @@ export function HistoryView() {
   
   return (
     <Tabs defaultValue="gratitude" className="space-y-4">
-      <TabsList>
+      <TabsList className="grid grid-cols-2 w-full sm:w-auto sm:inline-flex">
         <TabsTrigger value="gratitude">Gratitude History</TabsTrigger>
         <TabsTrigger value="habits">Habit History</TabsTrigger>
       </TabsList>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <TabsContent value="gratitude" className="lg:col-span-3 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <TabsContent value="gratitude" className="mt-0 lg:col-span-3 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <div className="lg:col-span-1">
                 <Card>
-                    <CardContent className="p-0">
+                    <CardContent className="p-0 flex justify-center">
                          <Calendar
                             mode="single"
                             selected={date}
@@ -87,10 +87,10 @@ export function HistoryView() {
             </Card>
           </div>
         </TabsContent>
-        <TabsContent value="habits" className="lg:col-span-3 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <TabsContent value="habits" className="mt-0 lg:col-span-3 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <div className="lg:col-span-1">
                  <Card>
-                    <CardContent className="p-0">
+                    <CardContent className="p-0 flex justify-center">
                         <Calendar
                             mode="single"
                             selected={date}
