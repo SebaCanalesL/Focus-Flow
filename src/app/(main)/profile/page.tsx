@@ -80,7 +80,11 @@ export default function ProfilePage() {
     if (birthday) {
       try {
         const date = parse(birthday, 'yyyy-MM-dd', new Date());
-        setBirthdayInput(format(date, 'dd/MM/yyyy'));
+        if (isValid(date)) {
+          setBirthdayInput(format(date, 'dd/MM/yyyy'));
+        } else {
+          setBirthdayInput("");
+        }
       } catch (e) {
         setBirthdayInput("");
       }
@@ -311,11 +315,11 @@ export default function ProfilePage() {
                         </div>
                     )}
                      {isEditingBirthday ? (
-                        <Button variant="ghost" size="icon" onClick={handleSaveBirthday}>
+                        <Button variant="ghost" size="icon" type="button" onClick={handleSaveBirthday}>
                             <Check className="h-4 w-4" />
                         </Button>
                      ) : (
-                        <Button variant="ghost" size="icon" onClick={() => setIsEditingBirthday(true)}>
+                        <Button variant="ghost" size="icon" type="button" onClick={() => setIsEditingBirthday(true)}>
                             <Pencil className="h-4 w-4" />
                         </Button>
                      )}
