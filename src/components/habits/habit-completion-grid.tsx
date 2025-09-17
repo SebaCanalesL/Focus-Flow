@@ -34,8 +34,9 @@ const HabitCompletionGrid = ({ habit }: { habit: Habit }) => {
   const getDaysForMonth = (month: Date) => {
     const monthStart = startOfMonth(month);
     const monthEnd = endOfMonth(month);
-    const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
-    const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
+    const weekOptions = { weekStartsOn: 1 as const };
+    const startDate = startOfWeek(monthStart, weekOptions);
+    const endDate = endOfWeek(monthEnd, weekOptions);
     return eachDayOfInterval({ start: startDate, end: endDate });
   }
 
