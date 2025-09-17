@@ -30,15 +30,4 @@ export const INITIAL_HABITS: Habit[] = [
   },
 ];
 
-export const INITIAL_GRATITUDE_ENTRIES: GratitudeEntry[] = [
-  {
-    id: '1',
-    date: formatISO(subDays(new Date(), 1), { representation: 'date' }),
-    content: '1. The warm sun on my face during my morning walk.\n2. A delicious cup of coffee to start the day.\n3. A productive and focused work session.',
-  },
-  {
-    id: '2',
-    date: formatISO(subDays(new Date(), 3), { representation: 'date' }),
-    content: '1. Finishing a great book.\n2. A long chat with an old friend.\n3. The beautiful sunset.',
-  },
-];
+export const INITIAL_GRATITUDE_ENTRIES: GratitudeEntry[] = [];
