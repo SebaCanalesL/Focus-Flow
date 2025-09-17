@@ -192,7 +192,7 @@ export function EditHabitDialog({ habit, children }: { habit: Habit, children: R
                       <RadioGroup
                         onValueChange={(value) => field.onChange(parseInt(value))}
                         value={field.value?.toString()}
-                        className="grid grid-cols-3 sm:flex sm:flex-wrap gap-2 pt-2"
+                        className="grid grid-cols-6 sm:flex sm:flex-wrap gap-2 pt-2 justify-center sm:justify-start"
                       >
                         {[...Array(6)].map((_, i) => (
                           <FormItem key={i + 1}>
