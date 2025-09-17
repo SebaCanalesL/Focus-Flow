@@ -58,6 +58,15 @@ function MotivationalMessage({ userName }: { userName: string }) {
   );
 }
 
+const gratitudePlaceholders = [
+    "¿Qué te hizo sonreír hoy?",
+    "Un gesto amable que recibiste...",
+    "Algo que aprendiste y valoras.",
+    "Una persona por la que sientes gratitud.",
+    "Un pequeño lujo que disfrutaste.",
+    "Algo que lograste, por pequeño que sea."
+];
+
 
 export function GratitudeJournal() {
   const { user, addGratitudeEntry, getGratitudeEntry } = useAppData()
@@ -234,7 +243,7 @@ export function GratitudeJournal() {
                 <span className="text-muted-foreground font-medium">{index + 1}.</span>
                 <Input
                     ref={el => inputRefs.current[index] = el}
-                    placeholder={`Agradecimiento #${index + 1}`}
+                    placeholder={gratitudePlaceholders[index % gratitudePlaceholders.length]}
                     value={item}
                     onChange={(e) => handleItemChange(index, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e, index)}
