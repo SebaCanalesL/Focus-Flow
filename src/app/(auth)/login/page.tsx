@@ -45,15 +45,16 @@ export default function LoginPage() {
       let description = "Ocurrió un error inesperado. Por favor, intenta de nuevo.";
       if (error.code) {
         switch (error.code) {
-            case 'auth/user-not-found':
-            case 'auth/wrong-password':
-                description = "Las credenciales son incorrectas. Verifica tu correo y contraseña.";
-                break;
-            case 'auth/invalid-email':
-                description = "El formato del correo electrónico no es válido.";
-                break;
-            default:
-                description = error.message;
+          case 'auth/user-not-found':
+          case 'auth/wrong-password':
+          case 'auth/invalid-credential':
+            description = "Las credenciales son incorrectas. Verifica tu correo y contraseña.";
+            break;
+          case 'auth/invalid-email':
+            description = "El formato del correo electrónico no es válido.";
+            break;
+          default:
+            description = "Ocurrió un error inesperado. Por favor, intenta de nuevo.";
         }
       }
       toast({
