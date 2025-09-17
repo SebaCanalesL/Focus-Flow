@@ -41,7 +41,7 @@ function MotivationalMessage({ userName }: { userName: string }) {
     return (
       <div className="flex items-center gap-2 text-sm text-muted-foreground animate-pulse mb-4">
         <WandSparkles className="h-4 w-4" />
-        Generando tu frase del día...
+        Creando tu motivación diaria...
       </div>
     );
   }
