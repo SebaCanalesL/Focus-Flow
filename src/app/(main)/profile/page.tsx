@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAppData } from "@/contexts/app-provider";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -72,6 +72,18 @@ export default function ProfilePage() {
   const [birthday, setBirthday] = useState<Date | undefined>(undefined);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // This effect ensures that if the user data loads after the component mounts,
+    // the state is updated with the correct values.
+    if (user) {
+      setDisplayName(user.displayName || "");
+      setPhotoURL(user.photoURL || "");
+      // Note: We are not setting birthday from user object as it's not a standard Firebase Auth property.
+      // It will be managed purely by the component's state.
+    }
+  }, [user]);
+
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return "U";
