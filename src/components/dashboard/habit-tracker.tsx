@@ -121,7 +121,7 @@ export function TodaysHabitsCard({ habits }: { habits: Habit[]}) {
 }
 
 export function CompletedWeeklyHabitsCard({ habits }: { habits: Habit[] }) {
-    const { getStreak } = useAppData();
+    const { getStreak, getWeekCompletion } = useAppData();
 
     if (habits.length === 0) {
         return null;
@@ -141,6 +141,8 @@ export function CompletedWeeklyHabitsCard({ habits }: { habits: Habit[] }) {
                     {habits.map(habit => {
                         const streak = getStreak(habit);
                         const streakUnit = streak === 1 ? "semana" : "semanas";
+                        const weekCompletion = getWeekCompletion(habit);
+                        
                         return (
                             <div key={habit.id} className="flex items-center justify-between rounded-lg border p-3 bg-secondary/30">
                                 <div className="flex items-center gap-3">
@@ -149,7 +151,7 @@ export function CompletedWeeklyHabitsCard({ habits }: { habits: Habit[] }) {
                                 </div>
                                 <div className="flex items-center gap-2">
                                      <p className="text-sm font-medium text-muted-foreground">
-                                        ({habit.daysPerWeek}/{habit.daysPerWeek})
+                                        ({weekCompletion.completed}/{weekCompletion.total})
                                     </p>
                                     {streak > 0 && (
                                         <Badge variant="secondary" className="flex items-center gap-1">
