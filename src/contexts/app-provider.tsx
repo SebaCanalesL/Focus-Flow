@@ -4,9 +4,9 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import type { User } from 'firebase/auth';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import type { Habit, GratitudeEntry, Frequency } from '@/lib/types';
+import type { Habit, GratitudeEntry } from '@/lib/types';
 import { INITIAL_HABITS, INITIAL_GRATITUDE_ENTRIES } from '@/lib/data';
-import { format, subDays, differenceInCalendarDays, parseISO } from 'date-fns';
+import { format, subDays, differenceInCalendarDays, parseISO, startOfWeek, endOfWeek, isWithinInterval, getWeek } from 'date-fns';
 
 interface AppContextType {
   user: User | null;
@@ -20,6 +20,7 @@ interface AppContextType {
   addGratitudeEntry: (content: string, date: Date) => void;
   getGratitudeEntry: (date: Date) => GratitudeEntry | undefined;
   isClient: boolean;
+  getWeekCompletion: (habit: Habit) => { completed: number; total: number };
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -111,50 +112,94 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }
 
  const getStreak = (habit: Habit) => {
-    if (!habit || habit.completedDates.length === 0) {
-      return 0;
-    }
-
-    const sortedDates = habit.completedDates
-      .map(dateStr => parseISO(dateStr))
-      .sort((a, b) => b.getTime() - a.getTime());
-
-    const today = new Date();
-    let mostRecentDate = sortedDates[0];
-
-    // If the most recent completion is not today or yesterday, the streak is broken.
-    if (differenceInCalendarDays(today, mostRecentDate) > 1) {
-      return 0;
-    }
-
-    let streak = 1;
-    let currentStreakDate = mostRecentDate;
-
-    for (let i = 1; i < sortedDates.length; i++) {
-      const nextDate = sortedDates[i];
-      // Check if the next date is exactly one day before the current streak date
-      if (differenceInCalendarDays(currentStreakDate, nextDate) === 1) {
-        streak++;
-        currentStreakDate = nextDate; // Continue the streak
-      } else if (differenceInCalendarDays(currentStreakDate, nextDate) > 1) {
-        // A day was skipped, so the streak is broken
-        break;
-      }
-      // If difference is 0, it's a duplicate entry for the same day, so we just ignore it and continue.
-    }
-
-    // A special case: if the most recent completion was yesterday, but not today, the streak is still valid.
-    // The loop above correctly calculates it. We just need to ensure we don't return 0 incorrectly.
-    if (differenceInCalendarDays(today, mostRecentDate) === 1) {
-      return streak;
-    }
+    if (!habit || habit.completedDates.length === 0) return 0;
     
-    // If the most recent completion is today, the calculated streak is also correct.
-    if (differenceInCalendarDays(today, mostRecentDate) === 0) {
-      return streak;
-    }
+    const sortedDates = habit.completedDates.map(d => parseISO(d)).sort((a,b) => b.getTime() - a.getTime());
 
-    return 0; // Should not be reached if logic is correct, but as a fallback.
+    if (habit.frequency === 'daily') {
+        const today = new Date();
+        const mostRecentDate = sortedDates[0];
+
+        if (differenceInCalendarDays(today, mostRecentDate) > 1) {
+            return 0;
+        }
+
+        let streak = 1;
+        for (let i = 1; i < sortedDates.length; i++) {
+            const diff = differenceInCalendarDays(sortedDates[i-1], sortedDates[i]);
+            if (diff === 1) {
+                streak++;
+            } else if (diff > 1) {
+                break;
+            }
+        }
+        return streak;
+
+    } else if (habit.frequency === 'weekly') {
+        const today = new Date();
+        const weekOption = { weekStartsOn: 1 as const };
+        const target = habit.daysPerWeek || 1;
+
+        const completedWeeks = new Set<number>();
+        
+        for (const date of sortedDates) {
+            const completionsInWeek = sortedDates.filter(d => 
+                isWithinInterval(d, {
+                    start: startOfWeek(date, weekOption),
+                    end: endOfWeek(date, weekOption)
+                })
+            ).length;
+
+            if (completionsInWeek >= target) {
+                completedWeeks.add(getWeek(date, weekOption));
+            }
+        }
+
+        if (completedWeeks.size === 0) return 0;
+
+        const sortedWeeks = Array.from(completedWeeks).sort((a,b) => b - a);
+
+        let currentWeek = getWeek(today, weekOption);
+        let lastWeek = getWeek(subDays(today, 7), weekOption);
+        
+        if (!sortedWeeks.includes(currentWeek) && !sortedWeeks.includes(lastWeek)) {
+          return 0;
+        }
+
+        let streak = 0;
+        if (sortedWeeks.includes(currentWeek)) streak++;
+        else if (sortedWeeks.includes(lastWeek)) streak++;
+        else return 0;
+        
+        for (let i=0; i<sortedWeeks.length -1; i++) {
+          const week = sortedWeeks[i];
+          const prevWeek = sortedWeeks[i+1];
+          if (week - prevWeek === 1) {
+            streak++;
+          } else {
+            break;
+          }
+        }
+        
+        return streak;
+    }
+    return 0;
+  };
+  
+  const getWeekCompletion = (habit: Habit) => {
+    if (habit.frequency !== 'weekly' || !habit.daysPerWeek) {
+      return { completed: 0, total: 0 };
+    }
+    const today = new Date();
+    const weekStart = startOfWeek(today, { weekStartsOn: 1 });
+    const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
+    
+    const completedThisWeek = habit.completedDates.filter(dateStr => {
+      const d = parseISO(dateStr);
+      return isWithinInterval(d, { start: weekStart, end: weekEnd });
+    }).length;
+
+    return { completed: completedThisWeek, total: habit.daysPerWeek };
   };
 
   const addGratitudeEntry = (content: string, date: Date) => {
@@ -192,6 +237,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addGratitudeEntry,
     getGratitudeEntry,
     isClient,
+    getWeekCompletion,
   };
 
   return (

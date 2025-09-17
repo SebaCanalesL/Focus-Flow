@@ -5,6 +5,7 @@ export interface Habit {
   name: string;
   icon: string;
   frequency: Frequency;
+  daysPerWeek?: number; // Target days per week for weekly habits
   createdAt: string;
   completedDates: string[]; // Store dates as ISO strings 'YYYY-MM-DD'
 }

@@ -22,7 +22,7 @@ const Icon = ({ name, className }: { name: IconName; className?: string }) => {
 };
 
 export function HabitCardWithGrid({ habit }: { habit: Habit }) {
-  const { toggleHabitCompletion, getStreak } = useAppData();
+  const { toggleHabitCompletion, getStreak, getWeekCompletion } = useAppData();
   const [calendarOpen, setCalendarOpen] = useState(false);
 
   const today = new Date();
@@ -40,6 +40,10 @@ export function HabitCardWithGrid({ habit }: { habit: Habit }) {
       toggleHabitCompletion(habit.id, day);
     }
   };
+  
+  const weekCompletion = getWeekCompletion(habit);
+  const isWeekly = habit.frequency === 'weekly';
+  const streakUnit = isWeekly ? (streak === 1 ? "semana" : "semanas") : (streak === 1 ? "día" : "días");
 
   return (
     <Card className="flex flex-col">
@@ -51,10 +55,15 @@ export function HabitCardWithGrid({ habit }: { habit: Habit }) {
             </div>
             <div>
               <CardTitle className="text-lg font-semibold">{habit.name}</CardTitle>
-              <p className="text-sm text-muted-foreground flex items-center gap-1">
-                <Flame className={cn("h-4 w-4", streak > 0 ? "text-orange-500" : "text-muted-foreground")} />
-                Racha: {streak} {streak === 1 ? "día" : "días"}
-              </p>
+                <div className="text-sm text-muted-foreground flex items-center gap-2">
+                    <p className="flex items-center gap-1">
+                        <Flame className={cn("h-4 w-4", streak > 0 ? "text-orange-500" : "text-muted-foreground")} />
+                        Racha: {streak} {streakUnit}
+                    </p>
+                    {isWeekly && (
+                       <p className="font-medium">({weekCompletion.completed}/{weekCompletion.total} esta semana)</p>
+                    )}
+                </div>
             </div>
           </div>
           <div className="flex items-center gap-2">

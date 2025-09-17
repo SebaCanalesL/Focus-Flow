@@ -41,15 +41,22 @@ export function CreateHabitDialog() {
   const [name, setName] = useState("")
   const [icon, setIcon] = useState("Target")
   const [frequency, setFrequency] = useState<Frequency>("daily")
+  const [daysPerWeek, setDaysPerWeek] = useState<number | undefined>(5);
   const [isOpen, setIsOpen] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (name.trim()) {
-      addHabit({ name, icon, frequency })
+      addHabit({ 
+        name, 
+        icon, 
+        frequency,
+        daysPerWeek: frequency === 'weekly' ? daysPerWeek : undefined,
+      })
       setName("")
       setIcon("Target")
       setFrequency("daily")
+      setDaysPerWeek(5);
       setIsOpen(false)
     }
   }
@@ -123,6 +130,23 @@ export function CreateHabitDialog() {
                 </SelectContent>
               </Select>
             </div>
+            {frequency === 'weekly' && (
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="days-per-week" className="text-right">
+                  Days / Week
+                </Label>
+                <Input
+                  id="days-per-week"
+                  type="number"
+                  value={daysPerWeek}
+                  onChange={(e) => setDaysPerWeek(parseInt(e.target.value, 10))}
+                  className="col-span-3"
+                  placeholder="e.g. 5"
+                  min="1"
+                  max="7"
+                />
+              </div>
+            )}
           </div>
           <DialogFooter>
             <DialogClose asChild>
