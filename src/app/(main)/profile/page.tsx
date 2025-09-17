@@ -33,6 +33,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { User, sendPasswordResetEmail, updateProfile, deleteUser } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { Pencil } from "lucide-react";
 
 const AvatarPlaceholders = [
     {
@@ -69,6 +70,7 @@ export default function ProfilePage() {
   const [photoURL, setPhotoURL] = useState(user?.photoURL || "");
   const [birthdayInput, setBirthdayInput] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isEditingBirthday, setIsEditingBirthday] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -80,11 +82,14 @@ export default function ProfilePage() {
       try {
         const date = parse(birthday, 'yyyy-MM-dd', new Date());
         setBirthdayInput(format(date, 'dd/MM/yyyy'));
+        setIsEditingBirthday(false);
       } catch (e) {
         setBirthdayInput(birthday); // fallback to raw value if parsing fails
+        setIsEditingBirthday(true);
       }
     } else {
         setBirthdayInput("");
+        setIsEditingBirthday(true);
     }
   }, [user, birthday]);
 
@@ -133,10 +138,16 @@ export default function ProfilePage() {
 
           if (day < 1 || day > 31) {
             toast({ title: "Día inválido", description: "El día debe estar entre 1 y 31.", variant: "destructive" });
+            setIsSaving(false);
+            return;
           } else if (month < 1 || month > 12) {
             toast({ title: "Mes inválido", description: "El mes debe estar entre 1 y 12.", variant: "destructive" });
+            setIsSaving(false);
+            return;
           } else if (year < 1900 || dateParts[2].length !== 4) {
             toast({ title: "Año inválido", description: "El año debe ser de 4 dígitos y mayor o igual a 1900.", variant: "destructive" });
+            setIsSaving(false);
+            return;
           } else {
              try {
                 const parsedDate = parse(birthdayInput, 'dd/MM/yyyy', new Date());
@@ -144,21 +155,33 @@ export default function ProfilePage() {
                   birthdayToSave = parsedDate;
                 } else {
                    toast({ title: "Fecha de nacimiento inválida", description: "La fecha no es válida. Por favor, revísala.", variant: "destructive" });
+                   setIsSaving(false);
+                   return;
                 }
              } catch (error) {
                  toast({ title: "Error en fecha", description: "El formato de la fecha no es correcto.", variant: "destructive" });
+                 setIsSaving(false);
+                 return;
              }
           }
         } else if (birthdayInput.length > 0) {
            toast({ title: "Formato incorrecto", description: "Por favor usa el formato DD/MM/AAAA.", variant: "destructive" });
+           setIsSaving(false);
+           return;
         }
       }
+
       setAppBirthday(birthdayToSave);
       
       toast({
         title: "¡Perfil Actualizado!",
         description: "Tu información ha sido guardada exitosamente.",
       });
+
+      if (birthdayToSave || !birthdayInput) {
+        setIsEditingBirthday(false);
+      }
+
     } catch (error: any) {
       toast({
         title: "Error al actualizar",
@@ -287,13 +310,22 @@ export default function ProfilePage() {
               </div>
                <div className="space-y-2">
                 <Label htmlFor="birthday">Fecha de nacimiento</Label>
-                <Input
-                  id="birthday"
-                  placeholder="DD/MM/AAAA"
-                  value={birthdayInput}
-                  onChange={handleBirthdayChange}
-                  maxLength={10}
-                />
+                {isEditingBirthday ? (
+                    <Input
+                    id="birthday"
+                    placeholder="DD/MM/AAAA"
+                    value={birthdayInput}
+                    onChange={handleBirthdayChange}
+                    maxLength={10}
+                    />
+                ) : (
+                    <div className="flex items-center justify-between">
+                        <p className="text-sm h-10 flex items-center">{birthdayInput}</p>
+                        <Button variant="ghost" size="icon" onClick={() => setIsEditingBirthday(true)}>
+                            <Pencil className="h-4 w-4" />
+                        </Button>
+                    </div>
+                )}
               </div>
               <div className="flex justify-end">
                 <Button type="submit" disabled={isSaving} className="w-full sm:w-auto">
@@ -351,4 +383,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
