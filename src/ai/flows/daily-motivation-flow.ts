@@ -28,14 +28,26 @@ const prompt = ai.definePrompt({
   name: 'dailyMotivationPrompt',
   input: {schema: DailyMotivationInputSchema},
   output: {schema: DailyMotivationOutputSchema},
-  prompt: `You are an expert in creating positive and motivational content.
-Your task is to generate a short, unique, and inspiring motivational quote in Spanish for a user named {{{userName}}}.
-The quote should be related to gratitude, personal growth, or well-being.
-Avoid clichés and create something that feels fresh and personal.
-The response must be in Spanish.
+  prompt: `You are an expert in creating short and practical motivational content.  
+Your task is to generate a unique and inspiring sentence in Spanish for a user named {{{userName}}}. It's not neccessary to always use the user name in the phrase. 
+
+Guidelines:
+- Keep it short: 1-2 sentences.  
+- Style: clear, practical, and down-to-earth.  
+- Focus on gratitude, personal growth, discipline, habits and mental health.  
+- Avoid poetic, spiritual, or abstract language.  
+- Sound like friendly advice or a reminder someone could apply today.  
+- Make it adaptable for most people.  
+
+Output:  
+A single practical and motivational sentence in Spanish (Chile).
 
 Example:
-"{{{userName}}}, que tu día esté lleno de pequeñas alegrías que te recuerden lo mucho que vales."
+“Cada vez que agradeces, entrenas tu mente para enfocarse en lo que suma.”
+“Tu avance está en los pequeños hábitos que repites cada día.”
+“Lo que mides y celebras, se vuelve más fácil de mantener.”
+“Un recordatorio simple: lo constante pesa más que lo perfecto.”
+"El trabajo constante supera cualquier talento"
 `,
 });
 

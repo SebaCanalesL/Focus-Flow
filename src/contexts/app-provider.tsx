@@ -1,12 +1,14 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import type { User } from 'firebase/auth';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import type { Habit, GratitudeEntry, Frequency } from '@/lib/types';
 import { INITIAL_HABITS, INITIAL_GRATITUDE_ENTRIES } from '@/lib/data';
 import { format, subDays, differenceInCalendarDays, parseISO, startOfWeek, endOfWeek, isWithinInterval, getWeek } from 'date-fns';
+import { dailyMotivation } from '@/ai/flows/daily-motivation-flow';
+
 
 interface AppContextType {
   user: User | null;
@@ -25,6 +27,8 @@ interface AppContextType {
   getGratitudeEntry: (date: Date) => GratitudeEntry | undefined;
   isClient: boolean;
   getWeekCompletion: (habit: Habit) => { completed: number; total: number };
+  getTodaysMotivation: (userName: string) => Promise<string>;
+  clearTodaysMotivation: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -38,16 +42,29 @@ const gratitudeHabitTemplate: Habit = {
   completedDates: [],
 };
 
+interface MotivationalMessage {
+  quote: string;
+  date: string;
+}
+
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
   const [habits, setHabits] = useState<Habit[]>([]);
   const [gratitudeEntries, setGratitudeEntries] = useState<GratitudeEntry[]>([]);
+  const [motivationalMessage, setMotivationalMessage] = useState<MotivationalMessage | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
+      if (!user) {
+        // Clear cached data on logout
+        setHabits([]);
+        setGratitudeEntries([]);
+        setMotivationalMessage(null);
+      }
       setLoading(false);
     });
     return () => unsubscribe();
@@ -55,71 +72,78 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setIsClient(true);
-    
-    let storedHabits: Habit[] = [];
-    let storedEntries: GratitudeEntry[] = [];
-    let habitsToSet: Habit[] = [];
-    
-    try {
-      const habitsStr = user ? localStorage.getItem(`focusflow-habits-${user.uid}`) : null;
-      const entriesStr = user ? localStorage.getItem(`focusflow-gratitudeEntries-${user.uid}`) : null;
+  }, []);
+  
+  useEffect(() => {
+    if (isClient && user) {
+        let storedHabits: Habit[] = [];
+        let storedEntries: GratitudeEntry[] = [];
+        
+        try {
+          const habitsStr = localStorage.getItem(`focusflow-habits-${user.uid}`);
+          const entriesStr = localStorage.getItem(`focusflow-gratitudeEntries-${user.uid}`);
+          const motivationStr = localStorage.getItem(`focusflow-motivation-${user.uid}`);
 
-      if (habitsStr) {
-        storedHabits = JSON.parse(habitsStr);
-      } else {
-        storedHabits = INITIAL_HABITS;
-      }
+          if (habitsStr) {
+            storedHabits = JSON.parse(habitsStr);
+          } else {
+            storedHabits = INITIAL_HABITS;
+          }
 
-      if (entriesStr) {
-        storedEntries = JSON.parse(entriesStr);
-      } else {
-        storedEntries = INITIAL_GRATITUDE_ENTRIES;
-      }
-    } catch (error) {
-      console.error("Failed to parse from localStorage", error);
-      storedHabits = INITIAL_HABITS;
-      storedEntries = INITIAL_GRATITUDE_ENTRIES;
+          if (entriesStr) {
+            storedEntries = JSON.parse(entriesStr);
+          } else {
+            storedEntries = INITIAL_GRATITUDE_ENTRIES;
+          }
+           if (motivationStr) {
+            setMotivationalMessage(JSON.parse(motivationStr));
+          }
+
+        } catch (error) {
+          console.error("Failed to parse from localStorage", error);
+          storedHabits = INITIAL_HABITS;
+          storedEntries = INITIAL_GRATITUDE_ENTRIES;
+        }
+        
+        let habitsToSet: Habit[] = [...storedHabits];
+        let gratitudeHabit = habitsToSet.find(h => h.id === 'gratitude-habit');
+        if (!gratitudeHabit) {
+            gratitudeHabit = { ...gratitudeHabitTemplate };
+            habitsToSet.unshift(gratitudeHabit);
+        }
+
+        const gratitudeDates = new Set(storedEntries.map(e => e.date));
+        const gratitudeHabitIndex = habitsToSet.findIndex(h => h.id === 'gratitude-habit');
+
+        if (gratitudeHabitIndex !== -1) {
+          const habit = habitsToSet[gratitudeHabitIndex];
+          const existingDates = new Set(habit.completedDates);
+          const newDates = Array.from(new Set([...Array.from(existingDates), ...Array.from(gratitudeDates)]));
+          habitsToSet[gratitudeHabitIndex] = { ...habit, completedDates: newDates.sort() };
+        }
+        
+        setHabits(habitsToSet);
+        setGratitudeEntries(storedEntries);
     }
-    
-    // Ensure gratitude habit exists and is synced
-    let gratitudeHabit = storedHabits.find(h => h.id === 'gratitude-habit');
-    if (!gratitudeHabit) {
-        gratitudeHabit = { ...gratitudeHabitTemplate };
-        habitsToSet = [gratitudeHabit, ...storedHabits];
-    } else {
-        habitsToSet = [...storedHabits];
-    }
-
-    const gratitudeDates = new Set(storedEntries.map(e => e.date));
-    const gratitudeHabitIndex = habitsToSet.findIndex(h => h.id === 'gratitude-habit');
-
-    if (gratitudeHabitIndex !== -1) {
-      const habit = habitsToSet[gratitudeHabitIndex];
-      const existingDates = new Set(habit.completedDates);
-      const newDates = Array.from(new Set([...Array.from(existingDates), ...Array.from(gratitudeDates)]));
-      habitsToSet[gratitudeHabitIndex] = { ...habit, completedDates: newDates.sort() };
-    }
-    
-    setHabits(habitsToSet);
-    setGratitudeEntries(storedEntries);
-
   }, [isClient, user]);
 
   useEffect(() => {
-    if (isClient && user) {
+    if (isClient && user && habits.length > 0) {
       localStorage.setItem(`focusflow-habits-${user.uid}`, JSON.stringify(habits));
-    } else if (isClient && !user && habits.length > 0) {
-        // Handle saving for non-logged-in users if needed, or clear storage
     }
   }, [habits, isClient, user]);
 
   useEffect(() => {
-    if (isClient && user) {
+    if (isClient && user && gratitudeEntries.length > 0) {
       localStorage.setItem(`focusflow-gratitudeEntries-${user.uid}`, JSON.stringify(gratitudeEntries));
-    } else if (isClient && !user && gratitudeEntries.length > 0) {
-        // Handle saving for non-logged-in users if needed, or clear storage
     }
   }, [gratitudeEntries, isClient, user]);
+  
+  useEffect(() => {
+    if (isClient && user && motivationalMessage) {
+      localStorage.setItem(`focusflow-motivation-${user.uid}`, JSON.stringify(motivationalMessage));
+    }
+  }, [motivationalMessage, isClient, user]);
 
   const addHabit = (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates' | 'icon'>) => {
     const newHabit: Habit = {
@@ -310,6 +334,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return gratitudeEntries.find(entry => entry.date === dateString);
   };
   
+  const getTodaysMotivation = useCallback(async (userName: string) => {
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+
+    if (motivationalMessage && motivationalMessage.date === todayStr) {
+      return motivationalMessage.quote;
+    }
+
+    const response = await dailyMotivation({ userName });
+    const newMotivation: MotivationalMessage = {
+      quote: response.quote,
+      date: todayStr,
+    };
+    setMotivationalMessage(newMotivation);
+    return newMotivation.quote;
+  }, [motivationalMessage]);
+
+  const clearTodaysMotivation = () => {
+    setMotivationalMessage(null);
+    if(user){
+        localStorage.removeItem(`focusflow-motivation-${user.uid}`);
+    }
+  }
+
   const value = {
     user,
     setUser,
@@ -327,6 +374,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     getGratitudeEntry,
     isClient,
     getWeekCompletion,
+    getTodaysMotivation,
+    clearTodaysMotivation,
   };
 
   return (

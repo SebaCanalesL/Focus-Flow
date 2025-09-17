@@ -14,25 +14,28 @@ import { Button } from "@/components/ui/button"
 import { useAppData } from "@/contexts/app-provider"
 import { BookHeart, Sparkles, WandSparkles } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { dailyMotivation } from "@/ai/flows/daily-motivation-flow"
 
 function MotivationalMessage({ userName }: { userName: string }) {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const { getTodaysMotivation } = useAppData();
 
   useEffect(() => {
-    dailyMotivation({ userName })
-      .then((response) => {
-        setMessage(response.quote);
-      })
-      .catch((error) => {
+    const fetchMessage = async () => {
+      setLoading(true);
+      try {
+        const motivation = await getTodaysMotivation(userName);
+        setMessage(motivation);
+      } catch (error) {
         console.error("Error fetching motivational message:", error);
         setMessage("¡Sigue así! Mañana te espera un nuevo día para agradecer.");
-      })
-      .finally(() => {
+      } finally {
         setLoading(false);
-      });
-  }, [userName]);
+      }
+    };
+
+    fetchMessage();
+  }, [userName, getTodaysMotivation]);
 
   if (loading) {
     return (

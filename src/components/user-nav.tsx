@@ -19,11 +19,12 @@ import { useAppData } from "@/contexts/app-provider";
 import Link from "next/link";
 
 export function UserNav() {
-  const { user } = useAppData();
+  const { user, clearTodaysMotivation } = useAppData();
   const router = useRouter();
 
   const handleLogout = async () => {
     await signOut(auth);
+    clearTodaysMotivation();
     router.push("/login");
   };
 
