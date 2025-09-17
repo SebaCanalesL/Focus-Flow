@@ -158,25 +158,23 @@ export function EditHabitDialog({ habit, children }: { habit: Habit, children: R
               render={({ field }) => (
                 <FormItem className="space-y-3">
                   <FormLabel>Frecuencia</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      className="flex gap-4"
-                    >
-                      <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="daily" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Diaria</FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="weekly" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Semanal</FormLabel>
-                      </FormItem>
-                    </RadioGroup>
+                   <FormControl>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        type="button"
+                        variant={field.value === 'daily' ? 'default' : 'outline'}
+                        onClick={() => field.onChange('daily')}
+                      >
+                        Diaria
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={field.value === 'weekly' ? 'default' : 'outline'}
+                        onClick={() => field.onChange('weekly')}
+                      >
+                        Semanal
+                      </Button>
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
