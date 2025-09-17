@@ -106,7 +106,7 @@ export function HabitCardWithGrid({
             </Popover>
             <Button
               size="icon"
-              className={cn("h-9 w-9 md:h-10 md:w-10", isCompletedToday && "bg-primary text-white hover:bg-primary/90")}
+              className={cn("h-9 w-9 md:h-10 md:w-10", isCompletedToday && "bg-green-600 text-white hover:bg-green-600/90")}
               variant={isCompletedToday ? "default" : "outline"}
               onClick={(e) => {
                 e.stopPropagation();
