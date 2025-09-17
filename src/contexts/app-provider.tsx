@@ -27,6 +27,15 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+const gratitudeHabitTemplate: Habit = {
+  id: 'gratitude-habit',
+  name: 'Agradecer',
+  icon: 'BookHeart',
+  frequency: 'daily',
+  createdAt: new Date().toISOString(),
+  completedDates: [],
+};
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -44,42 +53,50 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setIsClient(true);
-    if (!user) {
-        setHabits(INITIAL_HABITS);
-        setGratitudeEntries(INITIAL_GRATITUDE_ENTRIES);
-        return;
-    };
-    try {
-      const storedHabits = localStorage.getItem(`focusflow-habits-${user.uid}`);
-      const storedEntries = localStorage.getItem(`focusflow-gratitudeEntries-${user.uid}`);
+    
+    let baseHabits = INITIAL_HABITS;
+    let baseEntries = INITIAL_GRATITUDE_ENTRIES;
 
-      if (storedHabits) {
-        setHabits(JSON.parse(storedHabits));
-      } else {
-        setHabits(INITIAL_HABITS);
+    if (user) {
+      try {
+        const storedHabits = localStorage.getItem(`focusflow-habits-${user.uid}`);
+        const storedEntries = localStorage.getItem(`focusflow-gratitudeEntries-${user.uid}`);
+        
+        if (storedHabits) {
+          baseHabits = JSON.parse(storedHabits);
+        }
+        if (storedEntries) {
+          baseEntries = JSON.parse(storedEntries);
+        }
+      } catch (error) {
+        console.error("Failed to parse from localStorage", error);
       }
-      
-      if (storedEntries) {
-        setGratitudeEntries(JSON.parse(storedEntries));
-      } else {
-        setGratitudeEntries(INITIAL_GRATITUDE_ENTRIES);
-      }
-    } catch (error) {
-      console.error("Failed to parse from localStorage", error);
-      setHabits(INITIAL_HABITS);
-      setGratitudeEntries(INITIAL_GRATITUDE_ENTRIES);
     }
+    
+    // Ensure gratitude habit exists
+    const gratitudeHabitExists = baseHabits.some(h => h.id === 'gratitude-habit');
+    if (!gratitudeHabitExists) {
+      baseHabits = [gratitudeHabitTemplate, ...baseHabits];
+    }
+    
+    setHabits(baseHabits);
+    setGratitudeEntries(baseEntries);
+
   }, [isClient, user]);
 
   useEffect(() => {
     if (isClient && user) {
       localStorage.setItem(`focusflow-habits-${user.uid}`, JSON.stringify(habits));
+    } else if (isClient && !user && habits.length > 0) {
+        // Handle saving for non-logged-in users if needed, or clear storage
     }
   }, [habits, isClient, user]);
 
   useEffect(() => {
     if (isClient && user) {
       localStorage.setItem(`focusflow-gratitudeEntries-${user.uid}`, JSON.stringify(gratitudeEntries));
+    } else if (isClient && !user && gratitudeEntries.length > 0) {
+        // Handle saving for non-logged-in users if needed, or clear storage
     }
   }, [gratitudeEntries, isClient, user]);
 
