@@ -72,7 +72,9 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = useState(user?.displayName || "");
   const [photoURL, setPhotoURL] = useState(user?.photoURL || "");
   const [birthdayState, setBirthdayState] = useState<Date | undefined>(undefined);
+  const [tempBirthday, setTempBirthday] = useState<Date | undefined>(undefined);
   const [isSaving, setIsSaving] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -81,12 +83,13 @@ export default function ProfilePage() {
       setPhotoURL(user.photoURL || "");
     }
     if (birthday) {
-        // The birthday string is in 'yyyy-MM-dd' format.
-        // We need to parse it as UTC to avoid timezone issues.
         const [year, month, day] = birthday.split('-').map(Number);
-        setBirthdayState(new Date(Date.UTC(year, month - 1, day)));
+        const date = new Date(Date.UTC(year, month - 1, day));
+        setBirthdayState(date);
+        setTempBirthday(date);
     } else {
         setBirthdayState(undefined);
+        setTempBirthday(undefined);
     }
   }, [user, birthday]);
 
@@ -114,9 +117,6 @@ export default function ProfilePage() {
       const updatedUser = { ...user, displayName, photoURL } as User;
       setUser(updatedUser);
       
-      // Now save the birthday
-      setAppBirthday(birthdayState);
-
       toast({
         title: "¡Perfil Actualizado!",
         description: "Tu información ha sido guardada exitosamente.",
@@ -131,6 +131,22 @@ export default function ProfilePage() {
       setIsSaving(false);
     }
   };
+
+  const handleBirthdaySave = () => {
+    setAppBirthday(tempBirthday);
+    setBirthdayState(tempBirthday);
+    setIsCalendarOpen(false);
+    toast({
+        title: "Fecha de nacimiento guardada",
+    });
+  }
+
+  const handleCalendarOpenChange = (open: boolean) => {
+    if (open) {
+        setTempBirthday(birthdayState);
+    }
+    setIsCalendarOpen(open);
+  }
 
   const handlePasswordReset = async () => {
     if (!user?.email) {
@@ -249,7 +265,7 @@ export default function ProfilePage() {
               </div>
                <div className="space-y-2">
                 <Label htmlFor="birthday">Fecha de nacimiento</Label>
-                <Popover>
+                <Popover open={isCalendarOpen} onOpenChange={handleCalendarOpenChange}>
                   <PopoverTrigger asChild>
                     <Button
                       variant={"outline"}
@@ -265,13 +281,17 @@ export default function ProfilePage() {
                   <PopoverContent className="w-auto p-0">
                     <Calendar
                       mode="single"
-                      selected={birthdayState}
-                      onSelect={setBirthdayState}
+                      selected={tempBirthday}
+                      onSelect={setTempBirthday}
                       initialFocus
                       captionLayout="dropdown-buttons"
                       fromYear={1900}
                       toYear={new Date().getFullYear()}
                     />
+                    <div className="p-2 border-t flex justify-end gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => setIsCalendarOpen(false)}>Cancelar</Button>
+                        <Button size="sm" onClick={handleBirthdaySave}>Guardar</Button>
+                    </div>
                   </PopoverContent>
                 </Popover>
               </div>
