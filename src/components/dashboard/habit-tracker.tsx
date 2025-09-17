@@ -137,9 +137,14 @@ export function CompletedWeeklyHabitsCard({ habits }: { habits: Habit[] }) {
             <CardContent>
                 <div className="space-y-3">
                     {habits.map(habit => (
-                        <div key={habit.id} className="flex items-center gap-3 rounded-lg border p-3 bg-secondary/30">
-                            <Icon name={habit.icon as IconName} className="h-5 w-5 text-muted-foreground" />
-                            <p className="text-sm font-medium text-muted-foreground">{habit.name}</p>
+                        <div key={habit.id} className="flex items-center justify-between rounded-lg border p-3 bg-secondary/30">
+                            <div className="flex items-center gap-3">
+                                <Icon name={habit.icon as IconName} className="h-5 w-5 text-muted-foreground" />
+                                <p className="text-sm font-medium text-muted-foreground">{habit.name}</p>
+                            </div>
+                            <p className="text-sm font-medium text-muted-foreground">
+                                ({habit.daysPerWeek}/{habit.daysPerWeek})
+                            </p>
                         </div>
                     ))}
                 </div>
