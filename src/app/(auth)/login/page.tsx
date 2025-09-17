@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import {
@@ -67,6 +67,34 @@ export default function LoginPage() {
     }
   };
 
+  const handlePasswordReset = async () => {
+    if (!email) {
+      toast({
+        title: "Correo requerido",
+        description: "Por favor, introduce tu correo para restablecer la contraseña.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, email);
+      toast({
+        title: "Correo enviado",
+        description: "Revisa tu bandeja de entrada para restablecer tu contraseña.",
+      });
+    } catch (error: any) {
+       toast({
+        title: "Error",
+        description: "No se pudo enviar el correo de restablecimiento. Verifica que el correo sea correcto.",
+        variant: "destructive",
+      });
+    } finally {
+        setIsLoading(false);
+    }
+  };
+
+
   return (
     <Card>
       <CardHeader className="text-center">
@@ -91,7 +119,17 @@ export default function LoginPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Contraseña</Label>
+             <div className="flex items-center justify-between">
+              <Label htmlFor="password">Contraseña</Label>
+               <button
+                type="button"
+                onClick={handlePasswordReset}
+                className="text-xs font-semibold text-primary hover:underline"
+                disabled={isLoading}
+              >
+                ¿Olvidé mi contraseña?
+              </button>
+            </div>
             <Input
               id="password"
               type="password"
