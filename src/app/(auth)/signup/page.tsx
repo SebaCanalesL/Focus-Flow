@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { NotebookPen } from "lucide-react";
 
 export default function SignupPage() {
+  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -29,6 +30,13 @@ export default function SignupPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!displayName) {
+        toast({
+            title: "El apodo es requerido",
+            variant: "destructive",
+        });
+        return;
+    }
     if (password !== confirmPassword) {
       toast({
         title: "Las contraseñas no coinciden",
@@ -38,7 +46,11 @@ export default function SignupPage() {
     }
     setIsLoading(true);
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(userCredential.user, {
+        displayName: displayName
+      });
+
       toast({
         title: "¡Cuenta creada!",
         description: "Hemos creado tu cuenta exitosamente.",
@@ -66,6 +78,18 @@ export default function SignupPage() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSignup} className="space-y-4">
+            <div className="space-y-2">
+                <Label htmlFor="display-name">Apodo</Label>
+                <Input
+                id="display-name"
+                type="text"
+                placeholder="Tu apodo"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                required
+                disabled={isLoading}
+                />
+            </div>
           <div className="space-y-2">
             <Label htmlFor="email">Correo</Label>
             <Input
