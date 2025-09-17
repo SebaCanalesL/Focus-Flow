@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   NotebookPen,
 } from "lucide-react"
@@ -21,6 +21,7 @@ export default function MainLayout({
 }) {
   const { user, loading } = useAppData();
   const router = useRouter();
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -38,6 +39,8 @@ export default function MainLayout({
       </div>
     );
   }
+  
+  const closeSheet = () => setIsSheetOpen(false);
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
@@ -58,7 +61,7 @@ export default function MainLayout({
       </div>
       <div className="flex flex-col">
         <header className="flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6">
-          <Sheet>
+          <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
               <Button
                 variant="outline"
@@ -74,11 +77,12 @@ export default function MainLayout({
                 <Link
                   href="#"
                   className="flex items-center gap-2 text-lg font-semibold mb-4"
+                  onClick={closeSheet}
                 >
                   <NotebookPen className="h-6 w-6 text-primary" />
                   <span >FocusFlow</span>
                 </Link>
-                <MainNav />
+                <MainNav onLinkClick={closeSheet} />
               </nav>
             </SheetContent>
           </Sheet>

@@ -11,7 +11,7 @@ const links = [
   { name: "History", href: "/history", icon: CalendarDays },
 ];
 
-export function MainNav() {
+export function MainNav({ onLinkClick }: { onLinkClick?: () => void }) {
   const pathname = usePathname();
 
   return (
@@ -26,6 +26,7 @@ export function MainNav() {
               "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
               isActive && "bg-accent text-primary"
             )}
+            onClick={onLinkClick}
           >
             <link.icon className="h-4 w-4" />
             {link.name}
