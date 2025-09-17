@@ -119,17 +119,7 @@ export default function LoginPage() {
             />
           </div>
           <div className="space-y-2">
-             <div className="flex items-center justify-between">
-              <Label htmlFor="password">Contraseña</Label>
-               <button
-                type="button"
-                onClick={handlePasswordReset}
-                className="text-xs font-semibold text-primary hover:underline"
-                disabled={isLoading}
-              >
-                ¿Olvidé mi contraseña?
-              </button>
-            </div>
+            <Label htmlFor="password">Contraseña</Label>
             <Input
               id="password"
               type="password"
@@ -139,8 +129,18 @@ export default function LoginPage() {
               required
               disabled={isLoading}
             />
+             <div className="text-right">
+                <button
+                    type="button"
+                    onClick={handlePasswordReset}
+                    className="text-xs font-semibold text-primary hover:underline"
+                    disabled={isLoading}
+                >
+                    ¿Olvidé mi contraseña?
+                </button>
+            </div>
           </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button type="submit" className="w-full !mt-6" disabled={isLoading}>
             {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
           </Button>
         </form>
