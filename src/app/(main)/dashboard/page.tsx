@@ -48,7 +48,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-3xl font-bold tracking-tight">Hola {getUsername()}, qué bueno verte bien.</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Hola {getUsername()}, que bueno verte bien 😁</h1>
       <div className="grid gap-6 md:grid-cols-2">
         <GratitudeJournal />
         <div className="flex flex-col gap-6">
