@@ -1,28 +1,29 @@
+
 {
   "placeholderImages": [
     {
       "id": "avatar-1",
-      "description": "Pink monster avatar",
-      "imageUrl": "https://picsum.photos/seed/avatar1/150/150",
-      "imageHint": "pink monster"
+      "description": "Avatar Rosa",
+      "imageUrl": "/avatars/spark1-rosa.png",
+      "imageHint": "rosa"
     },
     {
       "id": "avatar-2",
-      "description": "Blue monster avatar",
-      "imageUrl": "https://picsum.photos/seed/avatar2/150/150",
-      "imageHint": "blue monster"
+      "description": "Avatar Verde",
+      "imageUrl": "/avatars/spark2-verde.png",
+      "imageHint": "verde"
     },
     {
       "id": "avatar-3",
-      "description": "Green monster avatar",
-      "imageUrl": "https://picsum.photos/seed/avatar3/150/150",
-      "imageHint": "green monster"
+      "description": "Avatar Naranjo",
+      "imageUrl": "/avatars/spark3-naranjo.png",
+      "imageHint": "naranjo"
     },
     {
       "id": "avatar-4",
-      "description": "Yellow monster avatar",
-      "imageUrl": "https://picsum.photos/seed/avatar4/150/150",
-      "imageHint": "yellow monster"
+      "description": "Avatar Azul",
+      "imageUrl": "/avatars/spark4-azul.png",
+      "imageHint": "azul"
     }
   ]
 }
