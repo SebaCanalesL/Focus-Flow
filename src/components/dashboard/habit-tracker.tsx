@@ -103,9 +103,12 @@ export function TodaysHabitsCard({ habits }: { habits: Habit[]}) {
                     <div className="flex items-center gap-2">
                          {isWeeklyGoalMet && <CheckCircle className="h-5 w-5 text-green-500" />}
                         {streak > 0 && (
-                            <Badge variant="secondary" className="flex items-center gap-1">
-                            <Flame className="h-4 w-4 text-orange-500" />
-                            {streak} {streakUnit}
+                            <Badge variant="secondary" className="flex flex-col items-center justify-center p-1 px-2 h-auto leading-none">
+                                <div className="flex items-center gap-1">
+                                    <Flame className="h-4 w-4 text-orange-500" />
+                                    <span className="font-semibold text-sm">{streak}</span>
+                                </div>
+                                <span className="text-xs font-normal">{streakUnit}</span>
                             </Badge>
                         )}
                     </div>
@@ -155,9 +158,12 @@ export function CompletedWeeklyHabitsCard({ habits }: { habits: Habit[] }) {
                                         ({weekCompletion.completed}/{weekCompletion.total})
                                     </p>
                                     {streak > 0 && (
-                                        <Badge variant="secondary" className="flex items-center gap-1">
-                                            <Flame className="h-4 w-4 text-orange-500" />
-                                            {streak} {streakUnit}
+                                        <Badge variant="secondary" className="flex flex-col items-center justify-center p-1 px-2 h-auto leading-none">
+                                            <div className="flex items-center gap-1">
+                                                <Flame className="h-4 w-4 text-orange-500" />
+                                                <span className="font-semibold text-sm">{streak}</span>
+                                            </div>
+                                            <span className="text-xs font-normal">{streakUnit}</span>
                                         </Badge>
                                     )}
                                 </div>
