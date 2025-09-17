@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAppData } from "@/contexts/app-provider"
 import { format, addDays, subDays, isToday } from "date-fns"
 import * as LucideIcons from "lucide-react";
-import { Target, ChevronLeft, ChevronRight } from "lucide-react"
+import { Target, ChevronLeft, ChevronRight, StickyNote } from "lucide-react"
 import { Button } from "../ui/button"
 
 type IconName = keyof typeof LucideIcons;
@@ -27,6 +27,10 @@ export function HistoryView() {
   const selectedGratitudeEntry = gratitudeEntries.find(
     (entry) => entry.date === selectedDateString
   )
+  
+  const gratitudeItems = selectedGratitudeEntry?.content.split('\n').filter(item => item.trim() !== '') || [];
+  const gratitudeNote = selectedGratitudeEntry?.note;
+
 
   const completedHabitsOnDate = habits.filter((habit) =>
     habit.completedDates.includes(selectedDateString)
@@ -104,8 +108,26 @@ export function HistoryView() {
                   </div>
                 </CardTitle>
               </CardHeader>
-              <CardContent style={{whiteSpace: 'pre-line'}}>
-                {selectedGratitudeEntry ? selectedGratitudeEntry.content : "No entry for this day."}
+              <CardContent>
+                {selectedGratitudeEntry ? (
+                    <div className="space-y-4">
+                        <ul className="space-y-2">
+                            {gratitudeItems.map((item, index) => (
+                                <li key={index} className="p-3 bg-primary/10 rounded-md text-sm text-card-foreground/90">
+                                    {index + 1}. {item}
+                                </li>
+                            ))}
+                        </ul>
+                        {gratitudeNote && (
+                            <div>
+                                <h4 className="font-semibold text-sm mb-2 flex items-center gap-2"><StickyNote className="h-4 w-4" /> Otras reflexiones</h4>
+                                <p className="p-3 bg-secondary/50 rounded-md text-sm text-card-foreground/90 whitespace-pre-wrap">{gratitudeNote}</p>
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <p className="text-sm text-muted-foreground">No entry for this day.</p>
+                )}
               </CardContent>
             </Card>
           </div>
