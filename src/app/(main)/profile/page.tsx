@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAppData } from "@/contexts/app-provider";
+import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,14 +12,26 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { User, sendPasswordResetEmail, updateProfile } from "firebase/auth";
+import { User, sendPasswordResetEmail, updateProfile, deleteUser } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
 export default function ProfilePage() {
   const { user, setUser, loading } = useAppData();
+  const router = useRouter();
   const [displayName, setDisplayName] = useState(user?.displayName || "");
   const [photoURL, setPhotoURL] = useState(user?.photoURL || "");
   const [isSaving, setIsSaving] = useState(false);
@@ -84,6 +97,33 @@ export default function ProfilePage() {
         description: "No se pudo enviar el correo de recuperación. Intenta más tarde.",
         variant: "destructive",
       });
+    }
+  };
+  
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+
+    try {
+      await deleteUser(user);
+      toast({
+        title: "Cuenta eliminada",
+        description: "Tu cuenta ha sido eliminada permanentemente.",
+      });
+      router.push("/signup");
+    } catch (error: any) {
+      if (error.code === 'auth/requires-recent-login') {
+        toast({
+          title: "Se requiere re-autenticación",
+          description: "Por seguridad, cierra sesión y vuelve a iniciarla antes de eliminar tu cuenta.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error al eliminar la cuenta",
+          description: "No se pudo eliminar la cuenta. Intenta de nuevo.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -164,6 +204,40 @@ export default function ProfilePage() {
             <Button variant="outline" onClick={handlePasswordReset} className="w-full sm:w-auto">Enviar Correo</Button>
           </CardContent>
         </Card>
+
+        <Card className="md:col-span-3 border-destructive">
+           <CardHeader>
+            <CardTitle className="text-destructive">Zona de Peligro</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <p className="font-medium">Eliminar Cuenta</p>
+              <p className="text-sm text-muted-foreground">
+                Esta acción es permanente y no se puede deshacer. Se eliminarán todos tus datos.
+              </p>
+            </div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" className="w-full sm:w-auto">Eliminar Cuenta</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esta acción no se puede deshacer. Esto eliminará permanentemente tu cuenta y borrará todos tus datos de nuestros servidores.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDeleteAccount} className="bg-destructive hover:bg-destructive/90">
+                    Sí, eliminar mi cuenta
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </CardContent>
+        </Card>
+
       </div>
     </div>
   );
