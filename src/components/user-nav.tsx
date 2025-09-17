@@ -77,12 +77,6 @@ export function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <Link href="/profile">
-            <DropdownMenuItem>
-              Perfil
-              <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-            </DropdownMenuItem>
-          </Link>
           <div className="relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
             <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
             <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
@@ -93,6 +87,12 @@ export function UserNav() {
               onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
             />
           </div>
+          <Link href="/profile">
+            <DropdownMenuItem>
+              Perfil
+              <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+            </DropdownMenuItem>
+          </Link>
           <DropdownMenuItem disabled>
             Ajustes
             <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
