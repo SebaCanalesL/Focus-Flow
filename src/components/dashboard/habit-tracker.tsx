@@ -121,6 +121,8 @@ export function TodaysHabitsCard({ habits }: { habits: Habit[]}) {
 }
 
 export function CompletedWeeklyHabitsCard({ habits }: { habits: Habit[] }) {
+    const { getStreak } = useAppData();
+
     if (habits.length === 0) {
         return null;
     }
@@ -136,17 +138,29 @@ export function CompletedWeeklyHabitsCard({ habits }: { habits: Habit[] }) {
             </CardHeader>
             <CardContent>
                 <div className="space-y-3">
-                    {habits.map(habit => (
-                        <div key={habit.id} className="flex items-center justify-between rounded-lg border p-3 bg-secondary/30">
-                            <div className="flex items-center gap-3">
-                                <Icon name={habit.icon as IconName} className="h-5 w-5 text-muted-foreground" />
-                                <p className="text-sm font-medium text-muted-foreground">{habit.name}</p>
+                    {habits.map(habit => {
+                        const streak = getStreak(habit);
+                        const streakUnit = streak === 1 ? "semana" : "semanas";
+                        return (
+                            <div key={habit.id} className="flex items-center justify-between rounded-lg border p-3 bg-secondary/30">
+                                <div className="flex items-center gap-3">
+                                    <Icon name={habit.icon as IconName} className="h-5 w-5 text-muted-foreground" />
+                                    <p className="text-sm font-medium text-muted-foreground">{habit.name}</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                     <p className="text-sm font-medium text-muted-foreground">
+                                        ({habit.daysPerWeek}/{habit.daysPerWeek})
+                                    </p>
+                                    {streak > 0 && (
+                                        <Badge variant="secondary" className="flex items-center gap-1">
+                                            <Flame className="h-4 w-4 text-orange-500" />
+                                            {streak} {streakUnit}
+                                        </Badge>
+                                    )}
+                                </div>
                             </div>
-                            <p className="text-sm font-medium text-muted-foreground">
-                                ({habit.daysPerWeek}/{habit.daysPerWeek})
-                            </p>
-                        </div>
-                    ))}
+                        )
+                    })}
                 </div>
             </CardContent>
         </Card>
