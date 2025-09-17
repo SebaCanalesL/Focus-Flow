@@ -143,7 +143,7 @@ export function GratitudeJournal() {
       {!isSaved && (
         <CardFooter>
             <Button onClick={handleSave}>
-              🙏Agradecimiento y Abundancia ✨️
+              🙏 Agradecimiento y Abundancia ✨️
             </Button>
         </CardFooter>
       )}
