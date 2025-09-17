@@ -183,12 +183,20 @@ export function GratitudeJournal() {
             <BookHeart className="text-primary" />
             Gratitud diaria
             </CardTitle>
-             {isSaved && (
-                <Button variant="ghost" size="icon" onClick={handleEdit} className="h-8 w-8">
-                    <Pencil className="h-4 w-4" />
-                    <span className="sr-only">Editar</span>
+            <div className="flex items-center gap-2">
+              {!isSaved && (
+                <Button variant="ghost" size="icon" onClick={() => setShowNote(!showNote)} className="h-8 w-8">
+                    <PlusCircle className="h-5 w-5" />
+                    <span className="sr-only">Agregar Nota</span>
                 </Button>
-            )}
+              )}
+              {isSaved && (
+                  <Button variant="ghost" size="icon" onClick={handleEdit} className="h-8 w-8">
+                      <Pencil className="h-4 w-4" />
+                      <span className="sr-only">Editar</span>
+                  </Button>
+              )}
+            </div>
         </div>
         {!isSaved && (
             <CardDescription>¿Cuáles son las cosas por las que estás agradecido hoy?</CardDescription>
@@ -202,9 +210,9 @@ export function GratitudeJournal() {
            <div className="space-y-4">
                 <ul className="space-y-2">
                     {gratitudeItems.map((item, index) => (
-                    <li key={index} className="p-3 bg-primary/10 rounded-md text-sm text-card-foreground/90">
-                        {index + 1}. {item}
-                    </li>
+                      item && <li key={index} className="p-3 bg-primary/10 rounded-md text-sm text-card-foreground/90">
+                          {index + 1}. {item}
+                      </li>
                     ))}
                 </ul>
                 {note && (
@@ -226,23 +234,13 @@ export function GratitudeJournal() {
                     onChange={(e) => handleItemChange(index, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e, index)}
                 />
-                {index >= 3 && (
-                    <Button variant="ghost" size="icon" onClick={() => removeItem(index)} className="h-9 w-9 shrink-0">
+                {index >= 2 && (
+                     <Button variant="ghost" size="icon" onClick={() => removeItem(index)} className="h-9 w-9 shrink-0">
                         <X className="h-4 w-4" />
                     </Button>
                 )}
               </div>
             ))}
-            <div className="flex gap-2 pt-2">
-                <Button variant="outline" size="sm" onClick={addItem} className="flex-1">
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Agradecimiento
-                </Button>
-                 <Button variant="outline" size="sm" onClick={() => setShowNote(!showNote)} className="flex-1">
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Nota
-                </Button>
-            </div>
              {showNote && (
                 <div className="pt-2">
                     <Textarea 
