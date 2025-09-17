@@ -8,8 +8,8 @@ import { Separator } from "@/components/ui/separator";
 
 const userLinks = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Habits", href: "/habits", icon: Target },
-  { name: "History", href: "/history", icon: CalendarDays },
+  { name: "Hábitos", href: "/habits", icon: Target },
+  { name: "Historial", href: "/history", icon: CalendarDays },
 ];
 
 const appLinks = [
