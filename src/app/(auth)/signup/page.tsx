@@ -85,9 +85,10 @@ export default function SignupPage() {
   const handleGoogleError = () => {
     toast({
       title: "Error con Google",
-      description: "No se pudo iniciar sesión con Google. Revisa la configuración del Client ID.",
+      description: "No se pudo iniciar sesión con Google. Revisa la configuración del Client ID y los dominios autorizados.",
       variant: "destructive",
     });
+    setIsGoogleLoading(false);
   }
 
   return (
@@ -106,6 +107,8 @@ export default function SignupPage() {
                 <GoogleLogin
                   onSuccess={handleGoogleSuccess}
                   onError={handleGoogleError}
+                  shape="rectangular"
+                  logo_alignment="left"
                 />
              }
             </div>
