@@ -34,7 +34,7 @@ const HabitCompletionGrid = ({ completedDates }: { completedDates: string[] }) =
     const prevMonth = startOfMonth(new Date(currentMonth).setMonth(currentMonth.getMonth() - 1));
     const prev2Month = startOfMonth(new Date(currentMonth).setMonth(currentMonth.getMonth() - 2));
 
-    return [prev2Month, prevMonth, currentMonth].reverse();
+    return [prev2Month, prevMonth, currentMonth];
   }, []);
 
   const getMonthGrid = (month: Date) => {
@@ -88,7 +88,7 @@ const HabitCompletionGrid = ({ completedDates }: { completedDates: string[] }) =
                   className="grid grid-flow-col grid-rows-7 gap-[var(--dot-gap)]"
               >
                 {eachDayOfInterval({ start: startOfWeek(month), end: endOfMonth(month) }).map((day) => {
-                  const dayString = format(day, 'yyyy-MM-dd');
+                  const dayString = format(day, 'yyyy-dd-MM');
                   const isCompleted = zonedCompletedDates.has(dayString);
                   const isFuture = day > new Date();
 
