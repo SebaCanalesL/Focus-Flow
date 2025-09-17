@@ -12,7 +12,7 @@ export const INITIAL_HABITS: Habit[] = [
   },
   {
     id: '1',
-    name: 'Revisión de Presupuesto Semanal',
+    name: 'Revisión de gastos semanal',
     icon: 'PiggyBank',
     frequency: 'weekly',
     daysPerWeek: 1,
