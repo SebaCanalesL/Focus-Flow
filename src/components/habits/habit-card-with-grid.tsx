@@ -68,21 +68,6 @@ export function HabitCardWithGrid({ habit }: { habit: Habit }) {
                 <Calendar
                   mode="multiple"
                   selected={completedDatesForCalendar}
-                  onSelect={(days) => {
-                    // This is a simplified way to handle multiple date toggling.
-                    // A more robust solution would diff the arrays.
-                    // For this implementation, we will just toggle the last selected day.
-                    const lastDay = days?.[days.length -1];
-                    handleDayClick(lastDay);
-                  }}
-                  modifiers={{
-                    // This is to prevent calendar from showing "today" as selected by default
-                    // We are handling the selection with the `selected` prop.
-                     today: {
-                      backgroundColor: 'transparent',
-                      color: 'inherit',
-                    }
-                  }}
                   onDayClick={handleDayClick}
                   initialFocus
                   weekStartsOn={1}
