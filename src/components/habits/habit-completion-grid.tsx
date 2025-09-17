@@ -19,7 +19,7 @@ import type { Habit } from '@/lib/types';
 const weekDays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
 const HabitCompletionGrid = ({ habit }: { habit: Habit }) => {
-  const { completedDates, color } = habit;
+  const { completedDates } = habit;
   const completedDatesSet = useMemo(() => new Set(completedDates), [completedDates]);
 
   const monthsToShow = useMemo(() => {
@@ -65,9 +65,9 @@ const HabitCompletionGrid = ({ habit }: { habit: Habit }) => {
                       className={cn(
                         'w-[var(--dot-size)] h-[var(--dot-size)] rounded-sm',
                         isFuture ? 'bg-transparent' : 'bg-muted/50',
-                         !isCurrentMonth && 'bg-transparent'
+                         !isCurrentMonth && 'bg-transparent',
+                         isCompleted && 'bg-primary'
                       )}
-                       style={{ backgroundColor: isCompleted ? color : undefined }}
                       title={dayString}
                     />
                   );

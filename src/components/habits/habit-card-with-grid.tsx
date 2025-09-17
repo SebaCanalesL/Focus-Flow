@@ -50,8 +50,8 @@ export function HabitCardWithGrid({ habit }: { habit: Habit }) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg" style={{ backgroundColor: `${habit.color}33`}}>
-              <Icon name={habit.icon as IconName} className="h-6 w-6" style={{ color: habit.color }} />
+            <div className="p-2 rounded-lg bg-primary/20">
+              <Icon name={habit.icon as IconName} className="h-6 w-6 text-primary" />
             </div>
             <div>
               <CardTitle className="text-lg font-semibold">{habit.name}</CardTitle>
@@ -76,8 +76,8 @@ export function HabitCardWithGrid({ habit }: { habit: Habit }) {
             </Popover>
             <Button
               size="icon"
-              className={cn(isCompletedToday && "text-white")}
-              style={{ backgroundColor: isCompletedToday ? habit.color : ""}}
+              className={cn(isCompletedToday && "bg-primary text-white hover:bg-primary/90")}
+              variant={isCompletedToday ? "default" : "outline"}
               onClick={() => toggleHabitCompletion(habit.id, new Date())}
             >
               {isCompletedToday ? <CheckCheck className="h-5 w-5" /> : <Check className="h-5 w-5" />}

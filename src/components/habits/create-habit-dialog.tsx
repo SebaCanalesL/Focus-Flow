@@ -24,20 +24,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Slider } from "@/components/ui/slider";
 import { useAppData } from "@/contexts/app-provider";
-import { cn } from "@/lib/utils";
-import { PlusCircle, Target } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-const habitColors = [
-  "hsl(var(--primary))",
-  "#4ade80",
-  "#facc15",
-  "#fb923c",
-  "#f87171",
-  "#60a5fa",
-];
+import { cn } from "@/lib/utils";
 
 const formSchema = z
   .object({
@@ -46,7 +36,6 @@ const formSchema = z
       required_error: "Debes seleccionar una frecuencia.",
     }),
     daysPerWeek: z.number().min(1).max(7).optional(),
-    color: z.string().min(1, "Debes seleccionar un color."),
   })
   .refine(
     (data) => {
@@ -71,7 +60,6 @@ export function CreateHabitDialog() {
     defaultValues: {
       name: "",
       frequency: "daily",
-      color: habitColors[0],
     },
   });
 
@@ -81,7 +69,6 @@ export function CreateHabitDialog() {
     addHabit({
       name: values.name,
       frequency: values.frequency,
-      color: values.color,
       daysPerWeek: values.daysPerWeek,
       // Icon is assigned automatically for now
       icon: "Target",
@@ -93,11 +80,9 @@ export function CreateHabitDialog() {
     });
     
     setIsOpen(false);
-    form.reset();
-     form.reset({
+    form.reset({
       name: "",
       frequency: "daily",
-      color: habitColors[0],
     });
   };
 
@@ -170,46 +155,35 @@ export function CreateHabitDialog() {
                 defaultValue={3}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Días a la semana ({field.value || 3})</FormLabel>
-                    <FormControl>
-                      <Slider
-                        min={1}
-                        max={7}
-                        step={1}
-                        defaultValue={[field.value || 3]}
-                        onValueChange={(value) => field.onChange(value[0])}
-                      />
+                    <FormLabel>Días a la semana</FormLabel>
+                     <FormControl>
+                      <RadioGroup
+                        onValueChange={(value) => field.onChange(parseInt(value))}
+                        value={field.value?.toString()}
+                        className="flex flex-wrap gap-2 pt-2"
+                      >
+                        {[...Array(7)].map((_, i) => (
+                          <FormItem key={i + 1}>
+                            <FormControl>
+                              <RadioGroupItem value={(i + 1).toString()} className="sr-only" />
+                            </FormControl>
+                            <FormLabel className={cn(
+                              "cursor-pointer rounded-full border-2 border-transparent px-3 py-1 transition-colors",
+                              field.value === i + 1
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "bg-muted hover:bg-muted/80"
+                            )}>
+                              {i + 1}
+                            </FormLabel>
+                          </FormItem>
+                        ))}
+                      </RadioGroup>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             )}
-            
-            <FormField
-              control={form.control}
-              name="color"
-              render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Color</FormLabel>
-                     <FormControl>
-                       <div className="flex gap-2">
-                        {habitColors.map(color => (
-                            <button
-                                type="button"
-                                key={color}
-                                className={cn("h-8 w-8 rounded-full border-2 transition-all",
-                                field.value === color ? 'border-foreground' : 'border-transparent'
-                                )}
-                                style={{ backgroundColor: color }}
-                                onClick={() => field.onChange(color)}
-                            />
-                        ))}
-                       </div>
-                    </FormControl>
-                </FormItem>
-              )}
-            />
 
             <DialogFooter>
               <Button type="submit">Crear Hábito</Button>

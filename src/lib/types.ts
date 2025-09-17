@@ -4,7 +4,6 @@ export interface Habit {
   id: string;
   name: string;
   icon: string;
-  color: string;
   frequency: Frequency;
   daysPerWeek?: number; // Target days per week for weekly habits
   createdAt: string;
