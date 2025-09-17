@@ -81,10 +81,10 @@ export default function ProfilePage() {
       setPhotoURL(user.photoURL || "");
     }
     if (birthday) {
-        // Adding 1 day to correct for timezone issues when parsing from string
-        const date = new Date(birthday);
-        const userTimezoneOffset = date.getTimezoneOffset() * 60000;
-        setBirthdayState(new Date(date.getTime() + userTimezoneOffset));
+        // The birthday string is in 'yyyy-MM-dd' format.
+        // We need to parse it as UTC to avoid timezone issues.
+        const [year, month, day] = birthday.split('-').map(Number);
+        setBirthdayState(new Date(year, month - 1, day));
     } else {
         setBirthdayState(undefined);
     }
