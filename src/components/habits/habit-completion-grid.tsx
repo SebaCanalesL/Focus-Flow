@@ -74,13 +74,13 @@ const HabitCompletionGrid = ({ completedDates }: { completedDates: string[] }) =
 
 
   return (
-    <div className="flex justify-end items-end gap-x-3 overflow-x-auto pb-2">
+    <div className="flex justify-start items-end gap-x-3 overflow-x-auto pb-2">
       <div className="grid grid-rows-7 gap-[var(--dot-gap)] shrink-0">
           {weekDays.map((day, i) => (
               <div key={i} className="text-xs text-muted-foreground w-4 h-[var(--dot-size)] flex items-center justify-center">{day}</div>
           ))}
       </div>
-      <div className="flex justify-end items-end gap-x-3 overflow-x-auto">
+      <div className="flex justify-start items-end gap-x-3 overflow-x-auto">
         {monthsToShow.map((month) => (
             <div key={format(month, 'yyyy-MM')} className="flex flex-col items-center gap-1 shrink-0">
               <p className="text-xs text-muted-foreground capitalize">{format(month, 'MMM', { locale: es })}</p>
