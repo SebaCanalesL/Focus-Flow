@@ -24,7 +24,7 @@ const Icon = ({ name, className }: { name: IconName; className?: string }) => {
 
 
 export function HabitTracker() {
-  const { habits, toggleHabitCompletion, getStreak, isClient } = useAppData()
+  const { habits, toggleHabitCompletion, getStreak, getWeekCompletion, isClient } = useAppData()
   const [today, setToday] = useState<Date | null>(null);
   
   useEffect(() => {
@@ -53,21 +53,32 @@ export function HabitTracker() {
   }
   
   const todayString = today.toISOString().split("T")[0]
-  const dailyHabits = habits.filter(h => h.frequency === 'daily');
+  
+  const habitsToShow = habits.filter(habit => {
+    if (habit.frequency === 'daily') {
+        return true;
+    }
+    if (habit.frequency === 'weekly') {
+        const { completed, total } = getWeekCompletion(habit);
+        return completed < total;
+    }
+    return false;
+  });
+
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Target className="text-primary" />
-          Hábitos de Hoy
+          Hábitos Pendientes
         </CardTitle>
-        <CardDescription>Completa tus hábitos de hoy para aumentar tu racha.</CardDescription>
+        <CardDescription>Completa tus hábitos para aumentar tu racha.</CardDescription>
       </CardHeader>
       <CardContent>
-        {dailyHabits.length > 0 ? (
+        {habitsToShow.length > 0 ? (
           <div className="space-y-4">
-            {dailyHabits.map((habit) => {
+            {habitsToShow.map((habit) => {
               const isCompleted = habit.completedDates.includes(todayString)
               const streak = getStreak(habit)
               return (
@@ -77,12 +88,12 @@ export function HabitTracker() {
                 >
                   <div className="flex items-center gap-3">
                     <Checkbox
-                      id={`habit-${habit.id}`}
+                      id={`habit-today-${habit.id}`}
                       checked={isCompleted}
                       onCheckedChange={() => toggleHabitCompletion(habit.id, today)}
                     />
                     <label
-                      htmlFor={`habit-${habit.id}`}
+                      htmlFor={`habit-today-${habit.id}`}
                       className="flex items-center gap-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                     >
                       <Icon name={habit.icon as IconName} className="h-5 w-5 text-muted-foreground" />
@@ -100,7 +111,7 @@ export function HabitTracker() {
             })}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground text-center py-8">Aún no has establecido hábitos diarios. ¡Ve a la página de 'Hábitos' para crear uno!</p>
+          <p className="text-sm text-muted-foreground text-center py-8">¡Felicidades! No tienes hábitos pendientes por ahora.</p>
         )}
       </CardContent>
     </Card>
