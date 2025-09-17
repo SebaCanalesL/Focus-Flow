@@ -3,7 +3,7 @@
 import type { Habit } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import * as LucideIcons from "lucide-react";
-import { Target, Flame, Check, CalendarDays, CheckCheck, Pencil } from "lucide-react";
+import { Target, Flame, Check, CalendarDays, CheckCheck, Pencil, GripVertical } from "lucide-react";
 import { useAppData } from "@/contexts/app-provider";
 import { cn } from "@/lib/utils";
 import { HabitCompletionGrid } from "./habit-completion-grid";
@@ -22,7 +22,17 @@ const Icon = ({ name, className }: { name: IconName; className?: string }) => {
   return <LucideIcon className={className} />;
 };
 
-export function HabitCardWithGrid({ habit }: { habit: Habit }) {
+export function HabitCardWithGrid({ 
+    habit, 
+    isDragging,
+    style,
+    ...props
+}: { 
+    habit: Habit, 
+    isDragging?: boolean, 
+    style?: React.CSSProperties, 
+    [key: string]: any 
+}) {
   const { toggleHabitCompletion, getStreak, getWeekCompletion } = useAppData();
   const [calendarOpen, setCalendarOpen] = useState(false);
 
@@ -47,11 +57,20 @@ export function HabitCardWithGrid({ habit }: { habit: Habit }) {
   const streakUnit = isWeekly ? (streak === 1 ? "semana" : "semanas") : (streak === 1 ? "día" : "días");
 
   return (
-    <Card className="flex flex-col">
+    <Card 
+        className={cn("flex flex-col transition-shadow", isDragging && "shadow-2xl")}
+        style={style}
+        {...props}
+    >
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/20">
+             {habit.id !== 'gratitude-habit' && (
+              <button {...props.listeners} className="cursor-grab active:cursor-grabbing">
+                <GripVertical className="h-6 w-6 text-muted-foreground" />
+              </button>
+            )}
+            <div className={cn("p-2 rounded-lg bg-primary/20", habit.id === 'gratitude-habit' && 'ml-12')}>
               <Icon name={habit.icon as IconName} className="h-6 w-6 text-primary" />
             </div>
             <div>

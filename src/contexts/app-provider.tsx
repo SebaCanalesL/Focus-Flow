@@ -13,6 +13,7 @@ interface AppContextType {
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   loading: boolean;
   habits: Habit[];
+  setHabits: React.Dispatch<React.SetStateAction<Habit[]>>;
   gratitudeEntries: GratitudeEntry[];
   addHabit: (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates' | 'icon'>) => void;
   updateHabit: (habitId: string, habitData: { name: string; frequency: Frequency; daysPerWeek?: number }) => void;
@@ -96,7 +97,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const habit = habitsToSet[gratitudeHabitIndex];
       const existingDates = new Set(habit.completedDates);
       const newDates = Array.from(new Set([...Array.from(existingDates), ...Array.from(gratitudeDates)]));
-      habitsToSet[gratitudeHabitIndex] = { ...habit, completedDates: newDates };
+      habitsToSet[gratitudeHabitIndex] = { ...habit, completedDates: newDates.sort() };
     }
     
     setHabits(habitsToSet);
@@ -152,7 +153,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           const newCompletedDates = completed
             ? habit.completedDates.filter(d => d !== dateString)
             : [...habit.completedDates, dateString];
-          return { ...habit, completedDates: newCompletedDates };
+          return { ...habit, completedDates: newCompletedDates.sort() };
         }
         return habit;
       })
@@ -230,17 +231,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
 
         let streak = 0;
-        if (sortedWeeks[0] === currentWeek) {
+        if (sortedWeeks.includes(currentWeek)) {
             streak = 1;
-        } else if (sortedWeeks[0] === lastWeek) {
+        } else if (sortedWeeks.includes(lastWeek)) {
             streak = 1;
         } else {
           return 0;
         }
         
-        for (let i=0; i<sortedWeeks.length -1; i++) {
-          const week = sortedWeeks[i];
-          const prevWeek = sortedWeeks[i+1];
+        const uniqueSortedWeeks = Array.from(new Set(sortedWeeks));
+
+
+        for (let i=0; i < uniqueSortedWeeks.length - 1; i++) {
+          const week = uniqueSortedWeeks[i];
+          const prevWeek = uniqueSortedWeeks[i+1];
           // This check works for year boundaries as getWeek is ISO week number
           if (week - prevWeek === 1 || (week === 1 && (prevWeek === 52 || prevWeek === 53))) {
             streak++;
@@ -293,7 +297,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (h.id === 'gratitude-habit' && !h.completedDates.includes(dateString)) {
           return {
             ...h,
-            completedDates: [...h.completedDates, dateString],
+            completedDates: [...h.completedDates, dateString].sort(),
           };
         }
         return h;
@@ -311,6 +315,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setUser,
     loading,
     habits,
+    setHabits,
     gratitudeEntries,
     addHabit,
     updateHabit,
