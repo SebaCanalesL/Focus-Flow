@@ -1,6 +1,5 @@
 "use client";
 
-import { CreateHabitDialog } from "@/components/habits/create-habit-dialog";
 import { HabitList } from "@/components/habits/habit-list";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -18,7 +17,6 @@ export default function HabitsPage() {
             Hoy es {formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1)}
           </p>
         </div>
-        <CreateHabitDialog />
       </div>
       <HabitList />
     </div>
