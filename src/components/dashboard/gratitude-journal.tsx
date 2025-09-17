@@ -39,7 +39,7 @@ function MotivationalMessage({ userName }: { userName: string }) {
 
   if (loading) {
     return (
-      <div className="flex items-center gap-2 text-sm text-muted-foreground animate-pulse">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground animate-pulse mb-4">
         <WandSparkles className="h-4 w-4" />
         Generando tu frase del día...
       </div>
@@ -47,7 +47,7 @@ function MotivationalMessage({ userName }: { userName: string }) {
   }
 
   return (
-    <div className="flex items-center gap-3 text-sm text-primary-foreground bg-primary/90 rounded-lg p-3">
+    <div className="flex items-center gap-3 text-sm text-primary-foreground bg-primary/90 rounded-lg p-3 mb-4">
         <WandSparkles className="h-6 w-6" />
         <p className="font-medium">{message}</p>
     </div>
@@ -104,9 +104,14 @@ export function GratitudeJournal() {
           <BookHeart className="text-primary" />
           Gratitud diaria
         </CardTitle>
-        <CardDescription>¿Cuáles son tres cosas por las que estás agradecido hoy?</CardDescription>
+        {!isSaved && (
+            <CardDescription>¿Cuáles son tres cosas por las que estás agradecido hoy?</CardDescription>
+        )}
       </CardHeader>
       <CardContent>
+        {isSaved && (
+            <MotivationalMessage userName={getUsername()} />
+        )}
         <Textarea
           placeholder="1. ...
 2. ...
@@ -117,16 +122,14 @@ export function GratitudeJournal() {
           disabled={isSaved}
         />
       </CardContent>
-      <CardFooter>
-        {!isSaved ? (
+      {!isSaved && (
+        <CardFooter>
             <Button onClick={handleSave}>
               <Sparkles className="mr-2 h-4 w-4" />
               Guardar lo bonito de hoy
             </Button>
-        ) : (
-            <MotivationalMessage userName={getUsername()} />
-        )}
-      </CardFooter>
+        </CardFooter>
+      )}
     </Card>
   )
 }
