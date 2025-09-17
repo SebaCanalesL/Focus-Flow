@@ -55,33 +55,52 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setIsClient(true);
     
-    let baseHabits = INITIAL_HABITS;
-    let baseEntries = INITIAL_GRATITUDE_ENTRIES;
+    let storedHabits: Habit[] = [];
+    let storedEntries: GratitudeEntry[] = [];
+    let habitsToSet: Habit[] = [];
+    
+    try {
+      const habitsStr = user ? localStorage.getItem(`focusflow-habits-${user.uid}`) : null;
+      const entriesStr = user ? localStorage.getItem(`focusflow-gratitudeEntries-${user.uid}`) : null;
 
-    if (user) {
-      try {
-        const storedHabits = localStorage.getItem(`focusflow-habits-${user.uid}`);
-        const storedEntries = localStorage.getItem(`focusflow-gratitudeEntries-${user.uid}`);
-        
-        if (storedHabits) {
-          baseHabits = JSON.parse(storedHabits);
-        }
-        if (storedEntries) {
-          baseEntries = JSON.parse(storedEntries);
-        }
-      } catch (error) {
-        console.error("Failed to parse from localStorage", error);
+      if (habitsStr) {
+        storedHabits = JSON.parse(habitsStr);
+      } else {
+        storedHabits = INITIAL_HABITS;
       }
+
+      if (entriesStr) {
+        storedEntries = JSON.parse(entriesStr);
+      } else {
+        storedEntries = INITIAL_GRATITUDE_ENTRIES;
+      }
+    } catch (error) {
+      console.error("Failed to parse from localStorage", error);
+      storedHabits = INITIAL_HABITS;
+      storedEntries = INITIAL_GRATITUDE_ENTRIES;
     }
     
-    // Ensure gratitude habit exists
-    const gratitudeHabitExists = baseHabits.some(h => h.id === 'gratitude-habit');
-    if (!gratitudeHabitExists) {
-      baseHabits = [gratitudeHabitTemplate, ...baseHabits];
+    // Ensure gratitude habit exists and is synced
+    let gratitudeHabit = storedHabits.find(h => h.id === 'gratitude-habit');
+    if (!gratitudeHabit) {
+        gratitudeHabit = { ...gratitudeHabitTemplate };
+        habitsToSet = [gratitudeHabit, ...storedHabits];
+    } else {
+        habitsToSet = [...storedHabits];
+    }
+
+    const gratitudeDates = new Set(storedEntries.map(e => e.date));
+    const gratitudeHabitIndex = habitsToSet.findIndex(h => h.id === 'gratitude-habit');
+
+    if (gratitudeHabitIndex !== -1) {
+      const habit = habitsToSet[gratitudeHabitIndex];
+      const existingDates = new Set(habit.completedDates);
+      const newDates = Array.from(new Set([...Array.from(existingDates), ...Array.from(gratitudeDates)]));
+      habitsToSet[gratitudeHabitIndex] = { ...habit, completedDates: newDates };
     }
     
-    setHabits(baseHabits);
-    setGratitudeEntries(baseEntries);
+    setHabits(habitsToSet);
+    setGratitudeEntries(storedEntries);
 
   }, [isClient, user]);
 
@@ -147,24 +166,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
  const getStreak = (habit: Habit) => {
     if (!habit || habit.completedDates.length === 0) return 0;
     
+    // Always sort dates before calculating streak to avoid order-of-insertion issues.
     const sortedDates = habit.completedDates.map(d => parseISO(d)).sort((a,b) => b.getTime() - a.getTime());
 
     if (habit.frequency === 'daily') {
         const today = new Date();
         const mostRecentDate = sortedDates[0];
-
+        
+        // If the last completion was more than a day ago, the streak is broken.
         if (differenceInCalendarDays(today, mostRecentDate) > 1) {
             return 0;
         }
 
-        let streak = 1;
+        let streak = 0;
+        // Check if today or yesterday is the most recent completion to start the streak count
+        if (differenceInCalendarDays(today, mostRecentDate) <= 1) {
+            streak = 1;
+        } else {
+            return 0;
+        }
+
         for (let i = 1; i < sortedDates.length; i++) {
             const diff = differenceInCalendarDays(sortedDates[i-1], sortedDates[i]);
             if (diff === 1) {
                 streak++;
             } else if (diff > 1) {
+                // A gap of more than one day breaks the streak.
                 break;
             }
+            // if diff is 0, it's the same day, so we don't increment but don't break either.
         }
         return streak;
 
@@ -200,14 +230,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
 
         let streak = 0;
-        if (sortedWeeks.includes(currentWeek)) streak++;
-        else if (sortedWeeks.includes(lastWeek)) streak++;
-        else return 0;
+        if (sortedWeeks[0] === currentWeek) {
+            streak = 1;
+        } else if (sortedWeeks[0] === lastWeek) {
+            streak = 1;
+        } else {
+          return 0;
+        }
         
         for (let i=0; i<sortedWeeks.length -1; i++) {
           const week = sortedWeeks[i];
           const prevWeek = sortedWeeks[i+1];
-          if (week - prevWeek === 1) {
+          // This check works for year boundaries as getWeek is ISO week number
+          if (week - prevWeek === 1 || (week === 1 && (prevWeek === 52 || prevWeek === 53))) {
             streak++;
           } else {
             break;
