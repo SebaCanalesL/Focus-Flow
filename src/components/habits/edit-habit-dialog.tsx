@@ -75,16 +75,31 @@ export function EditHabitDialog({ habit, children }: { habit: Habit, children: R
     },
   });
 
+  const frequency = form.watch("frequency");
+  const daysPerWeek = form.watch("daysPerWeek");
+
   useEffect(() => {
     form.reset({
         name: habit.name,
         frequency: habit.frequency,
-        daysPerWeek: habit.daysPerWeek,
+        daysPerWeek: habit.daysPerWeek || (habit.frequency === 'daily' ? 7 : undefined),
     });
-  }, [habit, form]);
+  }, [habit, form, isOpen]);
 
+  useEffect(() => {
+    if(daysPerWeek === 7) {
+        form.setValue("frequency", "daily");
+    }
+  }, [daysPerWeek, form]);
+  
+  useEffect(() => {
+    if(frequency === "daily") {
+        form.setValue("daysPerWeek", 7);
+    } else if (frequency === 'weekly' && daysPerWeek === 7) {
+        form.setValue("daysPerWeek", 6);
+    }
+  }, [frequency, daysPerWeek, form]);
 
-  const frequency = form.watch("frequency");
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     updateHabit(habit.id, {
@@ -146,7 +161,7 @@ export function EditHabitDialog({ habit, children }: { habit: Habit, children: R
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value}
                       className="flex gap-4"
                     >
                       <FormItem className="flex items-center space-x-2 space-y-0">
@@ -179,9 +194,9 @@ export function EditHabitDialog({ habit, children }: { habit: Habit, children: R
                       <RadioGroup
                         onValueChange={(value) => field.onChange(parseInt(value))}
                         value={field.value?.toString()}
-                        className="grid grid-cols-4 sm:flex sm:flex-wrap gap-2 pt-2"
+                        className="grid grid-cols-3 sm:flex sm:flex-wrap gap-2 pt-2"
                       >
-                        {[...Array(7)].map((_, i) => (
+                        {[...Array(6)].map((_, i) => (
                           <FormItem key={i + 1}>
                             <FormControl>
                               <RadioGroupItem value={(i + 1).toString()} className="sr-only" />

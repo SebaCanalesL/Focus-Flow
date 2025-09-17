@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -66,6 +66,22 @@ export function CreateHabitDialog() {
   });
 
   const frequency = form.watch("frequency");
+  const daysPerWeek = form.watch("daysPerWeek");
+
+  useEffect(() => {
+    if(daysPerWeek === 7) {
+        form.setValue("frequency", "daily");
+    }
+  }, [daysPerWeek, form]);
+  
+  useEffect(() => {
+    if(frequency === "daily") {
+        form.setValue("daysPerWeek", 7);
+    } else if (frequency === 'weekly' && daysPerWeek === 7) {
+        form.setValue("daysPerWeek", 6);
+    }
+  }, [frequency, daysPerWeek, form]);
+
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
@@ -75,7 +91,7 @@ export function CreateHabitDialog() {
       addHabit({
         name: values.name,
         frequency: values.frequency,
-        daysPerWeek: values.daysPerWeek,
+        daysPerWeek: values.frequency === 'weekly' ? values.daysPerWeek : undefined,
         icon: iconName,
       });
 
@@ -95,7 +111,7 @@ export function CreateHabitDialog() {
         addHabit({
             name: values.name,
             frequency: values.frequency,
-            daysPerWeek: values.daysPerWeek,
+            daysPerWeek: values.frequency === 'weekly' ? values.daysPerWeek : undefined,
             icon: "Target",
         });
         toast({
@@ -148,7 +164,7 @@ export function CreateHabitDialog() {
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value}
                       className="flex gap-4"
                     >
                       <FormItem className="flex items-center space-x-2 space-y-0">
@@ -182,9 +198,9 @@ export function CreateHabitDialog() {
                       <RadioGroup
                         onValueChange={(value) => field.onChange(parseInt(value))}
                         value={field.value?.toString()}
-                        className="grid grid-cols-4 sm:flex sm:flex-wrap gap-2 pt-2"
+                        className="grid grid-cols-3 sm:flex sm:flex-wrap gap-2 pt-2"
                       >
-                        {[...Array(7)].map((_, i) => (
+                        {[...Array(6)].map((_, i) => (
                           <FormItem key={i + 1}>
                             <FormControl>
                               <RadioGroupItem value={(i + 1).toString()} className="sr-only" />
