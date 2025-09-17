@@ -13,7 +13,7 @@ import {
 } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import {utcToZonedTime} from "date-fns-tz";
+import {toZonedTime} from "date-fns-tz";
 
 // Get user's time zone
 const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -23,7 +23,7 @@ const weekDays = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
 const HabitCompletionGrid = ({ completedDates }: { completedDates: string[] }) => {
   const zonedCompletedDates = useMemo(() => new Set(
     completedDates.map(d => {
-       const zonedDate = utcToZonedTime(parseISO(d), userTimeZone);
+       const zonedDate = toZonedTime(parseISO(d), userTimeZone);
        return format(zonedDate, "yyyy-MM-dd");
     })
   ), [completedDates]);
