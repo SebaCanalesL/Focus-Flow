@@ -3,13 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Target, CalendarDays, User } from "lucide-react";
+import { LayoutDashboard, Target, CalendarDays } from "lucide-react";
 
 const links = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Habits", href: "/habits", icon: Target },
   { name: "History", href: "/history", icon: CalendarDays },
-  { name: "Profile", href: "/profile", icon: User },
 ];
 
 export function MainNav() {
