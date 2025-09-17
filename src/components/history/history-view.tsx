@@ -158,7 +158,7 @@ export function HistoryView() {
               <CardHeader>
                 <CardTitle className="flex justify-between items-center">
                   <span>
-                    Hábitos del {date ? format(date, "d 'de' MMMM, yyyy", { locale: es }) : "..."}
+                    Hábitos del {date ? format(date, "d 'de' MMMM, yyyy", { locale: es }) : "..."} 🎯
                   </span>
                    <div className="flex items-center gap-2">
                     <Button variant="outline" size="icon" onClick={handlePrevDay}>
