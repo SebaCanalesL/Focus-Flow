@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
@@ -31,7 +32,7 @@ interface AppContextType {
   getTodaysMotivation: (userName: string) => Promise<string>;
   clearTodaysMotivation: () => void;
   birthday: string | null;
-  setBirthday: (date: Date) => void;
+  setBirthday: (date: Date | undefined) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -160,8 +161,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [motivationalMessage, isClient, user]);
 
   useEffect(() => {
-    if (isClient && user && birthday) {
-      localStorage.setItem(`focusflow-birthday-${user.uid}`, JSON.stringify(birthday));
+    if (isClient && user) {
+        if(birthday) {
+            localStorage.setItem(`focusflow-birthday-${user.uid}`, JSON.stringify(birthday));
+        } else {
+            localStorage.removeItem(`focusflow-birthday-${user.uid}`);
+        }
     }
   }, [birthday, isClient, user]);
 
@@ -382,8 +387,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const setBirthday = (date: Date) => {
-    setBirthdayState(format(date, 'yyyy-MM-dd'));
+  const setBirthday = (date: Date | undefined) => {
+    if (date) {
+        setBirthdayState(format(date, 'yyyy-MM-dd'));
+    } else {
+        setBirthdayState(null);
+    }
   };
 
   const value = {

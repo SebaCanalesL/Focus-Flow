@@ -81,7 +81,12 @@ export default function ProfilePage() {
       setPhotoURL(user.photoURL || "");
     }
     if (birthday) {
-        setBirthdayState(new Date(birthday));
+        // Adding 1 day to correct for timezone issues when parsing from string
+        const date = new Date(birthday);
+        const userTimezoneOffset = date.getTimezoneOffset() * 60000;
+        setBirthdayState(new Date(date.getTime() + userTimezoneOffset));
+    } else {
+        setBirthdayState(undefined);
     }
   }, [user, birthday]);
 
@@ -109,9 +114,7 @@ export default function ProfilePage() {
       const updatedUser = { ...user, displayName, photoURL } as User;
       setUser(updatedUser);
       
-      if(birthdayState) {
-        setAppBirthday(birthdayState);
-      }
+      setAppBirthday(birthdayState);
 
       toast({
         title: "¡Perfil Actualizado!",
