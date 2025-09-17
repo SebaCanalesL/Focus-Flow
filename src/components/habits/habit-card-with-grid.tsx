@@ -85,6 +85,7 @@ export function HabitCardWithGrid({ habit }: { habit: Habit }) {
                   }}
                   onDayClick={handleDayClick}
                   initialFocus
+                  weekStartsOn={1}
                 />
               </PopoverContent>
             </Popover>

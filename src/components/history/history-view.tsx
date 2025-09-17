@@ -58,6 +58,7 @@ export function HistoryView() {
                                 highlighted: 'bg-primary/20 text-primary-foreground rounded-full',
                             }}
                             className="p-3"
+                            weekStartsOn={1}
                           />
                     </CardContent>
                 </Card>
@@ -88,6 +89,7 @@ export function HistoryView() {
                                 highlighted: 'bg-primary/20 text-primary-foreground rounded-full',
                             }}
                             className="p-3"
+                            weekStartsOn={1}
                           />
                     </CardContent>
                 </Card>

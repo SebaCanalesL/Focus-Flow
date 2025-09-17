@@ -7,13 +7,13 @@ import {
   startOfMonth,
   endOfMonth,
   startOfWeek,
-  getDay,
+  endOfWeek,
   isSameMonth,
 } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
-const weekDays = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+const weekDays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
 const HabitCompletionGrid = ({ completedDates }: { completedDates: string[] }) => {
   const completedDatesSet = useMemo(() => new Set(completedDates), [completedDates]);
@@ -24,44 +24,16 @@ const HabitCompletionGrid = ({ completedDates }: { completedDates: string[] }) =
     const prevMonth = startOfMonth(new Date(currentMonth).setMonth(currentMonth.getMonth() - 1));
     const prev2Month = startOfMonth(new Date(currentMonth).setMonth(currentMonth.getMonth() - 2));
 
-    return [prev2Month, prevMonth, currentMonth];
+    return [prev2Month, prevMonth, currentMonth].sort((a, b) => a.getTime() - b.getTime());
   }, []);
-
-  const getMonthGrid = (month: Date) => {
+  
+  const getDaysForMonth = (month: Date) => {
     const monthStart = startOfMonth(month);
     const monthEnd = endOfMonth(month);
-
-    const firstDayOfMonth = startOfWeek(monthStart, { weekStartsOn: 1 }); // Monday
-    const daysInGrid = eachDayOfInterval({ start: firstDayOfMonth, end: monthEnd });
-
-    const grid = [];
-    let week: (Date | null)[] = [];
-
-    // Pad the beginning of the first week if the month doesn't start on a Monday
-    const startingDayIndex = (getDay(monthStart) + 6) % 7; // 0 for Monday, 6 for Sunday
-    for (let i = 0; i < startingDayIndex; i++) {
-        week.push(null);
-    }
-    
-    daysInGrid.forEach((day, index) => {
-      if (week.length === 7) {
-        grid.push(week);
-        week = [];
-      }
-      if (isSameMonth(day, monthStart)) {
-        week.push(day);
-      }
-    });
-
-    // Pad the end of the last week
-    while (week.length > 0 && week.length < 7) {
-      week.push(null);
-    }
-    grid.push(week);
-
-    return grid;
-  };
-
+    const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
+    const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
+    return eachDayOfInterval({ start: startDate, end: endDate });
+  }
 
   return (
     <div className="flex justify-start items-end gap-x-3 overflow-x-auto pb-2">
@@ -77,10 +49,11 @@ const HabitCompletionGrid = ({ completedDates }: { completedDates: string[] }) =
               <div
                   className="grid grid-flow-col grid-rows-7 gap-[var(--dot-gap)]"
               >
-                {eachDayOfInterval({ start: startOfWeek(month), end: endOfMonth(month) }).map((day) => {
+                {getDaysForMonth(month).map((day) => {
                   const dayString = format(day, 'yyyy-MM-dd');
                   const isCompleted = completedDatesSet.has(dayString);
                   const isFuture = day > new Date() && dayString !== format(new Date(), 'yyyy-MM-dd');
+                  const isCurrentMonth = isSameMonth(day, month);
 
                   return (
                     <div
@@ -88,7 +61,8 @@ const HabitCompletionGrid = ({ completedDates }: { completedDates: string[] }) =
                       className={cn(
                         'w-[var(--dot-size)] h-[var(--dot-size)] rounded-sm',
                         isFuture ? 'bg-transparent' : 'bg-muted/50',
-                        isCompleted && 'bg-primary'
+                        isCompleted && 'bg-primary',
+                        !isCurrentMonth && 'bg-transparent'
                       )}
                       title={dayString}
                     />
