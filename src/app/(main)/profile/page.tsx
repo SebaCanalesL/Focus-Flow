@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { useAppData } from "@/contexts/app-provider";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import { es } from "date-fns/locale";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -33,10 +33,6 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { User, sendPasswordResetEmail, updateProfile, deleteUser } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { cn } from "@/lib/utils";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { Calendar as CalendarIcon } from "lucide-react";
 
 const AvatarPlaceholders = [
     {
@@ -71,10 +67,8 @@ export default function ProfilePage() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState(user?.displayName || "");
   const [photoURL, setPhotoURL] = useState(user?.photoURL || "");
-  const [birthdayState, setBirthdayState] = useState<Date | undefined>(undefined);
-  const [tempBirthday, setTempBirthday] = useState<Date | undefined>(undefined);
+  const [birthdayInput, setBirthdayInput] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -83,13 +77,14 @@ export default function ProfilePage() {
       setPhotoURL(user.photoURL || "");
     }
     if (birthday) {
-        const [year, month, day] = birthday.split('-').map(Number);
-        const date = new Date(Date.UTC(year, month - 1, day));
-        setBirthdayState(date);
-        setTempBirthday(date);
+      try {
+        const date = parse(birthday, 'yyyy-MM-dd', new Date());
+        setBirthdayInput(format(date, 'dd/MM/yy'));
+      } catch (e) {
+        setBirthdayInput(birthday); // fallback to raw value if parsing fails
+      }
     } else {
-        setBirthdayState(undefined);
-        setTempBirthday(undefined);
+        setBirthdayInput("");
     }
   }, [user, birthday]);
 
@@ -102,6 +97,17 @@ export default function ProfilePage() {
     }
     return name.charAt(0).toUpperCase();
   };
+  
+  const handleBirthdayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/[^0-9]/g, '');
+    if (value.length > 2) {
+      value = value.slice(0,2) + '/' + value.slice(2);
+    }
+    if (value.length > 5) {
+      value = value.slice(0,5) + '/' + value.slice(5, 7);
+    }
+    setBirthdayInput(value);
+  }
 
   const handleSaveChanges = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,6 +123,21 @@ export default function ProfilePage() {
       const updatedUser = { ...user, displayName, photoURL } as User;
       setUser(updatedUser);
       
+      let birthdayToSave: Date | undefined = undefined;
+      if (birthdayInput) {
+        try {
+          const parsedDate = parse(birthdayInput, 'dd/MM/yy', new Date());
+          if (!isNaN(parsedDate.getTime())) {
+            birthdayToSave = parsedDate;
+          } else {
+            toast({ title: "Fecha de nacimiento inválida", description: "Por favor usa el formato DD/MM/AA.", variant: "destructive" });
+          }
+        } catch (error) {
+           toast({ title: "Error en fecha", description: "El formato de la fecha no es correcto.", variant: "destructive" });
+        }
+      }
+      setAppBirthday(birthdayToSave);
+      
       toast({
         title: "¡Perfil Actualizado!",
         description: "Tu información ha sido guardada exitosamente.",
@@ -131,22 +152,6 @@ export default function ProfilePage() {
       setIsSaving(false);
     }
   };
-
-  const handleBirthdaySave = () => {
-    setAppBirthday(tempBirthday);
-    setBirthdayState(tempBirthday);
-    setIsCalendarOpen(false);
-    toast({
-        title: "Fecha de nacimiento guardada",
-    });
-  }
-
-  const handleCalendarOpenChange = (open: boolean) => {
-    if (open) {
-        setTempBirthday(birthdayState);
-    }
-    setIsCalendarOpen(open);
-  }
 
   const handlePasswordReset = async () => {
     if (!user?.email) {
@@ -225,7 +230,7 @@ export default function ProfilePage() {
                 <Label>Elige un avatar</Label>
                 <div className="grid grid-cols-4 gap-2">
                     {AvatarPlaceholders.map(p => (
-                        <button key={p.id} onClick={() => setPhotoURL(p.imageUrl)} className={cn("rounded-full overflow-hidden border-2 transition-all", photoURL === p.imageUrl ? "border-primary" : "border-transparent hover:border-primary/50")}>
+                        <button key={p.id} onClick={() => setPhotoURL(p.imageUrl)} className="rounded-full overflow-hidden border-2 transition-all border-transparent hover:border-primary/50 data-[active=true]:border-primary" data-active={photoURL === p.imageUrl}>
                             <Image 
                                 src={p.imageUrl} 
                                 alt={p.description} 
@@ -265,35 +270,13 @@ export default function ProfilePage() {
               </div>
                <div className="space-y-2">
                 <Label htmlFor="birthday">Fecha de nacimiento</Label>
-                <Popover open={isCalendarOpen} onOpenChange={handleCalendarOpenChange}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full justify-start text-left font-normal sm:text-sm",
-                        !birthdayState && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {birthdayState ? format(birthdayState, "d 'de' MMMM, yyyy", { locale: es }) : <span>Elige una fecha</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={tempBirthday}
-                      onSelect={setTempBirthday}
-                      initialFocus
-                      captionLayout="dropdown-buttons"
-                      fromYear={1900}
-                      toYear={new Date().getFullYear()}
-                    />
-                    <div className="p-2 border-t flex justify-end gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => setIsCalendarOpen(false)}>Cancelar</Button>
-                        <Button size="sm" onClick={handleBirthdaySave}>Guardar</Button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
+                <Input
+                  id="birthday"
+                  placeholder="DD/MM/AA"
+                  value={birthdayInput}
+                  onChange={handleBirthdayChange}
+                  maxLength={8}
+                />
               </div>
               <div className="flex justify-end">
                 <Button type="submit" disabled={isSaving} className="w-full sm:w-auto">
