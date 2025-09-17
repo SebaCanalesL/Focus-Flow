@@ -47,7 +47,7 @@ export default function MainLayout({
       <div className="hidden border-r bg-card md:block">
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-            <Link href="/" className="flex items-center gap-2 font-semibold">
+            <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
               <NotebookPen className="h-6 w-6 text-primary" />
               <span className="">FocusFlow</span>
             </Link>
@@ -78,7 +78,7 @@ export default function MainLayout({
               </SheetHeader>
               <nav className="grid gap-2 text-lg font-medium">
                 <Link
-                  href="#"
+                  href="/dashboard"
                   className="flex items-center gap-2 text-lg font-semibold mb-4"
                   onClick={closeSheet}
                 >
