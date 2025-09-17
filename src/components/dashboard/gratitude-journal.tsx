@@ -74,7 +74,7 @@ export function GratitudeJournal() {
       const entry = getGratitudeEntry(currentDate)
       if (entry && entry.content) {
         const items = entry.content.split('\n').filter(item => item.trim() !== '');
-        setGratitudeItems(items.length > 0 ? items : ["", "", ""]);
+        setGratitudeItems(items.length >= 3 ? items : ["", "", ""]);
         setIsSaved(true);
       } else {
         setGratitudeItems(["", "", ""]);
@@ -119,7 +119,7 @@ export function GratitudeJournal() {
 
   const handleEdit = () => {
     setIsSaved(false);
-    if(gratitudeItems.length === 0) {
+    if(gratitudeItems.length < 3) {
       setGratitudeItems(["", "", ""]);
     }
   }
@@ -135,8 +135,9 @@ export function GratitudeJournal() {
   }
 
   const removeItem = (index: number) => {
+    if (gratitudeItems.length <= 3) return;
     const newItems = gratitudeItems.filter((_, i) => i !== index);
-    setGratitudeItems(newItems.length > 0 ? newItems : [""]);
+    setGratitudeItems(newItems);
     inputRefs.current = inputRefs.current.filter((_,i) => i !== index);
   }
 
@@ -203,9 +204,11 @@ export function GratitudeJournal() {
                     onChange={(e) => handleItemChange(index, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e, index)}
                 />
-                <Button variant="ghost" size="icon" onClick={() => removeItem(index)} className="h-9 w-9 shrink-0">
-                    <X className="h-4 w-4" />
-                </Button>
+                {index >= 3 && (
+                    <Button variant="ghost" size="icon" onClick={() => removeItem(index)} className="h-9 w-9 shrink-0">
+                        <X className="h-4 w-4" />
+                    </Button>
+                )}
               </div>
             ))}
             <Button variant="outline" size="sm" onClick={addItem} className="w-full">
