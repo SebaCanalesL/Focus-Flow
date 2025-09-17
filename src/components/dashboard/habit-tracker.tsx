@@ -96,21 +96,18 @@ export function HabitTracker() {
                       checked={isCompleted}
                       onCheckedChange={() => toggleHabitCompletion(habit.id, today)}
                     />
-                    <div className="flex flex-col">
-                        <label
-                        htmlFor={`habit-today-${habit.id}`}
-                        className="flex items-center gap-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                        <Icon name={habit.icon as IconName} className="h-5 w-5 text-muted-foreground" />
-                        {habit.name}
-                        </label>
-                         {isWeekly && weekCompletion && (
-                            <span className="text-xs text-muted-foreground ml-7 mt-1">
-                                {weekCompletion.completed}/{weekCompletion.total} esta semana
-                            </span>
-                        )}
-                    </div>
-
+                    <label
+                      htmlFor={`habit-today-${habit.id}`}
+                      className="flex items-center gap-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      <Icon name={habit.icon as IconName} className="h-5 w-5 text-muted-foreground" />
+                      {habit.name}
+                      {isWeekly && weekCompletion && (
+                          <span className="text-xs text-muted-foreground font-normal">
+                              ({weekCompletion.completed}/{weekCompletion.total})
+                          </span>
+                      )}
+                    </label>
                   </div>
                   {streak > 0 && (
                     <Badge variant="secondary" className="flex items-center gap-1">
