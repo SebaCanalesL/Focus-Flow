@@ -233,6 +233,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       };
       setGratitudeEntries(prev => [...prev, newEntry]);
     }
+    
+    // Auto-complete gratitude habit
+    setHabits(prev => 
+      prev.map(h => {
+        if (h.id === 'gratitude-habit' && !h.completedDates.includes(dateString)) {
+          return {
+            ...h,
+            completedDates: [...h.completedDates, dateString],
+          };
+        }
+        return h;
+      })
+    );
   };
 
   const getGratitudeEntry = (date: Date) => {

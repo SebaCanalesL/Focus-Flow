@@ -3,6 +3,14 @@ import { subDays, formatISO } from 'date-fns';
 
 export const INITIAL_HABITS: Habit[] = [
   {
+    id: 'gratitude-habit',
+    name: 'Agradecer',
+    icon: 'BookHeart',
+    frequency: 'daily',
+    createdAt: new Date().toISOString(),
+    completedDates: [],
+  },
+  {
     id: '1',
     name: 'Read for 15 minutes',
     icon: 'BookOpen',

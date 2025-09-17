@@ -59,11 +59,13 @@ export function HabitCardWithGrid({ habit }: { habit: Habit }) {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <EditHabitDialog habit={habit}>
-                <Button variant="outline" size="icon">
-                    <Pencil className="h-5 w-5" />
-                </Button>
-            </EditHabitDialog>
+            {habit.id !== 'gratitude-habit' && (
+                <EditHabitDialog habit={habit}>
+                    <Button variant="outline" size="icon">
+                        <Pencil className="h-5 w-5" />
+                    </Button>
+                </EditHabitDialog>
+            )}
 
             <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
