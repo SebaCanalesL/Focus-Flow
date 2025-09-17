@@ -194,7 +194,7 @@ export default function ProfilePage() {
         
         <Card className="md:col-span-3">
           <CardHeader>
-            <CardTitle>Seguridad</CardTitle>
+            <CardTitle>Contraseña</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
