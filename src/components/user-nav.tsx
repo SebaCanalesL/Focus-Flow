@@ -19,6 +19,8 @@ import { useAppData } from "@/contexts/app-provider";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
+import { Switch } from "./ui/switch";
+import { Label } from "./ui/label";
 
 export function UserNav() {
   const { user, clearTodaysMotivation } = useAppData();
@@ -81,10 +83,16 @@ export function UserNav() {
               <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
             </DropdownMenuItem>
           </Link>
-          <DropdownMenuItem onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
-            {theme === "dark" ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
-            <span>Modo {theme === "dark" ? "Claro" : "Oscuro"}</span>
-          </DropdownMenuItem>
+          <div className="relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
+            <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            <Label htmlFor="dark-mode-toggle" className="flex-grow ml-2">Modo Oscuro</Label>
+            <Switch 
+              id="dark-mode-toggle"
+              checked={theme === 'dark'}
+              onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+            />
+          </div>
           <DropdownMenuItem disabled>
             Ajustes
             <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
