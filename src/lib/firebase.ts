@@ -1,6 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import 'dotenv/config';
 
 // Firebase configuration is now loaded from environment variables
 const firebaseConfig = {
@@ -14,7 +13,7 @@ const firebaseConfig = {
 
 // Check if all required environment variables are set
 if (!firebaseConfig.apiKey || !firebaseConfig.authDomain || !firebaseConfig.projectId) {
-  console.error("Firebase configuration is missing. Make sure to set up your .env.local file");
+  console.error("Firebase configuration is missing. Make sure to set up your .env.local file with NEXT_PUBLIC_ prefixes");
 }
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
