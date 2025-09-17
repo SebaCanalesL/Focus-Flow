@@ -6,6 +6,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAppData } from "@/contexts/app-provider"
 import { format, addDays, subDays, isToday } from "date-fns"
+import { es } from "date-fns/locale"
 import * as LucideIcons from "lucide-react";
 import { Target, ChevronLeft, ChevronRight, StickyNote } from "lucide-react"
 import { Button } from "../ui/button"
@@ -69,8 +70,8 @@ export function HistoryView() {
   return (
     <Tabs defaultValue="gratitude" className="space-y-4">
       <TabsList className="grid grid-cols-2 w-full sm:w-auto sm:inline-flex">
-        <TabsTrigger value="gratitude">Gratitude History</TabsTrigger>
-        <TabsTrigger value="habits">Habit History</TabsTrigger>
+        <TabsTrigger value="gratitude">Historial de Gratitud</TabsTrigger>
+        <TabsTrigger value="habits">Historial de Hábitos</TabsTrigger>
       </TabsList>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <TabsContent value="gratitude" className="mt-0 lg:col-span-3 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -81,6 +82,7 @@ export function HistoryView() {
                             mode="single"
                             selected={date}
                             onSelect={setDate}
+                            locale={es}
                             modifiers={{ highlighted: gratitudeDays }}
                             modifiersClassNames={{
                                 highlighted: 'bg-primary/20 text-primary-foreground rounded-full',
@@ -96,7 +98,7 @@ export function HistoryView() {
               <CardHeader>
                 <CardTitle className="flex justify-between items-center">
                   <span>
-                    Gratitude Entry for {date ? format(date, "MMMM d, yyyy") : "..."}
+                    Entrada del {date ? format(date, "d 'de' MMMM, yyyy", { locale: es }) : "..."}
                   </span>
                    <div className="flex items-center gap-2">
                     <Button variant="outline" size="icon" onClick={handlePrevDay}>
@@ -126,7 +128,7 @@ export function HistoryView() {
                         )}
                     </div>
                 ) : (
-                    <p className="text-sm text-muted-foreground">No entry for this day.</p>
+                    <p className="text-sm text-muted-foreground">No hay entrada para este día.</p>
                 )}
               </CardContent>
             </Card>
@@ -140,6 +142,7 @@ export function HistoryView() {
                             mode="single"
                             selected={date}
                             onSelect={setDate}
+                            locale={es}
                             modifiers={{ highlighted: habitDays }}
                             modifiersClassNames={{
                                 highlighted: 'bg-primary/20 text-primary-foreground rounded-full',
@@ -155,7 +158,7 @@ export function HistoryView() {
               <CardHeader>
                 <CardTitle className="flex justify-between items-center">
                   <span>
-                    Completed Habits on {date ? format(date, "MMMM d, yyyy") : "..."}
+                    Hábitos del {date ? format(date, "d 'de' MMMM, yyyy", { locale: es }) : "..."}
                   </span>
                    <div className="flex items-center gap-2">
                     <Button variant="outline" size="icon" onClick={handlePrevDay}>
@@ -178,7 +181,7 @@ export function HistoryView() {
                     ))}
                   </ul>
                 ) : (
-                  "No habits completed on this day."
+                  "No se completaron hábitos este día."
                 )}
               </CardContent>
             </Card>
