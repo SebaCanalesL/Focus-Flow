@@ -92,14 +92,10 @@ export function GratitudeJournal() {
   }, [getGratitudeEntry, currentDate])
 
   useEffect(() => {
-    if(!isSaved) {
-        const lastIndex = gratitudeItems.length - 1;
-        const lastInput = inputRefs.current[lastIndex];
+    if(!isSaved && gratitudeItems.length > inputRefs.current.filter(Boolean).length) {
+        const lastInput = inputRefs.current[gratitudeItems.length - 1];
         if (lastInput) {
-            const previousIndex = lastIndex - 1;
-            if (previousIndex >= 0 && gratitudeItems[previousIndex] !== "") {
-                 lastInput.focus();
-            }
+            lastInput.focus();
         }
     }
   }, [gratitudeItems.length, isSaved]);
@@ -187,7 +183,7 @@ export function GratitudeJournal() {
             <div className="flex items-center gap-2">
               {!isSaved && (
                 <Button variant="ghost" size="sm" onClick={() => setShowNote(!showNote)}>
-                    <StickyNote className="h-4 w-4" />
+                    <Pencil className="h-4 w-4" />
                     <span className="ml-2">Nota</span>
                 </Button>
               )}
