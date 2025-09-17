@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useEffect, useState } from "react"
@@ -134,7 +135,7 @@ export function CompletedWeeklyHabitsCard({ habits }: { habits: Habit[] }) {
                     <CheckCircle className="text-green-500" />
                     ¡Metas semanales cumplidas!
                 </CardTitle>
-                <CardDescription>Estos hábitos ya cumplieron su meta para la semana. ¡Excelente trabajo!</CardDescription>
+                <CardDescription>Ya cumpliste con la meta semanal de estos hábitos. ¡Excelente trabajo!</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="space-y-3">
