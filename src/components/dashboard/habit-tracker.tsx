@@ -40,7 +40,7 @@ export function TodaysHabitsCard({ habits }: { habits: Habit[]}) {
             <Target className="text-primary" />
             Tus hábitos de hoy
           </CardTitle>
-          <CardDescription>Cumple hoy y mantén tu racha</CardDescription>
+          <CardDescription>Sigue cumpliendo y mantén tu racha</CardDescription>
         </CardHeader>
         <CardContent>
             <div className="space-y-4">
@@ -62,7 +62,7 @@ export function TodaysHabitsCard({ habits }: { habits: Habit[]}) {
           <Target className="text-primary" />
           Tus hábitos de hoy
         </CardTitle>
-        <CardDescription>Cumple hoy y mantén tu racha</CardDescription>
+        <CardDescription>Sigue cumpliendo y mantén tu racha</CardDescription>
       </CardHeader>
       <CardContent>
         {habits.length > 0 ? (
