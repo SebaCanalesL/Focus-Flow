@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import React, { useState, useEffect, useRef } from "react"
@@ -185,9 +186,9 @@ export function GratitudeJournal() {
             </CardTitle>
             <div className="flex items-center gap-2">
               {!isSaved && (
-                <Button variant="ghost" size="icon" onClick={() => setShowNote(!showNote)} className="h-8 w-8">
-                    <PlusCircle className="h-5 w-5" />
-                    <span className="sr-only">Agregar Nota</span>
+                <Button variant="ghost" size="sm" onClick={() => setShowNote(!showNote)}>
+                    <StickyNote className="h-4 w-4" />
+                    <span className="ml-2">Nota</span>
                 </Button>
               )}
               {isSaved && (
@@ -234,7 +235,7 @@ export function GratitudeJournal() {
                     onChange={(e) => handleItemChange(index, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e, index)}
                 />
-                {index >= 2 && (
+                {index > 2 && (
                      <Button variant="ghost" size="icon" onClick={() => removeItem(index)} className="h-9 w-9 shrink-0">
                         <X className="h-4 w-4" />
                     </Button>
