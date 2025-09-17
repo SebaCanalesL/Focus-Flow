@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useCa
 import type { User } from 'firebase/auth';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import type { Habit, GratitudeEntry, Frequency } from '@/lib/types';
+import type { Habit, GratitudeEntry, Frequency, FeedbackEntry } from '@/lib/types';
 import { INITIAL_HABITS, INITIAL_GRATITUDE_ENTRIES } from '@/lib/data';
 import { format, subDays, differenceInCalendarDays, parseISO, startOfWeek, endOfWeek, isWithinInterval, getWeek } from 'date-fns';
 import { dailyMotivation } from '@/ai/flows/daily-motivation-flow';
@@ -17,6 +17,7 @@ interface AppContextType {
   habits: Habit[];
   setHabits: React.Dispatch<React.SetStateAction<Habit[]>>;
   gratitudeEntries: GratitudeEntry[];
+  feedbackEntries: FeedbackEntry[];
   addHabit: (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates' | 'icon'>) => void;
   updateHabit: (habitId: string, habitData: { name: string; frequency: Frequency; daysPerWeek?: number }) => void;
   deleteHabit: (habitId: string) => void;
@@ -25,6 +26,7 @@ interface AppContextType {
   getStreak: (habit: Habit) => number;
   addGratitudeEntry: (content: string, date: Date) => void;
   getGratitudeEntry: (date: Date) => GratitudeEntry | undefined;
+  addFeedbackEntry: (content: string) => void;
   isClient: boolean;
   getWeekCompletion: (habit: Habit) => { completed: number; total: number };
   getTodaysMotivation: (userName: string) => Promise<string>;
@@ -54,6 +56,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isClient, setIsClient] = useState(false);
   const [habits, setHabits] = useState<Habit[]>([]);
   const [gratitudeEntries, setGratitudeEntries] = useState<GratitudeEntry[]>([]);
+  const [feedbackEntries, setFeedbackEntries] = useState<FeedbackEntry[]>([]);
   const [motivationalMessage, setMotivationalMessage] = useState<MotivationalMessage | null>(null);
 
   useEffect(() => {
@@ -63,6 +66,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         // Clear cached data on logout
         setHabits([]);
         setGratitudeEntries([]);
+        setFeedbackEntries([]);
         setMotivationalMessage(null);
       }
       setLoading(false);
@@ -78,10 +82,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (isClient && user) {
         let storedHabits: Habit[] = [];
         let storedEntries: GratitudeEntry[] = [];
+        let storedFeedback: FeedbackEntry[] = [];
         
         try {
           const habitsStr = localStorage.getItem(`focusflow-habits-${user.uid}`);
           const entriesStr = localStorage.getItem(`focusflow-gratitudeEntries-${user.uid}`);
+          const feedbackStr = localStorage.getItem(`focusflow-feedback-${user.uid}`);
           const motivationStr = localStorage.getItem(`focusflow-motivation-${user.uid}`);
 
           if (habitsStr) {
@@ -95,6 +101,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
           } else {
             storedEntries = INITIAL_GRATITUDE_ENTRIES;
           }
+          
+           if (feedbackStr) {
+            storedFeedback = JSON.parse(feedbackStr);
+          }
+
            if (motivationStr) {
             setMotivationalMessage(JSON.parse(motivationStr));
           }
@@ -103,6 +114,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           console.error("Failed to parse from localStorage", error);
           storedHabits = INITIAL_HABITS;
           storedEntries = INITIAL_GRATITUDE_ENTRIES;
+          storedFeedback = [];
         }
         
         let habitsToSet: Habit[] = [...storedHabits];
@@ -124,6 +136,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         
         setHabits(habitsToSet);
         setGratitudeEntries(storedEntries);
+        setFeedbackEntries(storedFeedback);
     }
   }, [isClient, user]);
 
@@ -138,6 +151,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(`focusflow-gratitudeEntries-${user.uid}`, JSON.stringify(gratitudeEntries));
     }
   }, [gratitudeEntries, isClient, user]);
+  
+  useEffect(() => {
+    if (isClient && user && feedbackEntries.length > 0) {
+      localStorage.setItem(`focusflow-feedback-${user.uid}`, JSON.stringify(feedbackEntries));
+    }
+  }, [feedbackEntries, isClient, user]);
   
   useEffect(() => {
     if (isClient && user && motivationalMessage) {
@@ -334,6 +353,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return gratitudeEntries.find(entry => entry.date === dateString);
   };
   
+  const addFeedbackEntry = (content: string) => {
+    if (!user) return;
+    const newFeedback: FeedbackEntry = {
+      id: Date.now().toString(),
+      date: format(new Date(), 'yyyy-MM-dd'),
+      content: content,
+      userId: user.uid,
+    };
+    setFeedbackEntries(prev => [...prev, newFeedback]);
+  };
+
   const getTodaysMotivation = useCallback(async (userName: string) => {
     const todayStr = format(new Date(), 'yyyy-MM-dd');
 
@@ -364,6 +394,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     habits,
     setHabits,
     gratitudeEntries,
+    feedbackEntries,
     addHabit,
     updateHabit,
     deleteHabit,
@@ -372,6 +403,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     getStreak,
     addGratitudeEntry,
     getGratitudeEntry,
+    addFeedbackEntry,
     isClient,
     getWeekCompletion,
     getTodaysMotivation,

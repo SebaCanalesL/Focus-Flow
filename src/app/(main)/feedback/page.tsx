@@ -13,11 +13,14 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useAppData } from "@/contexts/app-provider";
 import { Send } from "lucide-react";
 
 export default function FeedbackPage() {
   const [feedback, setFeedback] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { addFeedbackEntry } = useAppData();
 
   const handleSendFeedback = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,18 +33,24 @@ export default function FeedbackPage() {
       return;
     }
 
-    const recipient = "s.canales123@gmail.com";
-    const subject = "Feedback para FocusFlow";
-    const body = encodeURIComponent(feedback);
-
-    window.location.href = `mailto:${recipient}?subject=${subject}&body=${body}`;
+    setIsLoading(true);
     
-    toast({
-        title: "¡Gracias por tu feedback!",
-        description: "Se está abriendo tu cliente de correo para que puedas enviar tu comentario.",
-    });
-
-    setFeedback("");
+    try {
+        addFeedbackEntry(feedback);
+        toast({
+            title: "¡Gracias por tu feedback!",
+            description: "Tu comentario ha sido enviado y nos ayudará a mejorar.",
+        });
+        setFeedback("");
+    } catch (error) {
+        toast({
+            title: "Error al enviar",
+            description: "No se pudo guardar tu comentario. Por favor, intenta de nuevo.",
+            variant: "destructive",
+        });
+    } finally {
+        setIsLoading(false);
+    }
   };
 
   return (
@@ -62,15 +71,22 @@ export default function FeedbackPage() {
                 id="feedback-textarea"
                 placeholder="Escribe aquí lo que piensas, alguna idea o un problema que encontraste..."
                 value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
+                onChange={(e) => setFeedback(e.g.et.value)}
                 rows={8}
+                disabled={isLoading}
               />
             </div>
           </CardContent>
           <CardFooter>
-            <Button type="submit" className="w-full sm:w-auto">
-              <Send className="mr-2 h-4 w-4" />
-              Enviar Feedback
+            <Button type="submit" className="w-full sm:w-auto" disabled={isLoading}>
+              {isLoading ? (
+                "Enviando..."
+              ) : (
+                <>
+                  <Send className="mr-2 h-4 w-4" />
+                  Enviar Feedback
+                </>
+              )}
             </Button>
           </CardFooter>
         </form>
