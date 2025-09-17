@@ -6,7 +6,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import type { Habit, GratitudeEntry, Frequency } from '@/lib/types';
 import { INITIAL_HABITS, INITIAL_GRATITUDE_ENTRIES } from '@/lib/data';
-import { format } from 'date-fns';
+import { format, subDays, differenceInCalendarDays, parseISO } from 'date-fns';
 
 interface AppContextType {
   user: User | null;
@@ -110,62 +110,51 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return habits.find(h => h.id === habitId);
   }
 
-  const getStreak = (habit: Habit) => {
-    if (!habit) return 0;
-    const sortedDates = habit.completedDates.map(d => new Date(d)).sort((a, b) => b.getTime() - a.getTime());
-    let streak = 0;
-    let today = new Date();
-    today.setHours(0,0,0,0);
-
-    const todayCompleted = sortedDates.some(date => {
-        const d = new Date(date);
-        d.setHours(0,0,0,0);
-        return d.getTime() === today.getTime();
-    });
-
-    if (todayCompleted) {
-        streak = 1;
-        let lastDate = new Date(today);
-        for (let i = 0; i < sortedDates.length; i++) {
-            const currentDate = sortedDates[i];
-            const prevDate = new Date(lastDate);
-            prevDate.setDate(prevDate.getDate() - 1);
-            if (currentDate.getTime() === prevDate.getTime()) {
-                streak++;
-                lastDate = currentDate;
-            } else if (currentDate.getTime() < prevDate.getTime()) {
-                break;
-            }
-        }
-    } else { // Check if streak ended yesterday
-      let yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      yesterday.setHours(0,0,0,0);
-       const yesterdayCompleted = sortedDates.some(date => {
-        const d = new Date(date);
-        d.setHours(0,0,0,0);
-        return d.getTime() === yesterday.getTime();
-      });
-
-      if (yesterdayCompleted) {
-        streak = 1;
-        let lastDate = new Date(yesterday);
-         for (let i = 0; i < sortedDates.length; i++) {
-            if (sortedDates[i].getTime() === lastDate.getTime()) {
-                let prevDate = new Date(lastDate);
-                prevDate.setDate(prevDate.getDate() - 1);
-                
-                // look for prevDate in the rest of the array
-                if (sortedDates.slice(i+1).some(d => d.getTime() === prevDate.getTime())) {
-                    streak++;
-                    lastDate = prevDate;
-                }
-            }
-         }
-      }
+ const getStreak = (habit: Habit) => {
+    if (!habit || habit.completedDates.length === 0) {
+      return 0;
     }
 
-    return streak;
+    const sortedDates = habit.completedDates
+      .map(dateStr => parseISO(dateStr))
+      .sort((a, b) => b.getTime() - a.getTime());
+
+    const today = new Date();
+    let mostRecentDate = sortedDates[0];
+
+    // If the most recent completion is not today or yesterday, the streak is broken.
+    if (differenceInCalendarDays(today, mostRecentDate) > 1) {
+      return 0;
+    }
+
+    let streak = 1;
+    let currentStreakDate = mostRecentDate;
+
+    for (let i = 1; i < sortedDates.length; i++) {
+      const nextDate = sortedDates[i];
+      // Check if the next date is exactly one day before the current streak date
+      if (differenceInCalendarDays(currentStreakDate, nextDate) === 1) {
+        streak++;
+        currentStreakDate = nextDate; // Continue the streak
+      } else if (differenceInCalendarDays(currentStreakDate, nextDate) > 1) {
+        // A day was skipped, so the streak is broken
+        break;
+      }
+      // If difference is 0, it's a duplicate entry for the same day, so we just ignore it and continue.
+    }
+
+    // A special case: if the most recent completion was yesterday, but not today, the streak is still valid.
+    // The loop above correctly calculates it. We just need to ensure we don't return 0 incorrectly.
+    if (differenceInCalendarDays(today, mostRecentDate) === 1) {
+      return streak;
+    }
+    
+    // If the most recent completion is today, the calculated streak is also correct.
+    if (differenceInCalendarDays(today, mostRecentDate) === 0) {
+      return streak;
+    }
+
+    return 0; // Should not be reached if logic is correct, but as a fallback.
   };
 
   const addGratitudeEntry = (content: string, date: Date) => {
