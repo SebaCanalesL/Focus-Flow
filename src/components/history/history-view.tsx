@@ -5,9 +5,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAppData } from "@/contexts/app-provider"
-import { format } from "date-fns"
+import { format, addDays, subDays, isToday } from "date-fns"
 import * as LucideIcons from "lucide-react";
-import { Target } from "lucide-react"
+import { Target, ChevronLeft, ChevronRight } from "lucide-react"
+import { Button } from "../ui/button"
 
 type IconName = keyof typeof LucideIcons;
 
@@ -44,6 +45,18 @@ export function HistoryView() {
     })
   );
 
+  const handlePrevDay = () => {
+    if (date) {
+      setDate(subDays(date, 1));
+    }
+  };
+
+  const handleNextDay = () => {
+    if (date && !isToday(date)) {
+      setDate(addDays(date, 1));
+    }
+  };
+
 
   if (!isClient) {
     return <div className="h-96 bg-muted rounded-md w-full animate-pulse" />;
@@ -77,8 +90,18 @@ export function HistoryView() {
           <div className="lg:col-span-2">
             <Card>
               <CardHeader>
-                <CardTitle>
-                  Gratitude Entry for {date ? format(date, "MMMM d, yyyy") : "..."}
+                <CardTitle className="flex justify-between items-center">
+                  <span>
+                    Gratitude Entry for {date ? format(date, "MMMM d, yyyy") : "..."}
+                  </span>
+                   <div className="flex items-center gap-2">
+                    <Button variant="outline" size="icon" onClick={handlePrevDay}>
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" size="icon" onClick={handleNextDay} disabled={date ? isToday(date) : false}>
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent style={{whiteSpace: 'pre-line'}}>
@@ -108,8 +131,18 @@ export function HistoryView() {
            <div className="lg:col-span-2">
             <Card>
               <CardHeader>
-                <CardTitle>
-                  Completed Habits on {date ? format(date, "MMMM d, yyyy") : "..."}
+                <CardTitle className="flex justify-between items-center">
+                  <span>
+                    Completed Habits on {date ? format(date, "MMMM d, yyyy") : "..."}
+                  </span>
+                   <div className="flex items-center gap-2">
+                    <Button variant="outline" size="icon" onClick={handlePrevDay}>
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" size="icon" onClick={handleNextDay} disabled={date ? isToday(date) : false}>
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent>
