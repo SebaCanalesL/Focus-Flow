@@ -11,9 +11,10 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { useAppData } from "@/contexts/app-provider"
-import { BookHeart, WandSparkles, Pencil, PlusCircle, X } from "lucide-react"
+import { BookHeart, WandSparkles, Pencil, PlusCircle, X, StickyNote } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 function MotivationalMessage({ userName }: { userName: string }) {
@@ -59,6 +60,8 @@ function MotivationalMessage({ userName }: { userName: string }) {
 export function GratitudeJournal() {
   const { user, addGratitudeEntry, getGratitudeEntry } = useAppData()
   const [gratitudeItems, setGratitudeItems] = useState<string[]>(["", "", ""]);
+  const [note, setNote] = useState("");
+  const [showNote, setShowNote] = useState(false);
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
   const [isSaved, setIsSaved] = useState(false);
   const { toast } = useToast()
@@ -72,24 +75,26 @@ export function GratitudeJournal() {
   useEffect(() => {
     if (currentDate) {
       const entry = getGratitudeEntry(currentDate)
-      if (entry && entry.content) {
+      if (entry) {
         const items = entry.content.split('\n').filter(item => item.trim() !== '');
         setGratitudeItems(items.length >= 3 ? items : ["", "", ""]);
+        setNote(entry.note || "");
+        setShowNote(!!entry.note);
         setIsSaved(true);
       } else {
         setGratitudeItems(["", "", ""]);
+        setNote("");
+        setShowNote(false);
         setIsSaved(false);
       }
     }
   }, [getGratitudeEntry, currentDate])
 
-  // Effect to focus the new input when an item is added
   useEffect(() => {
     if(!isSaved) {
         const lastIndex = gratitudeItems.length - 1;
         const lastInput = inputRefs.current[lastIndex];
         if (lastInput) {
-            // Check if the new input was added by pressing enter on a non-empty previous input
             const previousIndex = lastIndex - 1;
             if (previousIndex >= 0 && gratitudeItems[previousIndex] !== "") {
                  lastInput.focus();
@@ -101,8 +106,8 @@ export function GratitudeJournal() {
 
   const handleSave = () => {
     const contentToSave = gratitudeItems.map(item => item.trim()).filter(item => item !== '').join('\n');
-    if (contentToSave && currentDate) {
-      addGratitudeEntry(contentToSave, currentDate)
+    if ((contentToSave || note) && currentDate) {
+      addGratitudeEntry(contentToSave, currentDate, note)
       setIsSaved(true);
       toast({
         title: "¡Entrada guardada!",
@@ -110,8 +115,8 @@ export function GratitudeJournal() {
       })
     } else {
        toast({
-        title: "Agradecimientos vacíos",
-        description: "Escribe al menos un agradecimiento para guardar.",
+        title: "Campos vacíos",
+        description: "Escribe al menos un agradecimiento o una nota para guardar.",
         variant: "destructive"
       })
     }
@@ -185,13 +190,21 @@ export function GratitudeJournal() {
             <MotivationalMessage userName={getUsername()} />
         )}
         {isSaved ? (
-           <ul className="space-y-2">
-            {gratitudeItems.map((item, index) => (
-              <li key={index} className="p-3 bg-primary/10 rounded-md text-sm text-card-foreground/90">
-                {index + 1}. {item}
-              </li>
-            ))}
-          </ul>
+           <div className="space-y-4">
+                <ul className="space-y-2">
+                    {gratitudeItems.map((item, index) => (
+                    <li key={index} className="p-3 bg-primary/10 rounded-md text-sm text-card-foreground/90">
+                        {index + 1}. {item}
+                    </li>
+                    ))}
+                </ul>
+                {note && (
+                    <div>
+                        <h4 className="font-semibold text-sm mb-2 flex items-center gap-2"><StickyNote className="h-4 w-4" /> Nota Adicional</h4>
+                        <p className="p-3 bg-secondary/50 rounded-md text-sm text-card-foreground/90 whitespace-pre-wrap">{note}</p>
+                    </div>
+                )}
+           </div>
         ) : (
           <div className="space-y-3">
             {gratitudeItems.map((item, index) => (
@@ -211,10 +224,26 @@ export function GratitudeJournal() {
                 )}
               </div>
             ))}
-            <Button variant="outline" size="sm" onClick={addItem} className="w-full">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Agregar agradecimiento
-            </Button>
+            <div className="flex gap-2 pt-2">
+                <Button variant="outline" size="sm" onClick={addItem} className="flex-1">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Agradecimiento
+                </Button>
+                 <Button variant="outline" size="sm" onClick={() => setShowNote(!showNote)} className="flex-1">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Nota
+                </Button>
+            </div>
+             {showNote && (
+                <div className="pt-2">
+                    <Textarea 
+                        placeholder="Escribe aquí una nota más extensa, tus reflexiones o lo que sientas..."
+                        value={note}
+                        onChange={(e) => setNote(e.target.value)}
+                        rows={4}
+                    />
+                </div>
+            )}
           </div>
         )}
       </CardContent>

@@ -23,7 +23,7 @@ interface AppContextType {
   toggleHabitCompletion: (habitId: string, date: Date) => void;
   getHabitById: (habitId: string) => Habit | undefined;
   getStreak: (habit: Habit) => number;
-  addGratitudeEntry: (content: string, date: Date) => void;
+  addGratitudeEntry: (content: string, date: Date, note?: string) => void;
   getGratitudeEntry: (date: Date) => GratitudeEntry | undefined;
   isClient: boolean;
   getWeekCompletion: (habit: Habit) => { completed: number; total: number };
@@ -299,35 +299,40 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return { completed: completedThisWeek, total: habit.daysPerWeek };
   };
 
-  const addGratitudeEntry = (content: string, date: Date) => {
+  const addGratitudeEntry = (content: string, date: Date, note?: string) => {
     const dateString = format(date, 'yyyy-MM-dd');
     const existingEntryIndex = gratitudeEntries.findIndex(entry => entry.date === dateString);
+  
+    const entryData = { content, note };
 
     if (existingEntryIndex > -1) {
       const updatedEntries = [...gratitudeEntries];
-      updatedEntries[existingEntryIndex] = { ...updatedEntries[existingEntryIndex], content };
+      updatedEntries[existingEntryIndex] = { ...updatedEntries[existingEntryIndex], ...entryData };
       setGratitudeEntries(updatedEntries);
     } else {
       const newEntry: GratitudeEntry = {
         id: Date.now().toString(),
         date: dateString,
         content,
+        note,
       };
       setGratitudeEntries(prev => [...prev, newEntry]);
     }
     
-    // Auto-complete gratitude habit
-    setHabits(prev => 
-      prev.map(h => {
-        if (h.id === 'gratitude-habit' && !h.completedDates.includes(dateString)) {
-          return {
-            ...h,
-            completedDates: [...h.completedDates, dateString].sort(),
-          };
-        }
-        return h;
-      })
-    );
+    // Auto-complete gratitude habit if there is content
+    if (content.trim().length > 0) {
+      setHabits(prev => 
+        prev.map(h => {
+          if (h.id === 'gratitude-habit' && !h.completedDates.includes(dateString)) {
+            return {
+              ...h,
+              completedDates: [...h.completedDates, dateString].sort(),
+            };
+          }
+          return h;
+        })
+      );
+    }
   };
 
   const getGratitudeEntry = (date: Date) => {

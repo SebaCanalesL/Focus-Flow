@@ -14,4 +14,5 @@ export interface GratitudeEntry {
   id: string;
   date: string; // ISO string 'YYYY-MM-DD'
   content: string;
+  note?: string;
 }
