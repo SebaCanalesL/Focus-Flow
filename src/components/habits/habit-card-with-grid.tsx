@@ -3,7 +3,7 @@
 import type { Habit } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import * as LucideIcons from "lucide-react";
-import { Target, Flame, Check, CalendarDays, CheckCheck, Pencil, GripVertical } from "lucide-react";
+import { Target, Flame, Check, CalendarDays, CheckCheck, Pencil } from "lucide-react";
 import { useAppData } from "@/contexts/app-provider";
 import { cn } from "@/lib/utils";
 import { HabitCompletionGrid } from "./habit-completion-grid";
@@ -56,21 +56,21 @@ export function HabitCardWithGrid({
   const isWeekly = habit.frequency === 'weekly';
   const streakUnit = isWeekly ? (streak === 1 ? "semana" : "semanas") : (streak === 1 ? "día" : "días");
 
+  const cardProps = habit.id !== 'gratitude-habit' ? props : {};
+  const listenerProps = habit.id !== 'gratitude-habit' ? props.listeners : {};
+
+
   return (
     <Card 
         className={cn("flex flex-col transition-shadow", isDragging && "shadow-2xl")}
         style={style}
-        {...props}
+        {...cardProps}
+        {...listenerProps}
     >
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-             {habit.id !== 'gratitude-habit' && (
-              <button {...props.listeners} className="cursor-grab active:cursor-grabbing">
-                <GripVertical className="h-6 w-6 text-muted-foreground" />
-              </button>
-            )}
-            <div className={cn("p-2 rounded-lg bg-primary/20", habit.id === 'gratitude-habit' && 'ml-12')}>
+            <div className={cn("p-2 rounded-lg bg-primary/20", habit.id === 'gratitude-habit' && 'ml-4')}>
               <Icon name={habit.icon as IconName} className="h-6 w-6 text-primary" />
             </div>
             <div>
@@ -80,7 +80,7 @@ export function HabitCardWithGrid({
           <div className="flex items-center gap-2">
             {habit.id !== 'gratitude-habit' && (
                 <EditHabitDialog habit={habit}>
-                    <Button variant="outline" size="icon" className="h-9 w-9 md:h-10 md:w-auto md:px-4">
+                    <Button variant="outline" size="icon" className="h-9 w-9 md:h-10 md:w-auto md:px-4" onClick={(e) => e.stopPropagation()}>
                         <Pencil className="h-5 w-5 md:mr-2" />
                         <span className="hidden md:inline">Editar</span>
                     </Button>
@@ -89,12 +89,12 @@ export function HabitCardWithGrid({
 
             <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="icon" className="h-9 w-9 md:h-10 md:w-auto md:px-4">
+                <Button variant="outline" size="icon" className="h-9 w-9 md:h-10 md:w-auto md:px-4" onClick={(e) => e.stopPropagation()}>
                   <CalendarDays className="h-5 w-5 md:mr-2" />
                    <span className="hidden md:inline">Ver</span>
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
+              <PopoverContent className="w-auto p-0" onClick={(e) => e.stopPropagation()}>
                 <Calendar
                   mode="multiple"
                   selected={completedDatesForCalendar}
@@ -108,7 +108,10 @@ export function HabitCardWithGrid({
               size="icon"
               className={cn("h-9 w-9 md:h-10 md:w-10", isCompletedToday && "bg-primary text-white hover:bg-primary/90")}
               variant={isCompletedToday ? "default" : "outline"}
-              onClick={() => toggleHabitCompletion(habit.id, new Date())}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleHabitCompletion(habit.id, new Date());
+              }}
             >
               {isCompletedToday ? <CheckCheck className="h-5 w-5" /> : <Check className="h-5 w-5" />}
             </Button>
