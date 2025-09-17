@@ -83,7 +83,7 @@ export function UserNav() {
           </Link>
           <DropdownMenuItem onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
             {theme === "dark" ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
-            Modo {theme === "dark" ? "Claro" : "Oscuro"}
+            <span>Modo {theme === "dark" ? "Claro" : "Oscuro"}</span>
           </DropdownMenuItem>
           <DropdownMenuItem disabled>
             Ajustes
