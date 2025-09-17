@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import {
   Card,
   CardContent,
@@ -61,8 +61,9 @@ export function GratitudeJournal() {
   const [gratitudeItems, setGratitudeItems] = useState<string[]>(["", "", ""]);
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
   const [isSaved, setIsSaved] = useState(false);
-
   const { toast } = useToast()
+  
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
     setCurrentDate(new Date());
@@ -72,7 +73,8 @@ export function GratitudeJournal() {
     if (currentDate) {
       const entry = getGratitudeEntry(currentDate)
       if (entry && entry.content) {
-        setGratitudeItems(entry.content.split('\n').filter(item => item.trim() !== ''));
+        const items = entry.content.split('\n').filter(item => item.trim() !== '');
+        setGratitudeItems(items.length > 0 ? items : ["", "", ""]);
         setIsSaved(true);
       } else {
         setGratitudeItems(["", "", ""]);
@@ -80,6 +82,22 @@ export function GratitudeJournal() {
       }
     }
   }, [getGratitudeEntry, currentDate])
+
+  // Effect to focus the new input when an item is added
+  useEffect(() => {
+    if(!isSaved) {
+        const lastIndex = gratitudeItems.length - 1;
+        const lastInput = inputRefs.current[lastIndex];
+        if (lastInput) {
+            // Check if the new input was added by pressing enter on a non-empty previous input
+            const previousIndex = lastIndex - 1;
+            if (previousIndex >= 0 && gratitudeItems[previousIndex] !== "") {
+                 lastInput.focus();
+            }
+        }
+    }
+  }, [gratitudeItems.length, isSaved]);
+
 
   const handleSave = () => {
     const contentToSave = gratitudeItems.map(item => item.trim()).filter(item => item !== '').join('\n');
@@ -118,8 +136,23 @@ export function GratitudeJournal() {
 
   const removeItem = (index: number) => {
     const newItems = gratitudeItems.filter((_, i) => i !== index);
-    setGratitudeItems(newItems);
+    setGratitudeItems(newItems.length > 0 ? newItems : [""]);
+    inputRefs.current = inputRefs.current.filter((_,i) => i !== index);
   }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        if (index === gratitudeItems.length - 1) {
+            addItem();
+        } else {
+            const nextInput = inputRefs.current[index + 1];
+            if (nextInput) {
+                nextInput.focus();
+            }
+        }
+    }
+  };
 
   const getUsername = () => {
     if (user?.displayName) return user.displayName;
@@ -164,9 +197,11 @@ export function GratitudeJournal() {
               <div key={index} className="flex items-center gap-2">
                 <span className="text-muted-foreground font-medium">{index + 1}.</span>
                 <Input
+                    ref={el => inputRefs.current[index] = el}
                     placeholder={`Agradecimiento #${index + 1}`}
                     value={item}
                     onChange={(e) => handleItemChange(index, e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e, index)}
                 />
                 <Button variant="ghost" size="icon" onClick={() => removeItem(index)} className="h-9 w-9 shrink-0">
                     <X className="h-4 w-4" />
