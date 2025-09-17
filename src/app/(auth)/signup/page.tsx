@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth";
-import { auth, googleProvider } from "@/lib/firebase";
+import { createUserWithEmailAndPassword, signInWithCredential, GoogleAuthProvider as FirebaseGoogleAuthProvider } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,16 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { NotebookPen } from "lucide-react";
-
-const GoogleIcon = () => (
-  <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4">
-    <title>Google</title>
-    <path
-      d="M12.48 10.92v3.28h7.84c-.24 1.84-.85 3.18-1.73 4.1-1.02 1.02-2.62 1.9-4.73 1.9-5.82 0-10.54-4.72-10.54-10.54s4.72-10.54 10.54-10.54c3.32 0 5.62 1.34 6.94 2.58l-2.68 2.58c-.85-.8-2.17-1.34-4.26-1.34-3.52 0-6.42 2.86-6.42 6.42s2.9 6.42 6.42 6.42c3.98 0 5.22-2.8 5.42-4.28H12.48z"
-      fill="currentColor"
-    />
-  </svg>
-);
+import { GoogleLogin } from "@react-oauth/google";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
@@ -65,11 +56,12 @@ export default function SignupPage() {
       setIsLoading(false);
     }
   };
-  
-  const handleGoogleSignIn = async () => {
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
     setIsGoogleLoading(true);
     try {
-      await signInWithPopup(auth, googleProvider);
+      const credential = FirebaseGoogleAuthProvider.credential(credentialResponse.credential);
+      await signInWithCredential(auth, credential);
       router.push("/dashboard");
     } catch (error: any) {
       toast({
@@ -82,6 +74,14 @@ export default function SignupPage() {
     }
   };
 
+  const handleGoogleError = () => {
+    toast({
+      title: "Error con Google",
+      description: "No se pudo iniciar sesión con Google.",
+      variant: "destructive",
+    });
+  }
+
   return (
     <Card>
       <CardHeader className="text-center">
@@ -93,10 +93,13 @@ export default function SignupPage() {
       </CardHeader>
       <CardContent>
          <div className="space-y-4">
-            <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isGoogleLoading || isLoading}>
-              <GoogleIcon />
-              {isGoogleLoading ? "Iniciando..." : "Continuar con Google"}
-            </Button>
+            <div className="flex justify-center">
+              <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  useOneTap
+                />
+            </div>
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -122,8 +125,7 @@ export default function SignupPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Contraseña</Label>
-                <Input
+                <Label htmlFor="password">Contraseña</Label>                <Input
                   id="password"
                   type="password"
                   value={password}
