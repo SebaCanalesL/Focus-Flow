@@ -80,18 +80,18 @@ export function HabitCardWithGrid({
           <div className="flex items-center gap-2">
             {habit.id !== 'gratitude-habit' && (
                 <EditHabitDialog habit={habit}>
-                    <Button variant="outline" size="icon" className="h-9 w-9 md:h-10 md:w-auto md:px-4" onClick={(e) => e.stopPropagation()}>
-                        <Pencil className="h-5 w-5 md:mr-2" />
-                        <span className="hidden md:inline">Editar</span>
+                    <Button variant="outline" size="icon" className="h-9 w-9" onClick={(e) => e.stopPropagation()}>
+                        <Pencil className="h-5 w-5" />
+                        <span className="sr-only">Editar</span>
                     </Button>
                 </EditHabitDialog>
             )}
 
             <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="icon" className="h-9 w-9 md:h-10 md:w-auto md:px-4" onClick={(e) => e.stopPropagation()}>
-                  <CalendarDays className="h-5 w-5 md:mr-2" />
-                   <span className="hidden md:inline">Ver</span>
+                <Button variant="outline" size="icon" className="h-9 w-9" onClick={(e) => e.stopPropagation()}>
+                  <CalendarDays className="h-5 w-5" />
+                   <span className="sr-only">Ver</span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" onClick={(e) => e.stopPropagation()}>
