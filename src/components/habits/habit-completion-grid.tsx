@@ -88,7 +88,7 @@ const HabitCompletionGrid = ({ completedDates }: { completedDates: string[] }) =
                   className="grid grid-flow-col grid-rows-7 gap-[var(--dot-gap)]"
               >
                 {eachDayOfInterval({ start: startOfWeek(month), end: endOfMonth(month) }).map((day) => {
-                  const dayString = format(day, 'yyyy-dd-MM');
+                  const dayString = format(day, 'yyyy-MM-dd');
                   const isCompleted = zonedCompletedDates.has(dayString);
                   const isFuture = day > new Date();
 
