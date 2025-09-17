@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button"
 import { useAppData } from "@/contexts/app-provider"
 import { BookHeart, WandSparkles, Pencil, PlusCircle, X, StickyNote } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { cn } from "@/lib/utils"
 
 function MotivationalMessage({ userName }: { userName: string }) {
   const [message, setMessage] = useState("");
@@ -189,9 +190,9 @@ export function GratitudeJournal() {
             </CardTitle>
             <div className="flex items-center gap-2">
               {!isSaved && (
-                <Button variant="ghost" size="sm" onClick={handleNoteToggle}>
+                <Button variant="ghost" size="sm" onClick={handleNoteToggle} className={cn(showNote && "text-destructive hover:text-destructive")}>
                     {showNote ? <X className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
-                    <span className="ml-2">Nota</span>
+                    <span className={cn(showNote ? "ml-1" : "ml-2")}>Nota</span>
                 </Button>
               )}
               {isSaved && (
