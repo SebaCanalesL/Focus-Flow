@@ -74,7 +74,7 @@ export default function SignupPage() {
     } catch (error: any) {
       toast({
         title: "Error con Google",
-        description: "No se pudo iniciar sesión con Google. Inténtalo de nuevo.",
+        description: error.message,
         variant: "destructive",
       });
     } finally {
