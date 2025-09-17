@@ -18,22 +18,31 @@ import { useToast } from "@/hooks/use-toast"
 export function GratitudeJournal() {
   const { addGratitudeEntry, getGratitudeEntry } = useAppData()
   const [content, setContent] = useState("")
-  const today = new Date()
+  const [currentDate, setCurrentDate] = useState<Date | null>(null);
+
   const { toast } = useToast()
 
   useEffect(() => {
-    const entry = getGratitudeEntry(today)
-    if (entry) {
-      setContent(entry.content)
+    setCurrentDate(new Date());
+  }, []);
+
+  useEffect(() => {
+    if (currentDate) {
+      const entry = getGratitudeEntry(currentDate)
+      if (entry) {
+        setContent(entry.content)
+      } else {
+        setContent("")
+      }
     }
-  }, [getGratitudeEntry, today])
+  }, [getGratitudeEntry, currentDate])
 
   const handleSave = () => {
-    if (content.trim()) {
-      addGratitudeEntry(content, today)
+    if (content.trim() && currentDate) {
+      addGratitudeEntry(content, currentDate)
       toast({
-        title: "Entry Saved!",
-        description: "Your gratitude entry has been saved.",
+        title: "¡Entrada guardada!",
+        description: "Tu entrada de gratitud ha sido guardada.",
       })
     }
   }
@@ -43,9 +52,9 @@ export function GratitudeJournal() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <BookHeart className="text-primary" />
-          Daily Gratitude
+          Gratitud Diaria
         </CardTitle>
-        <CardDescription>What are three things you're grateful for today?</CardDescription>
+        <CardDescription>¿Cuáles son tres cosas por las que estás agradecido hoy?</CardDescription>
       </CardHeader>
       <CardContent>
         <Textarea
@@ -60,7 +69,7 @@ export function GratitudeJournal() {
       <CardFooter>
         <Button onClick={handleSave}>
           <Save className="mr-2 h-4 w-4" />
-          Save Entry
+          Guardar Entrada
         </Button>
       </CardFooter>
     </Card>

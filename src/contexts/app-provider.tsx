@@ -1,11 +1,16 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import type { User } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import type { Habit, GratitudeEntry, Frequency } from '@/lib/types';
 import { INITIAL_HABITS, INITIAL_GRATITUDE_ENTRIES } from '@/lib/data';
 import { formatISO } from 'date-fns';
 
 interface AppContextType {
+  user: User | null;
+  loading: boolean;
   habits: Habit[];
   gratitudeEntries: GratitudeEntry[];
   addHabit: (habit: Omit<Habit, 'id' | 'createdAt' | 'completedDates'>) => void;
@@ -20,15 +25,30 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
   const [habits, setHabits] = useState<Habit[]>([]);
   const [gratitudeEntries, setGratitudeEntries] = useState<GratitudeEntry[]>([]);
 
   useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
     setIsClient(true);
+    if (!user) {
+        setHabits(INITIAL_HABITS);
+        setGratitudeEntries(INITIAL_GRATITUDE_ENTRIES);
+        return;
+    };
     try {
-      const storedHabits = localStorage.getItem('focusflow-habits');
-      const storedEntries = localStorage.getItem('focusflow-gratitudeEntries');
+      const storedHabits = localStorage.getItem(`focusflow-habits-${user.uid}`);
+      const storedEntries = localStorage.getItem(`focusflow-gratitudeEntries-${user.uid}`);
 
       if (storedHabits) {
         setHabits(JSON.parse(storedHabits));
@@ -46,19 +66,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setHabits(INITIAL_HABITS);
       setGratitudeEntries(INITIAL_GRATITUDE_ENTRIES);
     }
-  }, []);
+  }, [isClient, user]);
 
   useEffect(() => {
-    if (isClient) {
-      localStorage.setItem('focusflow-habits', JSON.stringify(habits));
+    if (isClient && user) {
+      localStorage.setItem(`focusflow-habits-${user.uid}`, JSON.stringify(habits));
     }
-  }, [habits, isClient]);
+  }, [habits, isClient, user]);
 
   useEffect(() => {
-    if (isClient) {
-      localStorage.setItem('focusflow-gratitudeEntries', JSON.stringify(gratitudeEntries));
+    if (isClient && user) {
+      localStorage.setItem(`focusflow-gratitudeEntries-${user.uid}`, JSON.stringify(gratitudeEntries));
     }
-  }, [gratitudeEntries, isClient]);
+  }, [gratitudeEntries, isClient, user]);
 
   const addHabit = (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates'>) => {
     const newHabit: Habit = {
@@ -172,6 +192,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
   
   const value = {
+    user,
+    loading,
     habits,
     gratitudeEntries,
     addHabit,

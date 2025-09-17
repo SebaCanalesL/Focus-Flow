@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { useEffect, useState } from "react"
 import {
   Card,
   CardContent,
@@ -25,20 +25,21 @@ const Icon = ({ name, className }: { name: IconName; className?: string }) => {
 
 export function HabitTracker() {
   const { habits, toggleHabitCompletion, getStreak, isClient } = useAppData()
-  const today = new Date()
-  const todayString = today.toISOString().split("T")[0]
+  const [today, setToday] = useState<Date | null>(null);
+  
+  useEffect(() => {
+    setToday(new Date());
+  }, []);
 
-  const dailyHabits = habits.filter(h => h.frequency === 'daily');
-
-  if (!isClient) {
+  if (!isClient || !today) {
     return (
        <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Target className="text-primary" />
-            Today's Habits
+            Hábitos de Hoy
           </CardTitle>
-          <CardDescription>Check off your habits for today.</CardDescription>
+          <CardDescription>Completa tus hábitos de hoy.</CardDescription>
         </CardHeader>
         <CardContent>
             <div className="space-y-4">
@@ -50,15 +51,18 @@ export function HabitTracker() {
       </Card>
     )
   }
+  
+  const todayString = today.toISOString().split("T")[0]
+  const dailyHabits = habits.filter(h => h.frequency === 'daily');
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Target className="text-primary" />
-          Today's Habits
+          Hábitos de Hoy
         </CardTitle>
-        <CardDescription>Check off your habits for today to build your streak.</CardDescription>
+        <CardDescription>Completa tus hábitos de hoy para aumentar tu racha.</CardDescription>
       </CardHeader>
       <CardContent>
         {dailyHabits.length > 0 ? (
@@ -96,7 +100,7 @@ export function HabitTracker() {
             })}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground text-center py-8">No daily habits set yet. Go to the 'Habits' page to create one!</p>
+          <p className="text-sm text-muted-foreground text-center py-8">Aún no has establecido hábitos diarios. ¡Ve a la página de 'Hábitos' para crear uno!</p>
         )}
       </CardContent>
     </Card>

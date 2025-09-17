@@ -1,44 +1,44 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import {
-  Bell,
-  Home,
-  LineChart,
-  Package,
-  Package2,
-  ShoppingCart,
-  Users,
   NotebookPen,
 } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { MainNav } from "@/components/main-nav"
 import { UserNav } from "@/components/user-nav"
+import { useAppData } from "@/contexts/app-provider";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function MainLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const { user, loading } = useAppData();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/login");
+    }
+  }, [user, loading, router]);
+
+  if (loading || !user) {
+    return (
+       <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <NotebookPen className="h-12 w-12 text-primary animate-pulse" />
+          <Skeleton className="h-8 w-48" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
       <div className="hidden border-r bg-card md:block">
