@@ -58,12 +58,20 @@ export default function SignupPage() {
   };
 
   const handleGoogleSuccess = async (credentialResponse: any) => {
+     if (!credentialResponse.credential) {
+      toast({
+        title: "Error con Google",
+        description: "No se recibieron las credenciales de Google.",
+        variant: "destructive",
+      });
+      return;
+    }
     setIsGoogleLoading(true);
     try {
       const credential = FirebaseGoogleAuthProvider.credential(credentialResponse.credential);
       await signInWithCredential(auth, credential);
       router.push("/dashboard");
-    } catch (error: any) {
+    } catch (error: any)      {
       toast({
         title: "Error con Google",
         description: error.message,
@@ -97,7 +105,6 @@ export default function SignupPage() {
               <GoogleLogin
                   onSuccess={handleGoogleSuccess}
                   onError={handleGoogleError}
-                  useOneTap
                 />
             </div>
 

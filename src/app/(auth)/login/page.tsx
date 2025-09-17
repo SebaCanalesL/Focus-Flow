@@ -46,6 +46,14 @@ export default function LoginPage() {
   };
 
   const handleGoogleSuccess = async (credentialResponse: any) => {
+    if (!credentialResponse.credential) {
+      toast({
+        title: "Error con Google",
+        description: "No se recibieron las credenciales de Google.",
+        variant: "destructive",
+      });
+      return;
+    }
     setIsGoogleLoading(true);
     try {
       const credential = FirebaseGoogleAuthProvider.credential(credentialResponse.credential);
@@ -85,7 +93,6 @@ export default function LoginPage() {
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={handleGoogleError}
-              useOneTap
             />
           </div>
 
