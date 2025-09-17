@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -66,24 +67,23 @@ const AvatarPlaceholders = [
 
 
 export default function ProfilePage() {
-  const { user, setUser, loading } = useAppData();
+  const { user, setUser, loading, birthday, setBirthday: setAppBirthday } = useAppData();
   const router = useRouter();
   const [displayName, setDisplayName] = useState(user?.displayName || "");
   const [photoURL, setPhotoURL] = useState(user?.photoURL || "");
-  const [birthday, setBirthday] = useState<Date | undefined>(undefined);
+  const [birthdayState, setBirthdayState] = useState<Date | undefined>(undefined);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    // This effect ensures that if the user data loads after the component mounts,
-    // the state is updated with the correct values.
     if (user) {
       setDisplayName(user.displayName || "");
       setPhotoURL(user.photoURL || "");
-      // Note: We are not setting birthday from user object as it's not a standard Firebase Auth property.
-      // It will be managed purely by the component's state.
     }
-  }, [user]);
+    if (birthday) {
+        setBirthdayState(new Date(birthday));
+    }
+  }, [user, birthday]);
 
 
   const getInitials = (name: string | null | undefined) => {
@@ -106,10 +106,12 @@ export default function ProfilePage() {
         photoURL: photoURL,
       });
 
-      // We need to manually update the user object in our context
-      // Note: birthday is not saved to Firebase Auth by default
       const updatedUser = { ...user, displayName, photoURL } as User;
       setUser(updatedUser);
+      
+      if(birthdayState) {
+        setAppBirthday(birthdayState);
+      }
 
       toast({
         title: "¡Perfil Actualizado!",
@@ -249,18 +251,18 @@ export default function ProfilePage() {
                       variant={"outline"}
                       className={cn(
                         "w-full justify-start text-left font-normal sm:text-sm",
-                        !birthday && "text-muted-foreground"
+                        !birthdayState && "text-muted-foreground"
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {birthday ? format(birthday, "d 'de' MMMM, yyyy", { locale: es }) : <span>Elige una fecha</span>}
+                      {birthdayState ? format(birthdayState, "d 'de' MMMM, yyyy", { locale: es }) : <span>Elige una fecha</span>}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
                     <Calendar
                       mode="single"
-                      selected={birthday}
-                      onSelect={setBirthday}
+                      selected={birthdayState}
+                      onSelect={setBirthdayState}
                       initialFocus
                       captionLayout="dropdown-buttons"
                       fromYear={1900}

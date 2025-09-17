@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
@@ -29,6 +30,8 @@ interface AppContextType {
   getWeekCompletion: (habit: Habit) => { completed: number; total: number };
   getTodaysMotivation: (userName: string) => Promise<string>;
   clearTodaysMotivation: () => void;
+  birthday: string | null;
+  setBirthday: (date: Date) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -55,6 +58,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [gratitudeEntries, setGratitudeEntries] = useState<GratitudeEntry[]>([]);
   const [motivationalMessage, setMotivationalMessage] = useState<MotivationalMessage | null>(null);
+  const [birthday, setBirthdayState] = useState<string | null>(null);
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -64,6 +69,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setHabits([]);
         setGratitudeEntries([]);
         setMotivationalMessage(null);
+        setBirthdayState(null);
       }
       setLoading(false);
     });
@@ -80,9 +86,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         let storedEntries: GratitudeEntry[] = [];
         
         try {
-          const habitsStr = localStorage.getItem(`focusflow-habits-${'\'\'\''}${user.uid}'\'\'\'`);
-          const entriesStr = localStorage.getItem(`focusflow-gratitudeEntries-${'\'\'\''}${user.uid}'\'\'\'`);
-          const motivationStr = localStorage.getItem(`focusflow-motivation-${'\'\'\''}${user.uid}'\'\'\'`);
+          const habitsStr = localStorage.getItem(`focusflow-habits-${user.uid}`);
+          const entriesStr = localStorage.getItem(`focusflow-gratitudeEntries-${user.uid}`);
+          const motivationStr = localStorage.getItem(`focusflow-motivation-${user.uid}`);
+          const birthdayStr = localStorage.getItem(`focusflow-birthday-${user.uid}`);
+
 
           if (habitsStr) {
             storedHabits = JSON.parse(habitsStr);
@@ -99,6 +107,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
            if (motivationStr) {
             setMotivationalMessage(JSON.parse(motivationStr));
           }
+
+          if (birthdayStr) {
+            setBirthdayState(JSON.parse(birthdayStr));
+          }
+
 
         } catch (error) {
           console.error("Failed to parse from localStorage", error);
@@ -130,21 +143,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (isClient && user && habits.length > 0) {
-      localStorage.setItem(`focusflow-habits-${'\'\'\''}${user.uid}'\'\'\'`, JSON.stringify(habits));
+      localStorage.setItem(`focusflow-habits-${user.uid}`, JSON.stringify(habits));
     }
   }, [habits, isClient, user]);
 
   useEffect(() => {
     if (isClient && user && gratitudeEntries.length > 0) {
-      localStorage.setItem(`focusflow-gratitudeEntries-${'\'\'\''}${user.uid}'\'\'\'`, JSON.stringify(gratitudeEntries));
+      localStorage.setItem(`focusflow-gratitudeEntries-${user.uid}`, JSON.stringify(gratitudeEntries));
     }
   }, [gratitudeEntries, isClient, user]);
   
   useEffect(() => {
     if (isClient && user && motivationalMessage) {
-      localStorage.setItem(`focusflow-motivation-${'\'\'\''}${user.uid}'\'\'\'`, JSON.stringify(motivationalMessage));
+      localStorage.setItem(`focusflow-motivation-${user.uid}`, JSON.stringify(motivationalMessage));
     }
   }, [motivationalMessage, isClient, user]);
+
+  useEffect(() => {
+    if (isClient && user && birthday) {
+      localStorage.setItem(`focusflow-birthday-${user.uid}`, JSON.stringify(birthday));
+    }
+  }, [birthday, isClient, user]);
+
 
   const addHabit = (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates'>) => {
     const newHabit: Habit = {
@@ -358,9 +378,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const clearTodaysMotivation = () => {
     setMotivationalMessage(null);
     if(user){
-        localStorage.removeItem(`focusflow-motivation-${'\'\'\''}${user.uid}'\'\'\'`);
+        localStorage.removeItem(`focusflow-motivation-${user.uid}`);
     }
-  }
+  };
+
+  const setBirthday = (date: Date) => {
+    setBirthdayState(format(date, 'yyyy-MM-dd'));
+  };
 
   const value = {
     user,
@@ -381,6 +405,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     getWeekCompletion,
     getTodaysMotivation,
     clearTodaysMotivation,
+    birthday,
+    setBirthday,
   };
 
   return (
