@@ -55,15 +55,6 @@ export function HabitCardWithGrid({ habit }: { habit: Habit }) {
             </div>
             <div>
               <CardTitle className="text-lg font-semibold">{habit.name}</CardTitle>
-                <div className="text-sm text-muted-foreground flex items-center gap-2">
-                    <p className="flex items-center gap-1">
-                        <Flame className={cn("h-4 w-4", streak > 0 ? "text-orange-500" : "text-muted-foreground")} />
-                        Racha: {streak} {streakUnit}
-                    </p>
-                    {isWeekly && (
-                       <p className="font-medium">({weekCompletion.completed}/{weekCompletion.total} esta semana)</p>
-                    )}
-                </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -79,7 +70,6 @@ export function HabitCardWithGrid({ habit }: { habit: Habit }) {
                   selected={completedDatesForCalendar}
                   onDayClick={handleDayClick}
                   initialFocus
-                  weekStartsOn={1}
                 />
               </PopoverContent>
             </Popover>
@@ -93,8 +83,18 @@ export function HabitCardWithGrid({ habit }: { habit: Habit }) {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="flex-grow flex flex-col justify-end">
+      <CardContent className="flex-grow flex items-end justify-between gap-4">
         <HabitCompletionGrid completedDates={habit.completedDates} />
+        <div className="flex flex-col items-center justify-center p-4 rounded-lg bg-secondary/50 shrink-0">
+            <div className="flex items-center gap-2 text-2xl font-bold">
+                 <Flame className={cn("h-7 w-7", streak > 0 ? "text-orange-500" : "text-muted-foreground")} />
+                 <span>{streak}</span>
+            </div>
+            <p className="text-sm text-muted-foreground">{streakUnit}</p>
+             {isWeekly && (
+                <p className="text-xs font-medium text-muted-foreground mt-2">({weekCompletion.completed}/{weekCompletion.total} esta semana)</p>
+            )}
+        </div>
       </CardContent>
     </Card>
   );
