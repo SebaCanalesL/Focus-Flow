@@ -208,7 +208,7 @@ export default function ProfilePage() {
         <Card className="md:col-span-3 border-destructive">
           <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6">
             <div>
-              <p className="font-medium">Eliminar Cuenta</p>
+              <p className="font-bold">Eliminar Cuenta</p>
               <p className="text-sm text-muted-foreground">
                 Esta acción es permanente y no se puede deshacer. Se eliminarán todos tus datos.
               </p>
@@ -219,7 +219,7 @@ export default function ProfilePage() {
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
+                  <AlertDialogTitle>¿Estás absolutely seguro?</AlertDialogTitle>
                   <AlertDialogDescription>
                     Esta acción no se puede deshacer. Esto eliminará permanentemente tu cuenta y borrará todos tus datos de nuestros servidores.
                   </AlertDialogDescription>
