@@ -9,20 +9,24 @@ import {
   startOfWeek,
   endOfWeek,
   isSameMonth,
+  subMonths,
 } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import type { Habit } from '@/lib/types';
+
 
 const weekDays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
-const HabitCompletionGrid = ({ completedDates }: { completedDates: string[] }) => {
+const HabitCompletionGrid = ({ habit }: { habit: Habit }) => {
+  const { completedDates, color } = habit;
   const completedDatesSet = useMemo(() => new Set(completedDates), [completedDates]);
 
   const monthsToShow = useMemo(() => {
     const today = new Date();
     const currentMonth = startOfMonth(today);
-    const prevMonth = startOfMonth(new Date(currentMonth).setMonth(currentMonth.getMonth() - 1));
-    const prev2Month = startOfMonth(new Date(currentMonth).setMonth(currentMonth.getMonth() - 2));
+    const prevMonth = startOfMonth(subMonths(today, 1));
+    const prev2Month = startOfMonth(subMonths(today, 2));
 
     return [prev2Month, prevMonth, currentMonth].sort((a, b) => a.getTime() - b.getTime());
   }, []);
@@ -61,9 +65,9 @@ const HabitCompletionGrid = ({ completedDates }: { completedDates: string[] }) =
                       className={cn(
                         'w-[var(--dot-size)] h-[var(--dot-size)] rounded-sm',
                         isFuture ? 'bg-transparent' : 'bg-muted/50',
-                        isCompleted && 'bg-primary',
-                        !isCurrentMonth && 'bg-transparent'
+                         !isCurrentMonth && 'bg-transparent'
                       )}
+                       style={{ backgroundColor: isCompleted ? color : undefined }}
                       title={dayString}
                     />
                   );

@@ -6,6 +6,7 @@ export const INITIAL_HABITS: Habit[] = [
     id: '1',
     name: 'Read for 15 minutes',
     icon: 'BookOpen',
+    color: '#60a5fa',
     frequency: 'daily',
     createdAt: new Date().toISOString(),
     completedDates: [
@@ -18,6 +19,7 @@ export const INITIAL_HABITS: Habit[] = [
     id: '2',
     name: 'Go for a walk',
     icon: 'Footprints',
+    color: '#4ade80',
     frequency: 'daily',
     createdAt: new Date().toISOString(),
     completedDates: [
@@ -28,7 +30,9 @@ export const INITIAL_HABITS: Habit[] = [
     id: '3',
     name: 'Weekly review',
     icon: 'ClipboardCheck',
+    color: '#facc15',
     frequency: 'weekly',
+    daysPerWeek: 1,
     createdAt: new Date().toISOString(),
     completedDates: [],
   },

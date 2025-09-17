@@ -50,8 +50,8 @@ export function HabitCardWithGrid({ habit }: { habit: Habit }) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-primary/20 p-2 rounded-lg">
-              <Icon name={habit.icon as IconName} className="h-6 w-6 text-primary" />
+            <div className="p-2 rounded-lg" style={{ backgroundColor: `${habit.color}33`}}>
+              <Icon name={habit.icon as IconName} className="h-6 w-6" style={{ color: habit.color }} />
             </div>
             <div>
               <CardTitle className="text-lg font-semibold">{habit.name}</CardTitle>
@@ -70,12 +70,14 @@ export function HabitCardWithGrid({ habit }: { habit: Habit }) {
                   selected={completedDatesForCalendar}
                   onDayClick={handleDayClick}
                   initialFocus
+                  weekStartsOn={1}
                 />
               </PopoverContent>
             </Popover>
             <Button
               size="icon"
-              className={cn(isCompletedToday && "bg-green-600 hover:bg-green-700")}
+              className={cn(isCompletedToday && "text-white")}
+              style={{ backgroundColor: isCompletedToday ? habit.color : ""}}
               onClick={() => toggleHabitCompletion(habit.id, new Date())}
             >
               {isCompletedToday ? <CheckCheck className="h-5 w-5" /> : <Check className="h-5 w-5" />}
@@ -84,7 +86,7 @@ export function HabitCardWithGrid({ habit }: { habit: Habit }) {
         </div>
       </CardHeader>
       <CardContent className="flex-grow flex items-end justify-between gap-4">
-        <HabitCompletionGrid completedDates={habit.completedDates} />
+        <HabitCompletionGrid habit={habit} />
         <div className="flex flex-col items-center justify-center p-4 rounded-lg bg-secondary/50 shrink-0">
             <div className="flex items-center gap-2 text-2xl font-bold">
                  <Flame className={cn("h-7 w-7", streak > 0 ? "text-orange-500" : "text-muted-foreground")} />

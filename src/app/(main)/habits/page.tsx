@@ -3,6 +3,7 @@
 import { HabitList } from "@/components/habits/habit-list";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { CreateHabitDialog } from "@/components/habits/create-habit-dialog";
 
 export default function HabitsPage() {
   const today = new Date();
@@ -17,6 +18,7 @@ export default function HabitsPage() {
             Hoy es {formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1)}
           </p>
         </div>
+        <CreateHabitDialog />
       </div>
       <HabitList />
     </div>

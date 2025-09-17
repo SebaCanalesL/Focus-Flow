@@ -13,6 +13,7 @@ interface AppContextType {
   loading: boolean;
   habits: Habit[];
   gratitudeEntries: GratitudeEntry[];
+  addHabit: (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates'>) => void;
   toggleHabitCompletion: (habitId: string, date: Date) => void;
   getHabitById: (habitId: string) => Habit | undefined;
   getStreak: (habit: Habit) => number;
@@ -79,6 +80,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(`focusflow-gratitudeEntries-${user.uid}`, JSON.stringify(gratitudeEntries));
     }
   }, [gratitudeEntries, isClient, user]);
+
+  const addHabit = (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates'>) => {
+    const newHabit: Habit = {
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+      completedDates: [],
+      ...habitData,
+    };
+    setHabits(prev => [...prev, newHabit]);
+  };
 
   const toggleHabitCompletion = (habitId: string, date: Date) => {
     const dateString = format(date, 'yyyy-MM-dd');
@@ -219,6 +230,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     loading,
     habits,
     gratitudeEntries,
+    addHabit,
     toggleHabitCompletion,
     getHabitById,
     getStreak,
