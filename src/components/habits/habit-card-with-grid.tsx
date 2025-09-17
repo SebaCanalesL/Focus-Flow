@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "../ui/button";
 import { useState } from "react";
-import { formatISO } from "date-fns";
+import { format } from "date-fns";
 
 type IconName = keyof typeof LucideIcons;
 
@@ -26,11 +26,14 @@ export function HabitCardWithGrid({ habit }: { habit: Habit }) {
   const [calendarOpen, setCalendarOpen] = useState(false);
 
   const today = new Date();
-  const todayString = formatISO(today, { representation: "date" });
+  const todayString = format(today, "yyyy-MM-dd");
   const isCompletedToday = habit.completedDates.includes(todayString);
   const streak = getStreak(habit);
 
-  const completedDatesForCalendar = habit.completedDates.map(d => new Date(d));
+  const completedDatesForCalendar = habit.completedDates.map(d => {
+      const [year, month, day] = d.split('-').map(Number);
+      return new Date(year, month - 1, day);
+  });
 
   const handleDayClick = (day: Date | undefined) => {
     if (day) {

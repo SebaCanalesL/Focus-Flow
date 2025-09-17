@@ -9,24 +9,14 @@ import {
   startOfWeek,
   getDay,
   isSameMonth,
-  parseISO,
 } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import {toZonedTime} from "date-fns-tz";
-
-// Get user's time zone
-const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 const weekDays = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
 
 const HabitCompletionGrid = ({ completedDates }: { completedDates: string[] }) => {
-  const zonedCompletedDates = useMemo(() => new Set(
-    completedDates.map(d => {
-       const zonedDate = toZonedTime(parseISO(d), userTimeZone);
-       return format(zonedDate, "yyyy-MM-dd");
-    })
-  ), [completedDates]);
+  const completedDatesSet = useMemo(() => new Set(completedDates), [completedDates]);
 
   const monthsToShow = useMemo(() => {
     const today = new Date();
@@ -89,8 +79,8 @@ const HabitCompletionGrid = ({ completedDates }: { completedDates: string[] }) =
               >
                 {eachDayOfInterval({ start: startOfWeek(month), end: endOfMonth(month) }).map((day) => {
                   const dayString = format(day, 'yyyy-MM-dd');
-                  const isCompleted = zonedCompletedDates.has(dayString);
-                  const isFuture = day > new Date();
+                  const isCompleted = completedDatesSet.has(dayString);
+                  const isFuture = day > new Date() && dayString !== format(new Date(), 'yyyy-MM-dd');
 
                   return (
                     <div

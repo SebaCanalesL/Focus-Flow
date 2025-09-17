@@ -6,7 +6,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import type { Habit, GratitudeEntry, Frequency } from '@/lib/types';
 import { INITIAL_HABITS, INITIAL_GRATITUDE_ENTRIES } from '@/lib/data';
-import { formatISO } from 'date-fns';
+import { format } from 'date-fns';
 
 interface AppContextType {
   user: User | null;
@@ -91,7 +91,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const toggleHabitCompletion = (habitId: string, date: Date) => {
-    const dateString = formatISO(date, { representation: 'date' });
+    const dateString = format(date, 'yyyy-MM-dd');
     setHabits(prev =>
       prev.map(habit => {
         if (habit.id === habitId) {
@@ -169,7 +169,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const addGratitudeEntry = (content: string, date: Date) => {
-    const dateString = formatISO(date, { representation: 'date' });
+    const dateString = format(date, 'yyyy-MM-dd');
     const existingEntryIndex = gratitudeEntries.findIndex(entry => entry.date === dateString);
 
     if (existingEntryIndex > -1) {
@@ -187,7 +187,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const getGratitudeEntry = (date: Date) => {
-    const dateString = formatISO(date, { representation: 'date' });
+    const dateString = format(date, 'yyyy-MM-dd');
     return gratitudeEntries.find(entry => entry.date === dateString);
   };
   
