@@ -28,14 +28,37 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !password) {
+      toast({
+        title: "Campos incompletos",
+        description: "Por favor, introduce tu correo y contraseña.",
+        variant: "destructive",
+      });
+      return;
+    }
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
       router.push("/dashboard");
     } catch (error: any) {
+      console.error("Login error:", error);
+      let description = "Ocurrió un error inesperado. Por favor, intenta de nuevo.";
+      if (error.code) {
+        switch (error.code) {
+            case 'auth/user-not-found':
+            case 'auth/wrong-password':
+                description = "Las credenciales son incorrectas. Verifica tu correo y contraseña.";
+                break;
+            case 'auth/invalid-email':
+                description = "El formato del correo electrónico no es válido.";
+                break;
+            default:
+                description = error.message;
+        }
+      }
       toast({
         title: "Error al iniciar sesión",
-        description: error.message,
+        description: description,
         variant: "destructive",
       });
     } finally {
@@ -71,6 +94,7 @@ export default function LoginPage() {
             <Input
               id="password"
               type="password"
+              placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
