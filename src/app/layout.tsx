@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 // IMPORTANT: Replace this with your actual Google Client ID
-const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = "444464760523-litig6v91buouohs117uob86pc0ojb9q.apps.googleusercontent.com";
 
 export default function RootLayout({
   children,
