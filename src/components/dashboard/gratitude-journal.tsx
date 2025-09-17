@@ -12,7 +12,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { useAppData } from "@/contexts/app-provider"
-import { BookHeart, Save } from "lucide-react"
+import { BookHeart, Sparkles } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 export function GratitudeJournal() {
@@ -68,8 +68,8 @@ export function GratitudeJournal() {
       </CardContent>
       <CardFooter>
         <Button onClick={handleSave}>
-          <Save className="mr-2 h-4 w-4" />
-          Guardar Entrada
+          <Sparkles className="mr-2 h-4 w-4" />
+          Guardar lo bonito de hoy
         </Button>
       </CardFooter>
     </Card>
