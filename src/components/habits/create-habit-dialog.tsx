@@ -25,10 +25,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAppData } from "@/contexts/app-provider";
-import { PlusCircle, WandSparkles } from "lucide-react";
+import { PlusCircle, WandSparkles, Bell } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { suggestHabitIcon } from "@/ai/flows/suggest-habit-icon-flow";
+import { Switch } from "../ui/switch";
 
 const formSchema = z
   .object({
@@ -37,6 +38,8 @@ const formSchema = z
       required_error: "Debes seleccionar una frecuencia.",
     }),
     daysPerWeek: z.number().min(1).max(7).optional(),
+    reminderEnabled: z.boolean().default(false),
+    reminderTime: z.string().optional(),
   })
   .refine(
     (data) => {
@@ -48,6 +51,17 @@ const formSchema = z
     {
       message: "Debes especificar cuántos días a la semana.",
       path: ["daysPerWeek"],
+    }
+  ).refine(
+    (data) => {
+        if (data.reminderEnabled) {
+            return !!data.reminderTime;
+        }
+        return true;
+    },
+    {
+        message: "Debes seleccionar una hora para el recordatorio.",
+        path: ["reminderTime"],
     }
   );
 
@@ -62,11 +76,14 @@ export function CreateHabitDialog() {
     defaultValues: {
       name: "",
       frequency: "daily",
+      reminderEnabled: false,
+      reminderTime: "09:00",
     },
   });
 
   const frequency = form.watch("frequency");
   const daysPerWeek = form.watch("daysPerWeek");
+  const reminderEnabled = form.watch("reminderEnabled");
 
   useEffect(() => {
     if (daysPerWeek === 7) {
@@ -93,6 +110,8 @@ export function CreateHabitDialog() {
         frequency: values.frequency,
         daysPerWeek: values.frequency === 'weekly' ? values.daysPerWeek : undefined,
         icon: iconName,
+        reminderEnabled: values.reminderEnabled,
+        reminderTime: values.reminderEnabled ? values.reminderTime : undefined,
       });
 
       toast({
@@ -104,6 +123,8 @@ export function CreateHabitDialog() {
       form.reset({
         name: "",
         frequency: "daily",
+        reminderEnabled: false,
+        reminderTime: "09:00",
       });
     } catch (error) {
       console.error("Error creating habit:", error);
@@ -113,6 +134,8 @@ export function CreateHabitDialog() {
         frequency: values.frequency,
         daysPerWeek: values.frequency === 'weekly' ? values.daysPerWeek : undefined,
         icon: "Target",
+        reminderEnabled: values.reminderEnabled,
+        reminderTime: values.reminderEnabled ? values.reminderTime : undefined,
       });
       toast({
         title: "¡Hábito Creado!",
@@ -220,6 +243,45 @@ export function CreateHabitDialog() {
                 )}
               />
             )}
+            
+            <div className="space-y-4 rounded-lg border p-4">
+                <FormField
+                control={form.control}
+                name="reminderEnabled"
+                render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between">
+                         <div className="space-y-0.5">
+                            <FormLabel className="text-base flex items-center gap-2">
+                                <Bell className="h-4 w-4" />
+                                Recordatorio
+                            </FormLabel>
+                        </div>
+                        <FormControl>
+                            <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                            />
+                        </FormControl>
+                    </FormItem>
+                )}
+                />
+                {reminderEnabled && (
+                    <FormField
+                        control={form.control}
+                        name="reminderTime"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Hora del recordatorio</FormLabel>
+                                <FormControl>
+                                    <Input type="time" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                )}
+            </div>
+
 
             <DialogFooter>
               <Button type="submit" disabled={isSubmitting}>

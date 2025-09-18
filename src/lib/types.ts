@@ -8,6 +8,8 @@ export interface Habit {
   daysPerWeek?: number; // Target days per week for weekly habits
   createdAt: string;
   completedDates: string[]; // Store dates as ISO strings 'YYYY-MM-DD'
+  reminderEnabled?: boolean;
+  reminderTime?: string; // e.g., "09:00"
 }
 
 export interface GratitudeEntry {

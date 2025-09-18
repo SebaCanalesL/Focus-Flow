@@ -39,6 +39,8 @@ import { useAppData } from "@/contexts/app-provider";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import type { Habit } from "@/lib/types";
+import { Switch } from "../ui/switch";
+import { Bell } from "lucide-react";
 
 const formSchema = z
   .object({
@@ -47,6 +49,8 @@ const formSchema = z
       required_error: "Debes seleccionar una frecuencia.",
     }),
     daysPerWeek: z.number().min(1).max(7).optional(),
+    reminderEnabled: z.boolean().default(false),
+    reminderTime: z.string().optional(),
   })
   .refine(
     (data) => {
@@ -59,7 +63,18 @@ const formSchema = z
       message: "Debes especificar cuántos días a la semana.",
       path: ["daysPerWeek"],
     }
-  );
+  ).refine(
+    (data) => {
+        if (data.reminderEnabled) {
+            return !!data.reminderTime;
+        }
+        return true;
+    },
+    {
+        message: "Debes seleccionar una hora para el recordatorio.",
+        path: ["reminderTime"],
+    }
+    );
 
 export function EditHabitDialog({ habit, children }: { habit: Habit, children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -72,17 +87,22 @@ export function EditHabitDialog({ habit, children }: { habit: Habit, children: R
       name: habit.name,
       frequency: habit.frequency,
       daysPerWeek: habit.daysPerWeek,
+      reminderEnabled: habit.reminderEnabled || false,
+      reminderTime: habit.reminderTime || "09:00",
     },
   });
 
   const frequency = form.watch("frequency");
   const daysPerWeek = form.watch("daysPerWeek");
+  const reminderEnabled = form.watch("reminderEnabled");
 
   useEffect(() => {
     form.reset({
         name: habit.name,
         frequency: habit.frequency,
         daysPerWeek: habit.daysPerWeek || (habit.frequency === 'daily' ? 7 : undefined),
+        reminderEnabled: habit.reminderEnabled || false,
+        reminderTime: habit.reminderTime || "09:00",
     });
   }, [habit, form, isOpen]);
 
@@ -106,6 +126,8 @@ export function EditHabitDialog({ habit, children }: { habit: Habit, children: R
       name: values.name,
       frequency: values.frequency,
       daysPerWeek: values.frequency === 'weekly' ? values.daysPerWeek : undefined,
+      reminderEnabled: values.reminderEnabled,
+      reminderTime: values.reminderEnabled ? values.reminderTime : undefined,
     });
 
     toast({
@@ -216,6 +238,44 @@ export function EditHabitDialog({ habit, children }: { habit: Habit, children: R
                 )}
               />
             )}
+
+            <div className="space-y-4 rounded-lg border p-4">
+                <FormField
+                control={form.control}
+                name="reminderEnabled"
+                render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between">
+                         <div className="space-y-0.5">
+                            <FormLabel className="text-base flex items-center gap-2">
+                                <Bell className="h-4 w-4" />
+                                Recordatorio
+                            </FormLabel>
+                        </div>
+                        <FormControl>
+                            <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                            />
+                        </FormControl>
+                    </FormItem>
+                )}
+                />
+                {reminderEnabled && (
+                    <FormField
+                        control={form.control}
+                        name="reminderTime"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Hora del recordatorio</FormLabel>
+                                <FormControl>
+                                    <Input type="time" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                )}
+            </div>
             
             <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between w-full gap-2">
                 <AlertDialog>

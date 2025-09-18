@@ -20,7 +20,7 @@ interface AppContextType {
   setHabits: React.Dispatch<React.SetStateAction<Habit[]>>;
   gratitudeEntries: GratitudeEntry[];
   addHabit: (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates'>) => void;
-  updateHabit: (habitId: string, habitData: { name: string; frequency: Frequency; daysPerWeek?: number }) => void;
+  updateHabit: (habitId: string, habitData: Partial<Omit<Habit, 'id' | 'icon' | 'createdAt' | 'completedDates'>>) => void;
   deleteHabit: (habitId: string) => void;
   toggleHabitCompletion: (habitId: string, date: Date) => void;
   getHabitById: (habitId: string) => Habit | undefined;
@@ -181,7 +181,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setHabits(prev => [...prev, newHabit]);
   };
 
-  const updateHabit = (habitId: string, habitData: { name: string; frequency: Frequency; daysPerWeek?: number }) => {
+  const updateHabit = (habitId: string, habitData: Partial<Omit<Habit, 'id' | 'icon' | 'createdAt' | 'completedDates'>>) => {
     setHabits(prev =>
       prev.map(habit =>
         habit.id === habitId ? { ...habit, ...habitData } : habit
@@ -432,4 +432,3 @@ export function useAppData() {
   }
   return context;
 }
-
