@@ -40,7 +40,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import type { Habit } from "@/lib/types";
 import { Switch } from "../ui/switch";
-import { Bell } from "lucide-react";
+import { Bell, Clock } from "lucide-react";
 
 const formSchema = z
   .object({
@@ -261,19 +261,22 @@ export function EditHabitDialog({ habit, children }: { habit: Habit, children: R
                 )}
                 />
                 {reminderEnabled && (
-                    <FormField
-                        control={form.control}
-                        name="reminderTime"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Hora del recordatorio</FormLabel>
-                                <FormControl>
-                                    <Input type="time" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                  <FormField
+                    control={form.control}
+                    name="reminderTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Hora del recordatorio</FormLabel>
+                        <FormControl>
+                           <div className="relative">
+                            <Input type="time" {...field} className="pr-10" />
+                            <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 )}
             </div>
             

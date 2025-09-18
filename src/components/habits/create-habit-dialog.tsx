@@ -25,7 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAppData } from "@/contexts/app-provider";
-import { PlusCircle, WandSparkles, Bell } from "lucide-react";
+import { PlusCircle, WandSparkles, Bell, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { suggestHabitIcon } from "@/ai/flows/suggest-habit-icon-flow";
@@ -266,19 +266,22 @@ export function CreateHabitDialog() {
                 )}
                 />
                 {reminderEnabled && (
-                    <FormField
-                        control={form.control}
-                        name="reminderTime"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Hora del recordatorio</FormLabel>
-                                <FormControl>
-                                    <Input type="time" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                  <FormField
+                    control={form.control}
+                    name="reminderTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Hora del recordatorio</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input type="time" {...field} className="pr-10" />
+                            <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 )}
             </div>
 
