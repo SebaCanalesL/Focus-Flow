@@ -7,14 +7,6 @@
   },
   "functions": [
     {
-      "codebase": "default",
-      "predeploy": [
-        "npm --prefix \"$RESOURCE_DIR\" run lint",
-        "npm --prefix \"$RESOURCE_DIR\" run build"
-      ],
-      "source": "functions"
-    },
-    {
       "source": "app-functions",
       "codebase": "app-functions",
       "ignore": [
@@ -42,6 +34,7 @@
     ]
   },
   "hosting": {
+    "site": "studio-808864941-b51ba",
     "public": "public",
     "ignore": [
       "firebase.json",
