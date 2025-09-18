@@ -145,7 +145,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             unsubscribeUser();
         };
     }
-  }, [isClient, user, habits]); // Added habits to dependency array
+  }, [isClient, user]);
 
 
   useEffect(() => {
