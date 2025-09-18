@@ -9,6 +9,7 @@ export const INITIAL_HABITS: Habit[] = [
     frequency: 'daily',
     createdAt: new Date().toISOString(),
     completedDates: [],
+    order: -1, // Pinned to top
   },
   {
     id: '1',
@@ -18,6 +19,7 @@ export const INITIAL_HABITS: Habit[] = [
     daysPerWeek: 1,
     createdAt: new Date().toISOString(),
     completedDates: [],
+    order: 0,
   },
   {
     id: '2',
@@ -27,6 +29,7 @@ export const INITIAL_HABITS: Habit[] = [
     daysPerWeek: 4,
     createdAt: new Date().toISOString(),
     completedDates: [],
+    order: 1,
   },
 ];
 

@@ -1,8 +1,8 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import {initializeApp, getApps, getApp} from 'firebase/app';
+import {getAuth, connectAuthEmulator} from 'firebase/auth';
+import {getFirestore, connectFirestoreEmulator} from 'firebase/firestore';
+import {getStorage, connectStorageEmulator} from 'firebase/storage';
 
-// Firebase configuration is now loaded from environment variables
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -12,15 +12,19 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Check if all required environment variables are set
-if (!firebaseConfig.apiKey || !firebaseConfig.authDomain || !firebaseConfig.projectId) {
-  console.error("Firebase configuration is missing. Make sure to set up your .env.local file with NEXT_PUBLIC_ prefixes");
+// Initialize Firebase
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const firestore = getFirestore(app);
+const auth = getAuth(app);
+const storage = getStorage(app);
+
+// Cconnect to emulators if in development
+// IMPORTANT: This check MUST be precise to ensure the deployed app does not try to connect to emulators.
+if (process.env.NEXT_PUBLIC_USE_EMULATORS === 'true') {
+  console.log('Connecting to Firebase emulators');
+  connectFirestoreEmulator(firestore, 'localhost', 8080);
+  connectAuthEmulator(auth, 'http://localhost:9099');
+  connectStorageEmulator(storage, 'localhost', 9199);
 }
 
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
-const firestore = getFirestore(app);
-auth.useDeviceLanguage();
-
-
-export { app, auth, firestore };
+export {app, firestore, auth, storage};

@@ -17,7 +17,7 @@ import {
   getDocs,
   query,
   where,
-  documentId
+  orderBy
 } from 'firebase/firestore';
 import type { Habit, GratitudeEntry, Frequency } from '@/lib/types';
 import { INITIAL_HABITS, INITIAL_GRATITUDE_ENTRIES } from '@/lib/data';
@@ -49,15 +49,6 @@ interface AppContextType {
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
-
-const gratitudeHabitTemplate: Habit = {
-  id: 'gratitude-habit',
-  name: 'Agradecer 3 aspectos de mi vida',
-  icon: 'BookHeart',
-  frequency: 'daily',
-  createdAt: new Date().toISOString(),
-  completedDates: [],
-};
 
 interface MotivationalMessage {
   quote: string;
@@ -95,30 +86,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
   
   useEffect(() => {
     if (isClient && user) {
-        const habitsCollectionRef = collection(firestore, `users/${user.uid}/habits`);
+        const habitsQuery = query(collection(firestore, `users/${user.uid}/habits`), orderBy("order", "asc"));
         const gratitudeCollectionRef = collection(firestore, `users/${user.uid}/gratitudeEntries`);
         const userDocRef = doc(firestore, `users/${user.uid}`);
 
-        const unsubscribeHabits = onSnapshot(habitsCollectionRef, async (snapshot) => {
-            if (snapshot.empty) {
+        const unsubscribeHabits = onSnapshot(habitsQuery, async (snapshot) => {
+            if (snapshot.empty && (await getDocs(habitsQuery)).empty) {
                 // First time user, create initial habits
                 const batch = writeBatch(firestore);
                 INITIAL_HABITS.forEach(habit => {
-                    const newHabitRef = doc(habitsCollectionRef, habit.id);
+                    const newHabitRef = doc(collection(firestore, `users/${user.uid}/habits`), habit.id === 'gratitude-habit' ? habit.id : undefined);
                     batch.set(newHabitRef, habit);
                 });
                 await batch.commit();
             } else {
                 const serverHabits = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Habit));
-                 // Manually handle gratitude habit completion dates
-                const gratitudeHabit = serverHabits.find(h => h.id === 'gratitude-habit') || { ...gratitudeHabitTemplate };
-                const gratitudeDates = new Set(gratitudeEntries.map(e => e.date));
-                const existingDates = new Set(gratitudeHabit.completedDates);
-                const newDates = Array.from(new Set([...Array.from(existingDates), ...Array.from(gratitudeDates)]));
-                gratitudeHabit.completedDates = newDates.sort();
-                
-                const otherHabits = serverHabits.filter(h => h.id !== 'gratitude-habit');
-                setHabits([gratitudeHabit, ...otherHabits]);
+                setHabits(serverHabits);
             }
         });
         
@@ -127,16 +110,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
             setGratitudeEntries(serverEntries);
 
             // Update gratitude habit completion dates when entries change
-            setHabits(prevHabits => {
-                const gratitudeHabit = prevHabits.find(h => h.id === 'gratitude-habit') || { ...gratitudeHabitTemplate };
+            const gratitudeHabit = habits.find(h => h.id === 'gratitude-habit');
+            if (gratitudeHabit) {
                 const gratitudeDates = new Set(serverEntries.map(e => e.date));
-                const existingDates = new Set(gratitudeHabit.completedDates);
-                const newDates = Array.from(new Set([...Array.from(existingDates), ...Array.from(gratitudeDates)]));
-                gratitudeHabit.completedDates = newDates.sort();
+                const newCompletedDates = Array.from(gratitudeDates).sort();
 
-                const otherHabits = prevHabits.filter(h => h.id !== 'gratitude-habit');
-                return [gratitudeHabit, ...otherHabits];
-            })
+                if (JSON.stringify(gratitudeHabit.completedDates) !== JSON.stringify(newCompletedDates)) {
+                    const habitDocRef = doc(firestore, `users/${user.uid}/habits`, 'gratitude-habit');
+                    updateDoc(habitDocRef, { completedDates: newCompletedDates });
+                }
+            }
         });
 
         const unsubscribeUser = onSnapshot(userDocRef, (doc) => {
@@ -162,7 +145,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             unsubscribeUser();
         };
     }
-  }, [isClient, user]);
+  }, [isClient, user, habits]); // Added habits to dependency array
 
 
   useEffect(() => {
@@ -204,12 +187,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [isClient, habits]);
 
 
-  const addHabit = async (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates'>) => {
+  const addHabit = async (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates' | 'order'>) => {
     if (!user) return;
     const habitsCollectionRef = collection(firestore, `users/${user.uid}/habits`);
     const newHabit: Omit<Habit, 'id'> = {
       createdAt: new Date().toISOString(),
       completedDates: [],
+      order: habits.filter(h => h.id !== 'gratitude-habit').length,
       ...habitData,
     };
     await addDoc(habitsCollectionRef, newHabit);
@@ -229,6 +213,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const toggleHabitCompletion = async (habitId: string, date: Date) => {
     if (!user) return;
+    if (habitId === 'gratitude-habit') return; // Should be handled by addGratitudeEntry
+
     const dateString = format(date, 'yyyy-MM-dd');
     const habit = habits.find(h => h.id === habitId);
     if (!habit) return;
@@ -366,14 +352,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await updateDoc(docRef, { content, note });
     } else {
       await addDoc(gratitudeCollectionRef, { content, note, date: dateString });
-    }
-    
-    // Auto-complete gratitude habit if there is content
-    if (content.trim().length > 0) {
-      const habit = habits.find(h => h.id === 'gratitude-habit');
-      if (habit && !habit.completedDates.includes(dateString)) {
-         await toggleHabitCompletion('gratitude-habit', date);
-      }
     }
   };
 

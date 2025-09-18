@@ -56,8 +56,16 @@ function SortableHabitItem({ habit }: { habit: Habit }) {
 }
 
 export function HabitList() {
-  const { user, habits, setHabits, isClient } = useAppData()
+  const { user, habits: appHabits, setHabits, isClient } = useAppData()
   const [activeHabit, setActiveHabit] = useState<Habit | null>(null);
+  const [localHabits, setLocalHabits] = useState<Habit[]>([]);
+
+  useEffect(() => {
+    // Sort habits from context by order and update local state
+    const sortedHabits = [...appHabits].sort((a,b) => (a.order || 0) - (b.order || 0));
+    setLocalHabits(sortedHabits);
+  }, [appHabits]);
+
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -78,7 +86,7 @@ export function HabitList() {
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
-    const habit = habits.find(h => h.id === active.id);
+    const habit = localHabits.find(h => h.id === active.id);
     if (habit) {
         setActiveHabit(habit);
     }
@@ -89,21 +97,29 @@ export function HabitList() {
     setActiveHabit(null);
 
     if (over && active.id !== over.id) {
-      const oldIndex = habits.findIndex(item => item.id === active.id);
-      const newIndex = habits.findIndex(item => item.id === over.id);
+      const oldIndex = localHabits.findIndex(item => item.id === active.id);
+      const newIndex = localHabits.findIndex(item => item.id === over.id);
       
-      const newHabits = arrayMove(habits, oldIndex, newIndex);
-      setHabits(newHabits);
+      const newHabits = arrayMove(localHabits, oldIndex, newIndex);
+      setLocalHabits(newHabits);
 
       if (user) {
-        const batch = writeBatch(firestore);
-        newHabits.forEach((habit, index) => {
-          if (habit.id !== 'gratitude-habit') {
-            const habitRef = doc(firestore, `users/${user.uid}/habits`, habit.id);
-            batch.update(habitRef, { order: index });
-          }
-        });
-        await batch.commit();
+        try {
+            const batch = writeBatch(firestore);
+            newHabits.forEach((habit, index) => {
+                if(habit.id !== 'gratitude-habit') {
+                    const habitRef = doc(firestore, `users/${user.uid}/habits`, habit.id);
+                    batch.update(habitRef, { order: index });
+                }
+            });
+            await batch.commit();
+            // Optionally, resync with global state after commit if needed
+            setHabits(newHabits);
+        } catch (error) {
+            console.error("Failed to update habit order:", error);
+            // Revert local state on error
+            setLocalHabits(appHabits);
+        }
       }
     }
   }
@@ -118,10 +134,8 @@ export function HabitList() {
     )
   }
 
-  const sortableHabits = habits
-    .filter(h => h.id !== 'gratitude-habit')
-    .sort((a, b) => (a.order || 0) - (b.order || 0));
-  const gratitudeHabit = habits.find(h => h.id === 'gratitude-habit');
+  const gratitudeHabit = localHabits.find(h => h.id === 'gratitude-habit');
+  const sortableHabits = localHabits.filter(h => h.id !== 'gratitude-habit');
 
   return (
     <DndContext
