@@ -120,24 +120,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
           storedEntries = INITIAL_GRATITUDE_ENTRIES;
         }
         
-        let habitsToSet: Habit[] = [...storedHabits];
-        let gratitudeHabit = habitsToSet.find(h => h.id === 'gratitude-habit');
-        if (!gratitudeHabit) {
-            gratitudeHabit = { ...gratitudeHabitTemplate };
-            habitsToSet.unshift(gratitudeHabit);
-        }
+        const sortableHabits = storedHabits.filter(h => h.id !== 'gratitude-habit');
+        const gratitudeHabit = storedHabits.find(h => h.id === 'gratitude-habit') || { ...gratitudeHabitTemplate };
 
         const gratitudeDates = new Set(storedEntries.map(e => e.date));
-        const gratitudeHabitIndex = habitsToSet.findIndex(h => h.id === 'gratitude-habit');
-
-        if (gratitudeHabitIndex !== -1) {
-          const habit = habitsToSet[gratitudeHabitIndex];
-          const existingDates = new Set(habit.completedDates);
-          const newDates = Array.from(new Set([...Array.from(existingDates), ...Array.from(gratitudeDates)]));
-          habitsToSet[gratitudeHabitIndex] = { ...habit, completedDates: newDates.sort() };
-        }
+        const existingDates = new Set(gratitudeHabit.completedDates);
+        const newDates = Array.from(new Set([...Array.from(existingDates), ...Array.from(gratitudeDates)]));
+        gratitudeHabit.completedDates = newDates.sort();
         
-        setHabits(habitsToSet);
+        setHabits([gratitudeHabit, ...sortableHabits]);
         setGratitudeEntries(storedEntries);
     }
   }, [isClient, user]);
@@ -169,6 +160,43 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
     }
   }, [birthday, isClient, user]);
+  
+   // Notifications logic
+  useEffect(() => {
+    if (!isClient) return;
+
+    // 1. Request permission on component mount if not already granted/denied
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    // 2. Set up an interval to check for reminders
+    const intervalId = setInterval(() => {
+      if (Notification.permission !== 'granted') return;
+
+      const now = new Date();
+      const currentTime = format(now, 'HH:mm');
+      const todayString = format(now, 'yyyy-MM-dd');
+      
+      habits.forEach(habit => {
+        // Check if reminder is enabled, time matches, and it's not already completed today
+        if (
+          habit.reminderEnabled &&
+          habit.reminderTime === currentTime &&
+          !habit.completedDates.includes(todayString)
+        ) {
+           // 3. Show notification
+          new Notification('¡Es hora de tu hábito!', {
+            body: `No te olvides de completar: "${habit.name}"`,
+            icon: '/logo.png' // Optional: you can add an icon
+          });
+        }
+      });
+    }, 60000); // Check every minute
+
+    // 4. Clean up interval on component unmount
+    return () => clearInterval(intervalId);
+  }, [isClient, habits]);
 
 
   const addHabit = (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates'>) => {
@@ -432,3 +460,5 @@ export function useAppData() {
   }
   return context;
 }
+
+    
