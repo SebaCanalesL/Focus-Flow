@@ -7,8 +7,34 @@
   },
   "functions": [
     {
-      "source": "app-functions",
       "codebase": "app-functions",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        ".runtimeconfig.json"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run lint",
+        "npm --prefix \"$RESOURCE_DIR\" run build"
+      ],
+      "source": "app-functions"
+    },
+    {
+      "codebase": "focusflow-dev-codebase",
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run lint",
+        "npm --prefix \"$RESOURCE_DIR\" run build"
+      ],
+      "source": "focusflow-dev-codebase"
+    },
+    {
+      "source": "focusflow-dev-codebase2",
+      "codebase": "focusflow-dev-codebase2",
       "ignore": [
         "node_modules",
         ".git",
@@ -22,19 +48,21 @@
       ]
     }
   ],
-  "apphosting": {
-    "backendId": "focusflow-backend",
-    "rootDir": "/",
-    "ignore": [
-      "node_modules",
-      ".git",
-      "firebase-debug.log",
-      "firebase-debug.*.log",
-      "functions"
-    ]
-  },
+  "apphosting": [
+    {
+      "backendId": "focusflow-dev",
+      "rootDir": "/",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "functions"
+      ],
+      "alwaysDeployFromSource": true
+    }
+  ],
   "hosting": {
-    "site": "studio-808864941-b51ba",
     "public": "public",
     "ignore": [
       "firebase.json",
@@ -43,7 +71,8 @@
     ]
   },
   "storage": {
-    "rules": "storage.rules"
+    "rules": "storage.rules",
+    "bucket": "focusflowv2-dev.firebasestorage.app"
   },
   "emulators": {
     "apphosting": {
