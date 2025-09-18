@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { useAppData } from "@/contexts/app-provider"
 import { HabitCardWithGrid } from "./habit-card-with-grid"
 import {
@@ -24,6 +24,9 @@ import {
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Habit } from "@/lib/types";
+import { doc, writeBatch } from "firebase/firestore";
+import { firestore } from "@/lib/firebase";
+
 
 function SortableHabitItem({ habit }: { habit: Habit }) {
   const {
@@ -53,7 +56,7 @@ function SortableHabitItem({ habit }: { habit: Habit }) {
 }
 
 export function HabitList() {
-  const { habits, setHabits, isClient } = useAppData()
+  const { user, habits, setHabits, isClient } = useAppData()
   const [activeHabit, setActiveHabit] = useState<Habit | null>(null);
 
   const sensors = useSensors(
@@ -81,16 +84,27 @@ export function HabitList() {
     }
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveHabit(null);
 
     if (over && active.id !== over.id) {
-      setHabits((items) => {
-        const oldIndex = items.findIndex(item => item.id === active.id);
-        const newIndex = items.findIndex(item => item.id === over.id);
-        return arrayMove(items, oldIndex, newIndex);
-      });
+      const oldIndex = habits.findIndex(item => item.id === active.id);
+      const newIndex = habits.findIndex(item => item.id === over.id);
+      
+      const newHabits = arrayMove(habits, oldIndex, newIndex);
+      setHabits(newHabits);
+
+      if (user) {
+        const batch = writeBatch(firestore);
+        newHabits.forEach((habit, index) => {
+          if (habit.id !== 'gratitude-habit') {
+            const habitRef = doc(firestore, `users/${user.uid}/habits`, habit.id);
+            batch.update(habitRef, { order: index });
+          }
+        });
+        await batch.commit();
+      }
     }
   }
 
@@ -104,7 +118,9 @@ export function HabitList() {
     )
   }
 
-  const sortableHabits = habits.filter(h => h.id !== 'gratitude-habit');
+  const sortableHabits = habits
+    .filter(h => h.id !== 'gratitude-habit')
+    .sort((a, b) => (a.order || 0) - (b.order || 0));
   const gratitudeHabit = habits.find(h => h.id === 'gratitude-habit');
 
   return (

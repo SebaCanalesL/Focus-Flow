@@ -10,6 +10,7 @@ export interface Habit {
   completedDates: string[]; // Store dates as ISO strings 'YYYY-MM-DD'
   reminderEnabled?: boolean;
   reminderTime?: string; // e.g., "09:00"
+  order?: number; // For drag and drop ordering
 }
 
 export interface GratitudeEntry {

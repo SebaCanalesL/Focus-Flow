@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
 // Firebase configuration is now loaded from environment variables
 const firebaseConfig = {
@@ -18,7 +19,8 @@ if (!firebaseConfig.apiKey || !firebaseConfig.authDomain || !firebaseConfig.proj
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
+const firestore = getFirestore(app);
 auth.useDeviceLanguage();
 
 
-export { app, auth };
+export { app, auth, firestore };
