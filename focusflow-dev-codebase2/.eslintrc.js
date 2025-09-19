@@ -1,1 +1,0 @@
-export default [{ files: ["**/*.js"], languageOptions: { globals: { module: "readonly" } } }];

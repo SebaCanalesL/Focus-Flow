@@ -1,21 +1,16 @@
 {
   "firestore": {
-    "database": "focusflowv2",
-    "location": "southamerica-west1",
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
   "functions": [
     {
-      "codebase": "app-functions",
       "ignore": [
         "node_modules",
         ".git",
         "firebase-debug.log",
         "firebase-debug.*.log",
         "*.local",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
         ".runtimeconfig.json"
       ],
       "predeploy": [
@@ -23,29 +18,6 @@
         "npm --prefix \"$RESOURCE_DIR\" run build"
       ],
       "source": "app-functions"
-    },
-    {
-      "codebase": "focusflow-dev-codebase",
-      "predeploy": [
-        "npm --prefix \"$RESOURCE_DIR\" run lint",
-        "npm --prefix \"$RESOURCE_DIR\" run build"
-      ],
-      "source": "focusflow-dev-codebase"
-    },
-    {
-      "source": "focusflow-dev-codebase2",
-      "codebase": "focusflow-dev-codebase2",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "*.local"
-      ],
-      "predeploy": [
-        "npm --prefix \"$RESOURCE_DIR\" run lint",
-        "npm --prefix \"$RESOURCE_DIR\" run build"
-      ]
     }
   ],
   "apphosting": [
@@ -57,7 +29,7 @@
         ".git",
         "firebase-debug.log",
         "firebase-debug.*.log",
-        "functions"
+        "app-functions"
       ],
       "alwaysDeployFromSource": true
     }
@@ -71,43 +43,48 @@
     ]
   },
   "storage": {
-    "rules": "storage.rules",
-    "bucket": "focusflowv2-dev.firebasestorage.app"
+    "rules": "storage.rules"
   },
   "emulators": {
     "apphosting": {
+      "host": "127.0.0.1",
       "port": 5002,
       "rootDirectory": "./",
       "startCommand": "npm run dev"
     },
     "ui": {
-      "enabled": true
+      "enabled": true,
+      "host": "127.0.0.1",
+      "port": 4000
+    },
+    "hub": {
+      "host": "127.0.0.1",
+      "port": 4400
+    },
+    "logging": {
+      "host": "127.0.0.1",
+      "port": 4500
     },
     "singleProjectMode": true,
     "auth": {
+      "host": "127.0.0.1",
       "port": 9099
     },
     "functions": {
+      "host": "127.0.0.1",
       "port": 5001
     },
     "firestore": {
+      "host": "127.0.0.1",
       "port": 8080
     },
-    "database": {
-      "port": 9000
-    },
     "hosting": {
+      "host": "127.0.0.1",
       "port": 5000
     },
     "storage": {
+      "host": "127.0.0.1",
       "port": 9199
-    },
-    "dataconnect": {
-      "port": 9399,
-      "dataDir": "dataconnect/.dataconnect/pgliteData"
-    },
-    "tasks": {
-      "port": 9499
     }
   }
 }
