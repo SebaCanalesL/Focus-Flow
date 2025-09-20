@@ -1,6 +1,6 @@
 // src/lib/onboard.ts
 import {
-  doc, getDoc, setDoc, writeBatch, runTransaction,
+  doc, getDoc, setDoc, writeBatch,
   serverTimestamp, collection
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -20,28 +20,24 @@ export async function ensureUserSeed(
   const userRef = doc(db, `users/${uid}`);
   const now = serverTimestamp();
 
-  // 1) Transacción corta: crea user si no existe y marca seedState=pending
-  await runTransaction(db, async (tx) => {
-    const snap = await tx.get(userRef);
-    if (!snap.exists()) {
-      tx.set(userRef, {
-        email: profile?.email ?? null,
-        displayName: profile?.displayName ?? null,
-        photoURL: profile?.photoURL ?? null,
-        createdAt: now,
-        updatedAt: now,
-        seeded: false,
-        seedState: 'pending' as SeedState,
-        version: 1,
-      });
-      return;
-    }
-    const data = snap.data() as any;
-    if (data.seedState === 'done') return; // idempotente
-    if (data.seedState !== 'pending') {
-      tx.update(userRef, { seedState: 'pending', updatedAt: now });
-    }
-  });
+  const userDoc = await getDoc(userRef);
+  const userData = userDoc.data();
+
+  if (userDoc.exists() && userData.seedState === 'done') {
+    return;
+  }
+
+  await setDoc(userRef, {
+    email: profile?.email ?? null,
+    displayName: profile?.displayName ?? null,
+    photoURL: profile?.photoURL ?? null,
+    createdAt: userData?.createdAt ?? now, // Keep original creation date
+    updatedAt: now,
+    seeded: false,
+    seedState: 'pending' as SeedState,
+    version: 1,
+  }, { merge: true });
+
 
   // 2) Sembrar hábitos con IDs fijos (merge para idempotencia)
   const habitsCol = collection(db, `users/${uid}/habits`);
