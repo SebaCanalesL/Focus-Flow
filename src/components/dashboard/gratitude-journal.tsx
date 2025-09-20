@@ -240,7 +240,9 @@ export function GratitudeJournal() {
               <div key={index} className="flex items-center gap-2">
                 <span className="text-muted-foreground font-medium">{index + 1}.</span>
                 <Input
-                    ref={el => inputRefs.current[index] = el}
+                    ref={el => {
+                      if (el) inputRefs.current[index] = el;
+                    }}
                     placeholder={gratitudePlaceholders[index % gratitudePlaceholders.length]}
                     value={item}
                     onChange={(e) => handleItemChange(index, e.target.value)}

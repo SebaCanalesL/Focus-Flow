@@ -39,7 +39,6 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push("/dashboard");
     } catch (error: any) {
       console.error("Login error:", error);
       let description = "Ocurrió un error inesperado. Por favor, intenta de nuevo.";

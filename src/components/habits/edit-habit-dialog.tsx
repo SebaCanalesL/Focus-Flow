@@ -41,6 +41,7 @@ import { cn } from "@/lib/utils";
 import type { Habit } from "@/lib/types";
 import { Switch } from "../ui/switch";
 import { Bell, Clock } from "lucide-react";
+import { updateHabit, deleteHabit } from "@/lib/db/habits";
 
 const formSchema = z
   .object({
@@ -78,7 +79,7 @@ const formSchema = z
 
 export function EditHabitDialog({ habit, children }: { habit: Habit, children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
-  const { updateHabit, deleteHabit } = useAppData();
+  const { user } = useAppData();
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -121,8 +122,9 @@ export function EditHabitDialog({ habit, children }: { habit: Habit, children: R
   }, [frequency, daysPerWeek, form]);
 
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    updateHabit(habit.id, {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!user) return;
+    await updateHabit(user.uid, habit.id, {
       name: values.name,
       frequency: values.frequency,
       daysPerWeek: values.frequency === 'weekly' ? values.daysPerWeek : undefined,
@@ -138,8 +140,9 @@ export function EditHabitDialog({ habit, children }: { habit: Habit, children: R
     setIsOpen(false);
   };
 
-  const handleDelete = () => {
-    deleteHabit(habit.id);
+  const handleDelete = async () => {
+    if (!user) return;
+    await deleteHabit(user.uid, habit.id);
     toast({
         title: "¡Hábito Eliminado!",
         description: `El hábito "${habit.name}" ha sido eliminado.`,

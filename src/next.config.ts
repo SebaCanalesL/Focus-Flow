@@ -3,10 +3,12 @@ import type {NextConfig} from 'next';
 const nextConfig: NextConfig = {
   /* config options here */
   experimental: {
-    allowedDevOrigins: [
-        "http://localhost:5002",
-        "https://*.cloudworkstations.dev",
-    ],
+    serverActions: {
+        allowedOrigins: [
+            "http://localhost:5002",
+            "https://*.cloudworkstations.dev",
+        ],
+    }
   },
   typescript: {
     ignoreBuildErrors: true,
