@@ -1,41 +1,15 @@
 {
-  "firestore": {
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
+  "emulators": {
+    "ui":         { "enabled": true, "host": "127.0.0.1", "port": 4013 },
+    "firestore":  { "host": "127.0.0.1", "port": 8080 },
+    "auth":       { "host": "127.0.0.1", "port": 9099 },
+    "storage":    { "host": "127.0.0.1", "port": 9199 },
+    "functions":  { "host": "127.0.0.1", "port": 5001 },
+    "hosting":    { "host": "127.0.0.1", "port": 5000 },
+    "hub": { "host": "127.0.0.1", "port": 4400 }
   },
-  "functions": [
-    {
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "*.local",
-        ".runtimeconfig.json"
-      ],
-      "predeploy": [
-        "npm --prefix \"$RESOURCE_DIR\" run lint",
-        "npm --prefix \"$RESOURCE_DIR\" run build"
-      ],
-      "source": "app-functions"
-    }
-  ],
-  "apphosting": [
-    {
-      "backendId": "focusflow-dev",
-      "rootDir": "/",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "app-functions"
-      ],
-      "alwaysDeployFromSource": true
-    }
-  ],
   "hosting": {
-    "public": "public",
+    "public": "out",
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -45,46 +19,23 @@
   "storage": {
     "rules": "storage.rules"
   },
-  "emulators": {
-    "apphosting": {
-      "host": "127.0.0.1",
-      "port": 5002,
-      "rootDirectory": "./",
-      "startCommand": "npm run dev"
-    },
-    "ui": {
-      "enabled": true,
-      "host": "127.0.0.1",
-      "port": 4000
-    },
-    "hub": {
-      "host": "127.0.0.1",
-      "port": 4400
-    },
-    "logging": {
-      "host": "127.0.0.1",
-      "port": 4500
-    },
-    "singleProjectMode": true,
-    "auth": {
-      "host": "127.0.0.1",
-      "port": 9099
-    },
-    "functions": {
-      "host": "127.0.0.1",
-      "port": 5001
-    },
-    "firestore": {
-      "host": "127.0.0.1",
-      "port": 8080
-    },
-    "hosting": {
-      "host": "127.0.0.1",
-      "port": 5000
-    },
-    "storage": {
-      "host": "127.0.0.1",
-      "port": 9199
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "functions": [
+    {
+      "source": "app-functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run build"
+      ]
     }
-  }
+  ]
 }

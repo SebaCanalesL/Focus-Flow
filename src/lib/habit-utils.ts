@@ -19,7 +19,7 @@ export function calculateStreak(habit: Habit): number {
   }
 
   // Sort dates descending to start from the most recent
-  const sortedDates = [...habit.completedDates].sort((a, b) => b.getTime() - a.getTime());
+  const sortedDates = [...habit.completedDates].map(date => new Date(date)).sort((a, b) => b.getTime() - a.getTime());
 
   let streak = 0;
   const today = startOfDay(new Date());
@@ -74,7 +74,7 @@ export function calculateWeekCompletion(habit: Habit): { completed: number; tota
   const startOfThisWeek = startOfWeek(today, { weekStartsOn: 1 }); // Assuming week starts on Monday
 
   const completedThisWeek = habit.completedDates.filter(date => 
-    isSameWeek(date, startOfThisWeek, { weekStartsOn: 1 })
+    isSameWeek(new Date(date), startOfThisWeek, { weekStartsOn: 1 })
   ).length;
 
   return { completed: completedThisWeek, total };

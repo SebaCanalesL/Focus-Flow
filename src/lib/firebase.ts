@@ -5,6 +5,7 @@ import {
   initializeFirestore,
   connectFirestoreEmulator,
 } from "firebase/firestore";
+import { getStorage, connectStorageEmulator } from "firebase/storage";
 
 const isBrowser = typeof window !== "undefined";
 const isEdgeRuntime = typeof process !== "undefined" && process.env.NEXT_RUNTIME === "edge";
@@ -40,6 +41,7 @@ const firestore = initializeFirestore(app, {
 });
 
 const auth = getAuth(app);
+const storage = getStorage(app);
 
 // Idioma + persistencia del login solo en navegador
 if (isBrowser) {
@@ -53,6 +55,7 @@ if (useEmulators) {
   try {
     connectFirestoreEmulator(firestore, "127.0.0.1", 8080);
     connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
+    connectStorageEmulator(storage, "127.0.0.1", 9199);
     // console.info("[Firebase] Emulators ON");
   } catch {
     // no-op si ya estaban conectados
@@ -61,4 +64,4 @@ if (useEmulators) {
 
 export const isUsingEmulators = useEmulators;
 
-export { app, auth, firestore };
+export { app, auth, firestore, storage };

@@ -3,13 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
     "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "emu:pre": "npx kill-port 4013 || true && npx kill-port 4400 || true && npx kill-port 8080 || true && npx kill-port 9099 || true && npx kill-port 9199 || true && npx kill-port 5000 || true && npx kill-port 5001 || true && npx kill-port 5002 || true",
+    "dev:all": "npm run emu:pre && firebase emulators:start --only hosting,firestore,auth,storage --import ./.emulator-data --export-on-exit",
+    "emu:stop": "firebase emulators:stop || true",
+    "emu:clean": "rm -rf ./.emulator-data || true"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",
@@ -63,6 +67,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@types/dotenv": "^6.1.1",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
