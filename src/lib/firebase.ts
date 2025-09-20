@@ -48,6 +48,8 @@ if (isBrowser) {
   auth.useDeviceLanguage?.();
   // Mantener sesión tras recargar (localStorage)
   setPersistence(auth, browserLocalPersistence).catch(() => {});
+    // 👇 Exponer para inspección en la Consola del navegador
+    (window as any).__auth = auth;
 }
 
 // 🧪 Emuladores opcionales
