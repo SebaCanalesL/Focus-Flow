@@ -1,69 +1,19 @@
-// firestore.rules
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ==== Helpers ====
-    function signedIn() {
-      return request.auth != null;
-    }
-    function isOwner(uid) {
-      return signedIn() && request.auth.uid == uid;
-    }
-    function isCreate() { return request.method == 'create'; }
-    function isUpdate() { return request.method == 'update'; }
-
-    // ==== USERS root doc: users/{uid} ====
+    // Documento del propio usuario
     match /users/{uid} {
-      allow read, write: if isOwner(uid);
-
-      // (Opcional) Validaciones mínimas
-      allow create, update: if isOwner(uid)
-        && request.resource.data.keys().hasAll(['updatedAt'])
-        && request.resource.data.updatedAt is int
-        && (!('createdAt' in resource.data) || request.resource.data.createdAt == resource.data.createdAt); // no cambiar createdAt
+      allow create: if request.auth != null && request.auth.uid == uid;
+      allow read, update: if request.auth != null && request.auth.uid == uid;
     }
 
-    // ==== HABITS: users/{uid}/habits/{habitId} ====
-    match /users/{uid}/habits/{habitId} {
-      allow read: if isOwner(uid);
-      allow create: if isOwner(uid)
-        && request.resource.data.keys().hasAny(['name'])      // mínimo nombre
-        && request.resource.data.name is string
-        && request.resource.data.createdAt is int
-        && request.resource.data.updatedAt is int;
-
-      allow update: if isOwner(uid)
-        && request.resource.data.updatedAt is int
-        && resource.data.updatedAt is int
-        && request.resource.data.updatedAt > resource.data.updatedAt   // monotónico
-        && (!('createdAt' in resource.data) || request.resource.data.createdAt == resource.data.createdAt); // no tocar createdAt
-
-      allow delete: if isOwner(uid);
-    }
-
-    // ==== GRATITUDES: users/{uid}/gratitudes/{gratitudeId} ====
-    match /users/{uid}/gratitudes/{gratitudeId} {
-      allow read: if isOwner(uid);
-      allow create: if isOwner(uid)
-        && request.resource.data.text is string
-        && request.resource.data.date is string        // "YYYY-MM-DD"
-        && request.resource.data.createdAt is int
-        && request.resource.data.updatedAt is int;
-
-      allow update: if isOwner(uid)
-        && request.resource.data.updatedAt is int
-        && resource.data.updatedAt is int
-        && request.resource.data.updatedAt > resource.data.updatedAt
-        && (!('createdAt' in resource.data) || request.resource.data.createdAt == resource.data.createdAt);
-
-      allow delete: if isOwner(uid);
-    }
-
-    // ==== Bloquear todo lo demás explícitamente ====
-    match /{document=**} {
-      allow read, write: if false;
+    // Subcolecciones del usuario (habits, data, etc.)
+    match /users/{uid}/{sub=**} {
+      allow read, write:
+        if request.auth != null
+        && request.auth.uid == uid
+        && exists(/databases/$(database)/documents/users/$(uid));
     }
   }
 }

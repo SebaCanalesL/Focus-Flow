@@ -1,69 +1,41 @@
 // src/lib/firebase.ts
-import { initializeApp, getApps, getApp, type FirebaseOptions } from "firebase/app";
-import { getAuth, connectAuthEmulator, browserLocalPersistence, setPersistence } from "firebase/auth";
-import {
-  initializeFirestore,
-  connectFirestoreEmulator,
-} from "firebase/firestore";
-import { getStorage, connectStorageEmulator } from "firebase/storage";
+import { initializeApp, getApps, getApp, type FirebaseOptions } from 'firebase/app';
+import { getAuth, connectAuthEmulator, browserLocalPersistence, setPersistence } from 'firebase/auth';
+import { initializeFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { getStorage, connectStorageEmulator } from 'firebase/storage';
 
-const isBrowser = typeof window !== "undefined";
-const isEdgeRuntime = typeof process !== "undefined" && process.env.NEXT_RUNTIME === "edge";
-const useEmulators = process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === "true";
-
+const isEdgeRuntime = typeof process !== 'undefined' && process.env.NEXT_RUNTIME === 'edge';
 if (isEdgeRuntime) {
-  // Firestore web SDK no está soportado en Edge Runtime
-  throw new Error("Firestore no es compatible con Edge Runtime. Usa Node runtime o llamadas desde el cliente.");
+  throw new Error('Firestore Web SDK no soporta Edge runtime. Usa Node runtime o llama desde el cliente.');
 }
 
-const firebaseConfig: FirebaseOptions = {
+const config: FirebaseOptions = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
 };
 
-if (!firebaseConfig.apiKey || !firebaseConfig.authDomain || !firebaseConfig.projectId || !firebaseConfig.appId) {
-  throw new Error("Faltan variables de entorno de Firebase. Revisa tus .env(.development) con NEXT_PUBLIC_*");
-}
+const useEmulators = process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === 'true';
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const app = getApps().length ? getApp() : initializeApp(config);
 
-// 🔧 Firestore robusto: long-polling auto + cache local persistente + undefined-safe
-const firestore = initializeFirestore(app, {
+// 🔒 transporte robusto para proxies/túneles
+const db = initializeFirestore(app, {
   experimentalAutoDetectLongPolling: true,
-  ignoreUndefinedProperties: true,
-  // En SDK recientes puedes activar cache persistente así (si no, omítelo sin problema)
-  // experimentalForceLongPolling: false, // deja autodetección
-  // localCache: persistentLocalCache()   // si tu versión lo soporta
+  useFetchStreams: false,
 });
 
 const auth = getAuth(app);
+setPersistence(auth, browserLocalPersistence);
+
 const storage = getStorage(app);
 
-// Idioma + persistencia del login solo en navegador
-if (isBrowser) {
-  auth.useDeviceLanguage?.();
-  // Mantener sesión tras recargar (localStorage)
-  setPersistence(auth, browserLocalPersistence).catch(() => {});
-    // 👇 Exponer para inspección en la Consola del navegador
-    (window as any).__auth = auth;
-}
-
-// 🧪 Emuladores opcionales
 if (useEmulators) {
-  try {
-    connectFirestoreEmulator(firestore, "127.0.0.1", 8080);
-    connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
-    connectStorageEmulator(storage, "127.0.0.1", 9199);
-    // console.info("[Firebase] Emulators ON");
-  } catch {
-    // no-op si ya estaban conectados
-  }
+  connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+  connectFirestoreEmulator(db, '127.0.0.1', 8080);
+  connectStorageEmulator(storage, '127.0.0.1', 9199);
 }
 
-export const isUsingEmulators = useEmulators;
-
-export { app, auth, firestore, storage };
+export { app, auth, db, storage };

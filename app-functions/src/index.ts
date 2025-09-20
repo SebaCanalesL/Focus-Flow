@@ -1,19 +1,12 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * import {onCall} from "firebase-functions/v2/https";
- * import {onDocumentWritten} from "firebase-functions/v2/firestore";
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
 
-import {onRequest} from "firebase-functions/v2/https";
-import * as logger from "firebase-functions/logger";
+import { https } from 'firebase-functions';
+import next from 'next';
 
-// Start writing functions
-// https://firebase.google.com/docs/functions/typescript
+const isDev = process.env.NODE_ENV !== 'production';
 
-export const helloWorld = onRequest({maxInstances: 10}, (request, response) => {
-  logger.info("Hello logs!", {structuredData: true});
-  response.send("Hello from Firebase!");
+const nextApp = next({ dev: isDev, conf: { distDir: '.next' } });
+const nextHandle = nextApp.getRequestHandler();
+
+exports.helloWorld = https.onRequest((req, res) => {
+  return nextApp.prepare().then(() => nextHandle(req, res));
 });

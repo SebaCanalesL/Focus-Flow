@@ -56,8 +56,18 @@ function SortableHabitItem({ habit }: { habit: Habit }) {
 }
 
 export function HabitList() {
-  const { user, habits, setHabits, isClient } = useAppData()
+  const { user, habits, loading, ready } = useAppData();
   const [activeHabit, setActiveHabit] = useState<Habit | null>(null);
+  const [orderedHabits, setOrderedHabits] = useState<Habit[]>([]);
+
+  useEffect(() => {
+    if (habits) {
+        const sortableHabits = habits
+            .filter(h => h.id !== 'gratitude-habit')
+            .sort((a, b) => (a.order || 0) - (b.order || 0));
+        setOrderedHabits(sortableHabits);
+    }
+  }, [habits]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -78,9 +88,9 @@ export function HabitList() {
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
-    const habit = habits.find(h => h.id === active.id);
+    const habit = habits?.find(h => h.id === active.id);
     if (habit) {
-        setActiveHabit(habit);
+        setActiveHabit(habit as Habit);
     }
   };
 
@@ -89,11 +99,11 @@ export function HabitList() {
     setActiveHabit(null);
 
     if (over && active.id !== over.id) {
-      const oldIndex = habits.findIndex(item => item.id === active.id);
-      const newIndex = habits.findIndex(item => item.id === over.id);
+      const oldIndex = orderedHabits.findIndex(item => item.id === active.id);
+      const newIndex = orderedHabits.findIndex(item => item.id === over.id);
       
-      const newHabits = arrayMove(habits, oldIndex, newIndex);
-      setHabits(newHabits);
+      const newHabits = arrayMove(orderedHabits, oldIndex, newIndex);
+      setOrderedHabits(newHabits);
 
       if (user) {
         const batch = writeBatch(firestore);
@@ -108,7 +118,7 @@ export function HabitList() {
     }
   }
 
-  if (!isClient) {
+  if (loading && !ready) {
     return (
       <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
         {[...Array(3)].map((_, i) => (
@@ -118,10 +128,7 @@ export function HabitList() {
     )
   }
 
-  const sortableHabits = habits
-    .filter(h => h.id !== 'gratitude-habit')
-    .sort((a, b) => (a.order || 0) - (b.order || 0));
-  const gratitudeHabit = habits.find(h => h.id === 'gratitude-habit');
+  const gratitudeHabit = habits?.find(h => h.id === 'gratitude-habit');
 
   return (
     <DndContext
@@ -131,9 +138,9 @@ export function HabitList() {
       onDragEnd={handleDragEnd}
     >
       <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
-        {gratitudeHabit && <HabitCardWithGrid habit={gratitudeHabit} />}
-        <SortableContext items={sortableHabits.map(h => h.id)} strategy={verticalListSortingStrategy}>
-          {sortableHabits.map((habit) => (
+        {gratitudeHabit && <HabitCardWithGrid habit={gratitudeHabit as Habit} />}
+        <SortableContext items={orderedHabits.map(h => h.id)} strategy={verticalListSortingStrategy}>
+          {orderedHabits.map((habit) => (
             <SortableHabitItem key={habit.id} habit={habit} />
           ))}
         </SortableContext>

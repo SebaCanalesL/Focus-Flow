@@ -5,56 +5,48 @@ import {
   doc,
   getDoc,
   getDocs,
-  onSnapshot,
   orderBy,
   query,
   setDoc,
-  Timestamp,
+  updateDoc,
+  serverTimestamp,
   where,
 } from 'firebase/firestore';
-import { firestore } from '../firebase';
-import { GratitudeEntry } from '../types';
+import { db } from '@/lib/firebase'; // Corrected import
+import { GratitudeEntry } from '@/lib/types';
 
-type GratitudeInput = Partial<Omit<GratitudeEntry, 'id' | 'createdAt' | 'updatedAt'>
->;
-/**
- * Crea o actualiza un registro de gratitud para un usuario.
- * Si el registro no existe, añade `createdAt`. Siempre actualiza `updatedAt`.
- *
- * @param uid - El ID del usuario.
- * @param gratitudeId - El ID del registro de gratitud.
- * @param data - Los datos a guardar.
- * @returns Una promesa que se resuelve al completar la operación.
- */
-export const upsertGratitude = async (
+type GratitudeInput = Partial<Omit<GratitudeEntry, 'id' | 'createdAt' | 'updatedAt'>>;
+
+export async function createGratitude(uid: string, data: GratitudeInput) {
+  const ref = doc(collection(db, `users/${uid}/gratitudes`)); // Corrected instance
+  return setDoc(
+    ref,
+    {
+      ...data,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
+}
+
+export async function updateGratitude(
   uid: string,
   gratitudeId: string,
   data: GratitudeInput
-) => {
-  const gratitudeRef = doc(firestore, `users/${uid}/gratitudes`, gratitudeId);
-  const docSnap = await getDoc(gratitudeRef);
+) {
+  const gratitudeRef = doc(db, `users/${uid}/gratitudes`, gratitudeId); // Corrected instance
 
   const dataToSet = {
     ...data,
-    updatedAt: Timestamp.now(),
+    updatedAt: serverTimestamp(),
   };
 
-  if (!docSnap.exists()) {
-    (dataToSet as any).createdAt = Timestamp.now();
-  }
+  return updateDoc(gratitudeRef, dataToSet);
+}
 
-  return setDoc(gratitudeRef, dataToSet, { merge: true });
-};
-
-/**
- * Obtiene un registro de gratitud por su ID.
- *
- * @param uid - El ID del usuario.
- * @param gratitudeId - El ID del registro de gratitud.
- * @returns El registro de gratitud o null si no se encuentra.
- */
 export const getGratitude = async (uid: string, gratitudeId: string) => {
-  const gratitudeRef = doc(firestore, `users/${uid}/gratitudes`, gratitudeId);
+  const gratitudeRef = doc(db, `users/${uid}/gratitudes`, gratitudeId); // Corrected instance
   const docSnap = await getDoc(gratitudeRef);
 
   if (docSnap.exists()) {
@@ -63,53 +55,17 @@ export const getGratitude = async (uid: string, gratitudeId: string) => {
   return null;
 };
 
-/**
- * Elimina un registro de gratitud.
- *
- * @param uid - El ID del usuario.
- * @param gratitudeId - El ID del registro a eliminar.
- * @returns Una promesa que se resuelve al completar la eliminación.
- */
 export const deleteGratitude = (uid: string, gratitudeId: string) => {
-  const gratitudeRef = doc(firestore, `users/${uid}/gratitudes`, gratitudeId);
+  const gratitudeRef = doc(db, `users/${uid}/gratitudes`, gratitudeId); // Corrected instance
   return deleteDoc(gratitudeRef);
 };
 
-/**
- * Lista los registros de gratitud de un usuario para una fecha específica.
- *
- * @param uid - El ID del usuario.
- * @param date - La fecha en formato YYYY-MM-DD.
- * @returns Un array con los registros de gratitud encontrados.
- */
 export const listGratitudesByDate = async (uid: string, date: string) => {
-  const gratitudesCol = collection(firestore, `users/${uid}/gratitudes`);
+  const gratitudesCol = collection(db, `users/${uid}/gratitudes`); // Corrected instance
   const q = query(gratitudesCol, where('date', '==', date));
   const querySnapshot = await getDocs(q);
 
   return querySnapshot.docs.map(
     (doc) => ({ id: doc.id, ...doc.data() } as GratitudeEntry)
   );
-};
-
-/**
- * Escucha en tiempo real los registros de gratitud de un usuario.
- *
- * @param uid - El ID del usuario.
- * @param cb - El callback que se ejecuta con la lista de registros.
- * @returns Una función para cancelar la suscripción.
- */
-export const listenGratitudes = (uid: string, cb: (rows: GratitudeEntry[]) => void) => {
-  const gratitudesCol = collection(firestore, `users/${uid}/gratitudes`);
-  // Se puede ordenar si existe un índice compuesto, o por defecto por ID.
-  const q = query(gratitudesCol, orderBy('date', 'desc'));
-
-  const unsubscribe = onSnapshot(q, (querySnapshot) => {
-    const gratitudes = querySnapshot.docs.map(
-      (doc) => ({ id: doc.id, ...doc.data() } as GratitudeEntry)
-    );
-    cb(gratitudes);
-  });
-
-  return unsubscribe;
 };

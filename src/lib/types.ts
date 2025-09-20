@@ -1,3 +1,5 @@
+import { Timestamp } from 'firebase/firestore';
+
 export type Frequency = 'daily' | 'weekly';
 
 export interface Habit {
@@ -6,7 +8,8 @@ export interface Habit {
   icon: string;
   frequency: Frequency;
   daysPerWeek?: number; // Target days per week for weekly habits
-  createdAt: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
   completedDates: string[]; // Store dates as ISO strings 'YYYY-MM-DD'
   reminderEnabled?: boolean;
   reminderTime?: string; // e.g., "09:00"
@@ -18,4 +21,6 @@ export interface GratitudeEntry {
   date: string; // ISO string 'YYYY-MM-DD'
   content: string;
   note?: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }

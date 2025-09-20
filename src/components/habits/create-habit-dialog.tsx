@@ -30,6 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { suggestHabitIcon } from "@/ai/flows/suggest-habit-icon-flow";
 import { Switch } from "../ui/switch";
+import { createHabit } from "@/lib/db/habits";
 
 const formSchema = z
   .object({
@@ -68,7 +69,7 @@ const formSchema = z
 export function CreateHabitDialog() {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { addHabit } = useAppData();
+  const { user } = useAppData();
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -101,11 +102,12 @@ export function CreateHabitDialog() {
 
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!user) return;
     setIsSubmitting(true);
     try {
       const { iconName } = await suggestHabitIcon({ habitName: values.name });
 
-      addHabit({
+      await createHabit(user.uid, {
         name: values.name,
         frequency: values.frequency,
         daysPerWeek: values.frequency === 'weekly' ? values.daysPerWeek : undefined,
@@ -129,11 +131,11 @@ export function CreateHabitDialog() {
     } catch (error) {
       console.error("Error creating habit:", error);
       // Fallback for when AI fails
-      addHabit({
+      await createHabit(user.uid, {
         name: values.name,
         frequency: values.frequency,
         daysPerWeek: values.frequency === 'weekly' ? values.daysPerWeek : undefined,
-        icon: "Target",
+        icon: "Target", // Default icon
         reminderEnabled: values.reminderEnabled,
         reminderTime: values.reminderEnabled ? values.reminderTime : undefined,
       });
