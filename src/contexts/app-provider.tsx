@@ -17,7 +17,8 @@ import {
   query,
   where,
   orderBy,
-  serverTimestamp
+  serverTimestamp,
+  deleteField
 } from 'firebase/firestore';
 import type { Habit, GratitudeEntry } from '@/lib/types';
 import { format, subDays, differenceInCalendarDays, parseISO, startOfWeek, endOfWeek, isWithinInterval, getWeek } from 'date-fns';
@@ -34,7 +35,7 @@ interface AppContextType {
   setHabits: React.Dispatch<React.SetStateAction<Habit[]>>;
   gratitudeEntries: GratitudeEntry[];
   addHabit: (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates' | 'order'>) => Promise<void>;
-  updateHabit: (habitId: string, habitData: Partial<Omit<Habit, 'id' | 'icon' | 'createdAt' | 'completedDates'>>) => void;
+  updateHabit: (habitId: string, habitData: { [key: string]: any }) => void;
   deleteHabit: (habitId: string) => void;
   toggleHabitCompletion: (habitId: string, date: Date) => void;
   getHabitById: (habitId: string) => Habit | undefined;
@@ -197,7 +198,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await addDoc(habitsCollectionRef, newHabit);
   };
 
-  const updateHabit = async (habitId: string, habitData: Partial<Omit<Habit, 'id' | 'icon' | 'createdAt' | 'completedDates'>>) => {
+  const updateHabit = async (habitId: string, habitData: { [key: string]: any }) => {
     if (!user || !user.uid) return;
     const habitDocRef = doc(db, `users/${user.uid}/habits`, habitId);
     await updateDoc(habitDocRef, habitData);

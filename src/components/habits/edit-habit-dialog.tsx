@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -41,6 +42,7 @@ import { cn } from "@/lib/utils";
 import type { Habit } from "@/lib/types";
 import { Switch } from "../ui/switch";
 import { Bell, Clock } from "lucide-react";
+import { deleteField } from "firebase/firestore";
 
 const formSchema = z
   .object({
@@ -122,13 +124,25 @@ export function EditHabitDialog({ habit, children }: { habit: Habit, children: R
 
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    await updateHabit(habit.id, {
-      name: values.name,
-      frequency: values.frequency,
-      daysPerWeek: values.frequency === 'weekly' ? values.daysPerWeek : undefined,
-      reminderEnabled: values.reminderEnabled,
-      reminderTime: values.reminderEnabled ? values.reminderTime : undefined,
-    });
+    const updateData: { [key: string]: any } = {
+        name: values.name,
+        frequency: values.frequency,
+        reminderEnabled: values.reminderEnabled,
+    };
+
+    if (values.frequency === 'weekly') {
+        updateData.daysPerWeek = values.daysPerWeek;
+    } else {
+        updateData.daysPerWeek = deleteField();
+    }
+
+    if (values.reminderEnabled) {
+        updateData.reminderTime = values.reminderTime;
+    } else {
+        updateData.reminderTime = deleteField();
+    }
+
+    await updateHabit(habit.id, updateData);
 
     toast({
       title: "¡Hábito Actualizado!",

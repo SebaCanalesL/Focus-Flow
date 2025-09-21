@@ -29,6 +29,7 @@ import { useAppData } from "@/contexts/app-provider";
 import { PlusCircle, WandSparkles, Bell, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import type { Habit } from "@/lib/types";
 import { suggestHabitIcon } from "@/ai/flows/suggest-habit-icon-flow";
 import { Switch } from "../ui/switch";
 
@@ -97,19 +98,14 @@ export function CreateHabitDialog() {
     }
 
     try {
-      const habitData: any = {
+      const habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates' | 'order'> = {
         name: values.name,
         icon: iconName,
         frequency: values.frequency,
         reminderEnabled: values.reminderEnabled,
+        ...(values.frequency === 'weekly' && { daysPerWeek: values.daysPerWeek }),
+        ...(values.reminderEnabled && { reminderTime: values.reminderTime }),
       };
-
-      if (values.frequency === 'weekly') {
-        habitData.daysPerWeek = values.daysPerWeek;
-      }
-      if (values.reminderEnabled) {
-        habitData.reminderTime = values.reminderTime;
-      }
 
       await addHabit(habitData);
 
