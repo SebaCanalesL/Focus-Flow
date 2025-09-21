@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -108,7 +108,7 @@ export function CreateHabitDialog() {
 
       toast({
         title: "¡Hábito Creado!",
-        description: `El hábito "${values.name}" ha sido añadido a tu lista.`,
+        description: `El hábito \"${values.name}\" ha sido añadido a tu lista.`,
       });
 
       setIsOpen(false);

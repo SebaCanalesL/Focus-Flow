@@ -1,3 +1,5 @@
+import type { Timestamp } from 'firebase/firestore';
+
 export type Frequency = 'daily' | 'weekly';
 
 export interface Habit {
@@ -18,7 +20,7 @@ export interface GratitudeEntry {
   dateKey: string; // ISO string 'YYYY-MM-DD' in 'America/Santiago' timezone
   content: string;
   note?: string;
-  createdAt?: any; // serverTimestamp is tricky to type
+  createdAt?: Timestamp;
 }
 
 export interface UserProfile {
