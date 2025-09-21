@@ -6,7 +6,6 @@ import { useAppData } from "@/contexts/app-provider";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { format, parse, isValid } from "date-fns";
-import { es } from "date-fns/locale";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -85,7 +84,7 @@ export default function ProfilePage() {
         } else {
           setBirthdayInput("");
         }
-      } catch (e) {
+      } catch {
         setBirthdayInput("");
       }
     } else {
@@ -172,7 +171,7 @@ export default function ProfilePage() {
         description: "Tu información ha sido guardada exitosamente.",
       });
 
-    } catch (error: any) {
+    } catch {
       toast({
         title: "Error al actualizar",
         description: "No se pudo guardar la información. Intenta de nuevo.",
@@ -198,7 +197,7 @@ export default function ProfilePage() {
         title: "Correo de recuperación enviado",
         description: "Revisa tu bandeja de entrada para cambiar tu contraseña.",
       });
-    } catch (error) {
+    } catch {
        toast({
         title: "Error",
         description: "No se pudo enviar el correo de recuperación. Intenta más tarde.",
@@ -217,7 +216,8 @@ export default function ProfilePage() {
         description: "Tu cuenta ha sido eliminada permanentemente.",
       });
       router.push("/signup");
-    } catch (error: any) {
+    } catch (e: unknown) {
+      const error = e as { code?: string };
       if (error.code === 'auth/requires-recent-login') {
         toast({
           title: "Se requiere re-autenticación",

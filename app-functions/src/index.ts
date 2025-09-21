@@ -1,12 +1,8 @@
+import { onRequest } from "firebase-functions/v2/https";
+import admin from "firebase-admin";
 
-import { https } from 'firebase-functions';
-import next from 'next';
+admin.initializeApp();
 
-const isDev = process.env.NODE_ENV !== 'production';
-
-const nextApp = next({ dev: isDev, conf: { distDir: '.next' } });
-const nextHandle = nextApp.getRequestHandler();
-
-exports.helloWorld = https.onRequest((req, res) => {
-  return nextApp.prepare().then(() => nextHandle(req, res));
-});
+export const helloWorld = onRequest((req, res) => {
+  res.send("Hello from Firebase!");
+  });

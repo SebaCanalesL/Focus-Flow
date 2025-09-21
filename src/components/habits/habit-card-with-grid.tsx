@@ -26,12 +26,12 @@ export function HabitCardWithGrid({
     habit, 
     isDragging,
     style,
-    ...props
+    listeners
 }: { 
     habit: Habit, 
     isDragging?: boolean, 
     style?: React.CSSProperties, 
-    [key: string]: any 
+    listeners?: React.HTMLAttributes<HTMLDivElement>
 }) {
   const { toggleHabitCompletion, getStreak, getWeekCompletion } = useAppData();
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -68,7 +68,7 @@ export function HabitCardWithGrid({
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-start gap-3">
             {!isGratitudeHabit && (
-                 <div {...props.listeners} className="touch-none cursor-grab py-2">
+                 <div {...listeners} className="touch-none cursor-grab py-2">
                     <GripVertical className="h-5 w-5 text-muted-foreground" />
                 </div>
             )}

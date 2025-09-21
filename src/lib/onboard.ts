@@ -4,84 +4,57 @@ import {
   serverTimestamp, collection
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-
-const SEED_IDS = {
-  agradecer: 'gratitude-habit',
-  gastos: 'seed-gastos-semanal',
-  leer: 'seed-leer-10-pag',
-} as const;
+import { INITIAL_HABITS } from './data'; // Use single source of truth
+import type { UserProfile } from './types';
 
 type SeedState = 'pending' | 'done' | 'failed';
 
-export async function ensureUserSeed(
-  uid: string,
-  profile?: { email?: string; displayName?: string; photoURL?: string }
-) {
+/**
+ * Ensures a new user has the initial set of habits and a user profile document.
+ * This function is idempotent: it will not run if the user already has seed data.
+ */
+export async function ensureUserSeed(uid: string, profile?: Omit<UserProfile, 'uid'>) {
   const userRef = doc(db, `users/${uid}`);
-  const now = serverTimestamp();
-
   const userDoc = await getDoc(userRef);
   const userData = userDoc.data();
+  const now = serverTimestamp();
 
+  // 1. If seeding is already done, do nothing.
   if (userDoc.exists() && userData.seedState === 'done') {
     return;
   }
 
+  // 2. Mark the user's seedState as 'pending' and create/update their profile.
   await setDoc(userRef, {
     email: profile?.email ?? null,
     displayName: profile?.displayName ?? null,
     photoURL: profile?.photoURL ?? null,
-    createdAt: userData?.createdAt ?? now, // Keep original creation date
+    createdAt: userData?.createdAt ?? now, // Persist original creation date if it exists
     updatedAt: now,
-    seeded: false,
     seedState: 'pending' as SeedState,
-    version: 1,
   }, { merge: true });
 
-
-  // 2) Sembrar hábitos con IDs fijos (merge para idempotencia)
+  // 3. Create initial habits in a single atomic batch operation.
   const habitsCol = collection(db, `users/${uid}/habits`);
   const batch = writeBatch(db);
 
-  batch.set(doc(habitsCol, SEED_IDS.agradecer), {
-    name: 'Agradecer',
-    icon: '🙏',
-    frequency: 'daily',
-    order: 0,
-    completedDates: [],
-    reminderEnabled: false,
-    createdAt: now,
-    updatedAt: now,
-  }, { merge: true });
+  INITIAL_HABITS.forEach(habit => {
+    const { id, ...habitData } = habit;
+    const habitRef = doc(habitsCol, id);
+    batch.set(habitRef, {
+      ...habitData,
+      createdAt: now,
+      updatedAt: now, // Add updatedAt timestamp
+    });
+  });
 
-  batch.set(doc(habitsCol, SEED_IDS.gastos), {
-    name: 'Revisión de gastos semanal',
-    icon: '💸',
-    frequency: 'weekly',
-    daysPerWeek: 1,
-    order: 1,
-    completedDates: [],
-    reminderEnabled: false,
-    createdAt: now,
-    updatedAt: now,
-  }, { merge: true });
-
-  batch.set(doc(habitsCol, SEED_IDS.leer), {
-    name: 'Leer 10 páginas',
-    icon: '📚',
-    frequency: 'daily',
-    order: 2,
-    completedDates: [],
-    reminderEnabled: false,
-    createdAt: now,
-    updatedAt: now,
-  }, { merge: true });
-
+  // 4. Commit the batch and update the seedState upon completion or failure.
   try {
     await batch.commit();
-    await setDoc(userRef, { seeded: true, seedState: 'done', updatedAt: now }, { merge: true });
-  } catch (e) {
+    await setDoc(userRef, { seedState: 'done', updatedAt: now }, { merge: true });
+  } catch (error) {
+    console.error("Error seeding user data:", error);
     await setDoc(userRef, { seedState: 'failed', updatedAt: now }, { merge: true });
-    throw e; // que la capa superior decida, pero no bloquees la UI.
+    // Optionally re-throw or handle the error in the UI
   }
 }

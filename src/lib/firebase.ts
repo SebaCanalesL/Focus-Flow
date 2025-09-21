@@ -1,7 +1,7 @@
 import {initializeApp, getApps, getApp} from 'firebase/app';
-import {getAuth, connectAuthEmulator} from 'firebase/auth';
-import {getFirestore, connectFirestoreEmulator} from 'firebase/firestore';
-import {getStorage, connectStorageEmulator} from 'firebase/storage';
+import {getAuth} from 'firebase/auth';
+import {initializeFirestore, CACHE_SIZE_UNLIMITED} from 'firebase/firestore';
+import {getStorage} from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -14,20 +14,27 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const firestore = getFirestore(app);
+const db = initializeFirestore(
+  app, 
+  { 
+    experimentalForceLongPolling: true,
+    cacheSizeBytes: CACHE_SIZE_UNLIMITED,
+  },
+  'focusflowv2'
+);
 const auth = getAuth(app);
 const storage = getStorage(app);
 
 // Cconnect to emulators if in development
-if (process.env.NODE_ENV === 'development') {
-  console.log('Connecting to Firebase emulators');
-  try {
-    connectFirestoreEmulator(firestore, 'localhost', 8080);
-    connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
-    connectStorageEmulator(storage, 'localhost', 9199);
-  } catch (e) {
-    console.error("Error connecting to emulators. It's possible they are already connected.", e);
-  }
-}
+// if (process.env.NODE_ENV === 'development') {
+//   console.log('Connecting to Firebase emulators');
+//   try {
+//     connectFirestoreEmulator(db, 'localhost', 8080);
+//     connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+//     connectStorageEmulator(storage, 'localhost', 9199);
+//   } catch (e) {
+//     console.error("Error connecting to emulators. It's possible they are already connected.", e);
+//   }
+// }
 
-export {app, firestore, auth, storage};
+export {app, db, auth, storage};

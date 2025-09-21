@@ -25,7 +25,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Habit } from "@/lib/types";
 import { doc, writeBatch } from "firebase/firestore";
-import { firestore } from "@/lib/firebase";
+import { db } from "@/lib/firebase";
 
 
 function SortableHabitItem({ habit }: { habit: Habit }) {
@@ -105,10 +105,10 @@ export function HabitList() {
 
       if (user) {
         try {
-            const batch = writeBatch(firestore);
+            const batch = writeBatch(db);
             newHabits.forEach((habit, index) => {
                 if(habit.id !== 'gratitude-habit') {
-                    const habitRef = doc(firestore, `users/${user.uid}/habits`, habit.id);
+                    const habitRef = doc(db, `users/${user.uid}/habits`, habit.id);
                     batch.update(habitRef, { order: index });
                 }
             });

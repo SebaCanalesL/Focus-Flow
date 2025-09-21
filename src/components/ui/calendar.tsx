@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -24,21 +25,20 @@ function Calendar({
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
-        caption: "flex justify-center pt-1 relative items-center",
-        caption_label: cn("text-sm font-medium", props.captionLayout === 'dropdown-buttons' && 'hidden'),
-        caption_dropdowns: "flex gap-2",
-        nav: "space-x-1 flex items-center",
+        caption: "grid grid-cols-[1fr_auto_1fr] items-center h-10", // Grid layout for caption
+        caption_label: cn("text-sm font-medium text-center", props.captionLayout === 'dropdown-buttons' && 'hidden'),
+        caption_dropdowns: "flex gap-2 justify-center",
+        nav: "flex items-center",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+          "h-8 w-8 bg-transparent p-0 opacity-50 hover:opacity-100"
         ),
-        nav_button_previous: "absolute left-1",
-        nav_button_next: "absolute right-1",
+        nav_button_previous: "col-start-1 justify-self-start", // Position in grid
+        nav_button_next: "col-start-3 justify-self-end",     // Position in grid
         table: "w-full border-collapse space-y-1",
-        head_row: "flex",
-        head_cell:
-          "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
-        row: "flex w-full mt-2",
+        head_row: "grid grid-cols-7", // Grid for week days
+        head_cell: "text-muted-foreground rounded-md w-9 font-normal text-center text-[0.8rem]",
+        row: "grid grid-cols-7 w-full mt-2", // Grid for calendar days
         cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
         day: cn(
           buttonVariants({ variant: "ghost" }),
@@ -57,13 +57,9 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        IconLeft: ({ className, ...props }) => (
-          <ChevronLeft className={cn("h-4 w-4", className)} {...props} />
-        ),
-        IconRight: ({ className, ...props }) => (
-          <ChevronRight className={cn("h-4 w-4", className)} {...props} />
-        ),
-        Dropdown: ({ value, onChange, children, ...props }: DropdownProps) => {
+        IconLeft: ({ ...props }) => <ChevronLeft className="h-4 w-4" {...props} />,
+        IconRight: ({ ...props }) => <ChevronRight className="h-4 w-4" {...props} />,
+        Dropdown: ({ value, onChange, children }: DropdownProps) => {
             const options = React.Children.toArray(children) as React.ReactElement<React.HTMLProps<HTMLOptionElement>>[];
             const selected = options.find((child) => child.props.value === value);
             const handleChange = (value: string) => {

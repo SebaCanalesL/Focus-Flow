@@ -5,23 +5,14 @@
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
-  "functions": [
-    {
-      "source": "app-functions",
-      "codebase": "app-functions",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "*.local"
-      ],
-      "predeploy": [
-        "npm --prefix \"$RESOURCE_DIR\" run lint",
-        "npm --prefix \"$RESOURCE_DIR\" run build"
-      ]
-    }
-  ],
+  "functions": {
+    "source": "app-functions",
+    "runtime": "nodejs20",
+    "predeploy": [
+      "npm --prefix app-functions run build"
+    ],
+    "codebase": "default"
+  },
   "apphosting": {
     "backendId": "focusflow-staging",
     "rootDir": "/",
@@ -31,19 +22,29 @@
       "firebase-debug.log",
       "firebase-debug.*.log",
       "functions"
-    ]
+    ],
+    "alwaysDeployFromSource": true
   },
   "hosting": {
     "site": "studio-808864941-b51ba",
-    "public": "public",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "run": {
+          "serviceId": "focusflow-staging",
+          "region": "us-central1"
+        }
+      }
     ]
   },
   "storage": {
-    "rules": "storage.rules"
+    "rules": "storage.rules",
+    "bucket": "studio-808864941-b51ba.firebasestorage.app"
   },
   "emulators": {
     "apphosting": {

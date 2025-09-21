@@ -1,52 +1,18 @@
 
-import {
-  deleteDoc,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  serverTimestamp,
-  type DocumentData,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase'; // Corrected import
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { idOrThrow } from "@/lib/utils/ref-guards";
 
-
-export async function createUser(uid: string, data: any) {
-  const userRef = doc(db, 'users', uid); // Corrected instance
-  return setDoc(
-    userRef,
-    {
-      ...data,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    },
-    { merge: true }
-  );
+export async function getUser(uid?: string | null) {
+  const clean = idOrThrow("getUser.uid", uid);
+  const ref = doc(db, "users", clean);
+  const snap = await getDoc(ref);
+  return snap.data() ?? null;
 }
 
-export async function updateUser(uid: string, data: any) {
-  const userRef = doc(db, 'users', uid); // Corrected instance
-  return updateDoc(
-    userRef,
-    {
-      ...data,
-      updatedAt: serverTimestamp(),
-    }
-  );
+export async function createUser(data: { uid: string } & Record<string, unknown>) {
+  const clean = idOrThrow("createUser.uid", data?.uid);
+  const ref = doc(db, "users", clean);
+  // upsert real
+  await setDoc(ref, data, { merge: true });
 }
-
-export const getUser = async (uid: string) => {
-  const userRef = doc(db, 'users', uid); // Corrected instance
-  const docSnap = await getDoc(userRef);
-
-  if (docSnap.exists()) {
-    return { id: docSnap.id, ...docSnap.data() } as DocumentData;
-  } else {
-    return null;
-  }
-};
-
-export const deleteUser = (uid: string) => {
-  const userRef = doc(db, 'users', uid); // Corrected instance
-  return deleteDoc(userRef);
-};

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/lib/firebase";
@@ -23,7 +22,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -39,7 +37,10 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-    } catch (error: any) {
+      // El router.push("/") no es necesario si tienes un observer
+      // que redirige al usuario cuando el estado de auth cambia.
+    } catch (e: unknown) {
+      const error = e as { code?: string }; // Firebase errors have a code property
       console.error("Login error:", error);
       let description = "Ocurrió un error inesperado. Por favor, intenta de nuevo.";
       if (error.code) {
@@ -82,7 +83,7 @@ export default function LoginPage() {
         title: "Correo enviado",
         description: "Revisa tu bandeja de entrada para restablecer tu contraseña.",
       });
-    } catch (error: any) {
+    } catch {
        toast({
         title: "Error",
         description: "No se pudo enviar el correo de restablecimiento. Verifica que el correo sea correcto.",

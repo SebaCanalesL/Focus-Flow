@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -30,7 +31,6 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { suggestHabitIcon } from "@/ai/flows/suggest-habit-icon-flow";
 import { Switch } from "../ui/switch";
-import { createHabit } from "@/lib/db/habits";
 
 const formSchema = z
   .object({
@@ -69,7 +69,7 @@ const formSchema = z
 export function CreateHabitDialog() {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { user } = useAppData();
+  const { addHabit, user } = useAppData();
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -83,35 +83,25 @@ export function CreateHabitDialog() {
   });
 
   const frequency = form.watch("frequency");
-  const daysPerWeek = form.watch("daysPerWeek");
-  const reminderEnabled = form.watch("reminderEnabled");
-
-  useEffect(() => {
-    if (daysPerWeek === 7) {
-      form.setValue("frequency", "daily");
-    }
-  }, [daysPerWeek, form]);
-
-  useEffect(() => {
-    if (frequency === "daily") {
-      form.setValue("daysPerWeek", 7);
-    } else if (frequency === 'weekly' && daysPerWeek === 7) {
-      form.setValue("daysPerWeek", 6);
-    }
-  }, [frequency, daysPerWeek, form]);
-
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!user) return;
     setIsSubmitting(true);
-    try {
-      const { iconName } = await suggestHabitIcon({ habitName: values.name });
 
-      await createHabit(user.uid, {
+    let iconName = "Target"; // Default icon
+    try {
+      const result = await suggestHabitIcon({ habitName: values.name });
+      iconName = result.iconName;
+    } catch (e) {
+      console.warn("AI icon suggestion failed, using default.", e);
+    }
+
+    try {
+      await addHabit({
         name: values.name,
+        icon: iconName,
         frequency: values.frequency,
         daysPerWeek: values.frequency === 'weekly' ? values.daysPerWeek : undefined,
-        icon: iconName,
         reminderEnabled: values.reminderEnabled,
         reminderTime: values.reminderEnabled ? values.reminderTime : undefined,
       });
@@ -122,27 +112,14 @@ export function CreateHabitDialog() {
       });
 
       setIsOpen(false);
-      form.reset({
-        name: "",
-        frequency: "daily",
-        reminderEnabled: false,
-        reminderTime: "09:00",
-      });
+      form.reset();
+
     } catch (error) {
       console.error("Error creating habit:", error);
-      // Fallback for when AI fails
-      await createHabit(user.uid, {
-        name: values.name,
-        frequency: values.frequency,
-        daysPerWeek: values.frequency === 'weekly' ? values.daysPerWeek : undefined,
-        icon: "Target", // Default icon
-        reminderEnabled: values.reminderEnabled,
-        reminderTime: values.reminderEnabled ? values.reminderTime : undefined,
-      });
       toast({
-        title: "¡Hábito Creado!",
-        description: `El hábito "${values.name}" fue creado (no se pudo sugerir un ícono).`,
-        variant: "default",
+        title: "Error al crear el hábito",
+        description: "Hubo un problema al guardar tu hábito. Por favor, intenta de nuevo.",
+        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
@@ -161,7 +138,7 @@ export function CreateHabitDialog() {
         <DialogHeader>
           <DialogTitle>Crear un nuevo hábito</DialogTitle>
           <DialogDescription>
-            Completa los detalles de tu nuevo hábito y la IA sugerirá un ícono para ti.
+            Completa los detalles y la IA sugerirá un ícono para ti.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -221,15 +198,15 @@ export function CreateHabitDialog() {
                       <RadioGroup
                         onValueChange={(value) => field.onChange(parseInt(value))}
                         value={field.value?.toString()}
-                        className="grid grid-cols-6 gap-2 pt-2 justify-center"
+                        className="grid grid-cols-7 gap-1 pt-2 justify-center"
                       >
-                        {[...Array(6)].map((_, i) => (
+                        {[...Array(7)].map((_, i) => (
                           <FormItem key={i + 1}>
                             <FormControl>
                               <RadioGroupItem value={(i + 1).toString()} className="sr-only" />
                             </FormControl>
                             <FormLabel className={cn(
-                              "cursor-pointer rounded-full border-2 border-transparent px-3 py-1 transition-colors flex items-center justify-center",
+                              "cursor-pointer rounded-full h-8 w-8 transition-colors flex items-center justify-center",
                               field.value === i + 1
                                 ? "bg-primary text-primary-foreground border-primary"
                                 : "bg-muted hover:bg-muted/80"
@@ -267,7 +244,7 @@ export function CreateHabitDialog() {
                     </FormItem>
                 )}
                 />
-                {reminderEnabled && (
+                {form.watch("reminderEnabled") && (
                   <FormField
                     control={form.control}
                     name="reminderTime"
@@ -286,7 +263,6 @@ export function CreateHabitDialog() {
                   />
                 )}
             </div>
-
 
             <DialogFooter>
               <Button type="submit" disabled={isSubmitting}>

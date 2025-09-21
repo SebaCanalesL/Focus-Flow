@@ -1,5 +1,4 @@
 import type { Habit, GratitudeEntry } from './types';
-import { subDays, formatISO } from 'date-fns';
 
 export const INITIAL_HABITS: Habit[] = [
   {

@@ -28,7 +28,7 @@ function MotivationalMessage({ userName }: { userName: string }) {
       try {
         const motivation = await getTodaysMotivation(userName);
         setMessage(motivation);
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("Error fetching motivational message:", error);
         setMessage("¡Sigue así! Mañana te espera un nuevo día para agradecer.");
       } finally {

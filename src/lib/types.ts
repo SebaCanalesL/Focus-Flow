@@ -15,7 +15,15 @@ export interface Habit {
 
 export interface GratitudeEntry {
   id: string;
-  date: string; // ISO string 'YYYY-MM-DD'
+  dateKey: string; // ISO string 'YYYY-MM-DD' in 'America/Santiago' timezone
   content: string;
   note?: string;
+  createdAt?: any; // serverTimestamp is tricky to type
+}
+
+export interface UserProfile {
+  uid: string;
+  displayName?: string | null;
+  photoURL?: string | null;
+  email?: string | null;
 }

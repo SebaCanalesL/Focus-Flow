@@ -4,7 +4,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import type { User } from 'firebase/auth';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth, firestore } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import { 
   collection, 
   doc, 
@@ -17,12 +17,14 @@ import {
   getDocs,
   query,
   where,
-  orderBy
+  orderBy,
+  serverTimestamp
 } from 'firebase/firestore';
-import type { Habit, GratitudeEntry, Frequency } from '@/lib/types';
-import { INITIAL_HABITS, INITIAL_GRATITUDE_ENTRIES } from '@/lib/data';
+import type { Habit, GratitudeEntry } from '@/lib/types';
 import { format, subDays, differenceInCalendarDays, parseISO, startOfWeek, endOfWeek, isWithinInterval, getWeek } from 'date-fns';
 import { dailyMotivation } from '@/ai/flows/daily-motivation-flow';
+import { ensureUserSeed } from '@/lib/onboard';
+import { dayKey, toZoned } from '@/lib/dates';
 
 
 interface AppContextType {
@@ -32,7 +34,7 @@ interface AppContextType {
   habits: Habit[];
   setHabits: React.Dispatch<React.SetStateAction<Habit[]>>;
   gratitudeEntries: GratitudeEntry[];
-  addHabit: (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates'>) => void;
+  addHabit: (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates'>) => Promise<void>;
   updateHabit: (habitId: string, habitData: Partial<Omit<Habit, 'id' | 'icon' | 'createdAt' | 'completedDates'>>) => void;
   deleteHabit: (habitId: string) => void;
   toggleHabitCompletion: (habitId: string, date: Date) => void;
@@ -85,41 +87,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
   
   useEffect(() => {
-    if (isClient && user) {
-        const habitsQuery = query(collection(firestore, `users/${user.uid}/habits`), orderBy("order", "asc"));
-        const gratitudeCollectionRef = collection(firestore, `users/${user.uid}/gratitudeEntries`);
-        const userDocRef = doc(firestore, `users/${user.uid}`);
+    if (isClient && user && user.uid) {
+        ensureUserSeed(user.uid, {
+          displayName: user.displayName ?? undefined,
+          email: user.email ?? undefined,
+          photoURL: user.photoURL ?? undefined,
+        });
 
-        const unsubscribeHabits = onSnapshot(habitsQuery, async (snapshot) => {
-            if (snapshot.empty && (await getDocs(habitsQuery)).empty) {
-                // First time user, create initial habits
-                const batch = writeBatch(firestore);
-                INITIAL_HABITS.forEach(habit => {
-                    const newHabitRef = doc(collection(firestore, `users/${user.uid}/habits`), habit.id === 'gratitude-habit' ? habit.id : undefined);
-                    batch.set(newHabitRef, habit);
-                });
-                await batch.commit();
-            } else {
-                const serverHabits = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Habit));
-                setHabits(serverHabits);
-            }
+        const habitsQuery = query(collection(db, `users/${user.uid}/habits`), orderBy("order", "asc"));
+        const gratitudeQuery = query(collection(db, `users/${user.uid}/gratitudeEntries`), orderBy("createdAt", "desc"));
+        const userDocRef = doc(db, `users/${user.uid}`);
+
+        const unsubscribeHabits = onSnapshot(habitsQuery, (snapshot) => {
+            const serverHabits = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Habit));
+            setHabits(serverHabits);
         });
         
-        const unsubscribeGratitude = onSnapshot(gratitudeCollectionRef, (snapshot) => {
+        const unsubscribeGratitude = onSnapshot(gratitudeQuery, (snapshot) => {
             const serverEntries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as GratitudeEntry));
             setGratitudeEntries(serverEntries);
-
-            // Update gratitude habit completion dates when entries change
-            const gratitudeHabit = habits.find(h => h.id === 'gratitude-habit');
-            if (gratitudeHabit) {
-                const gratitudeDates = new Set(serverEntries.map(e => e.date));
-                const newCompletedDates = Array.from(gratitudeDates).sort();
-
-                if (JSON.stringify(gratitudeHabit.completedDates) !== JSON.stringify(newCompletedDates)) {
-                    const habitDocRef = doc(firestore, `users/${user.uid}/habits`, 'gratitude-habit');
-                    updateDoc(habitDocRef, { completedDates: newCompletedDates });
-                }
-            }
         });
 
         const unsubscribeUser = onSnapshot(userDocRef, (doc) => {
@@ -129,7 +115,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
             }
         });
         
-        // Local storage for motivation message (as it's device/day specific)
         try {
             const motivationStr = localStorage.getItem(`focusflow-motivation-${user.uid}`);
             if (motivationStr) {
@@ -147,14 +132,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [isClient, user]);
 
+  useEffect(() => {
+    if (!user || !user.uid) return;
+
+    const gratitudeHabit = habits.find(h => h.id === 'gratitude-habit');
+    if (gratitudeHabit) {
+        const gratitudeDates = new Set(gratitudeEntries.map(e => e.dateKey));
+        const newCompletedDates = Array.from(gratitudeDates).sort();
+
+        if (JSON.stringify(gratitudeHabit.completedDates) !== JSON.stringify(newCompletedDates)) {
+            const habitDocRef = doc(db, `users/${user.uid}/habits`, 'gratitude-habit');
+            updateDoc(habitDocRef, { completedDates: newCompletedDates });
+        }
+    }
+  }, [gratitudeEntries, habits, user]);
 
   useEffect(() => {
-    if (isClient && user && motivationalMessage) {
+    if (isClient && user && user.uid && motivationalMessage) {
       localStorage.setItem(`focusflow-motivation-${user.uid}`, JSON.stringify(motivationalMessage));
     }
   }, [motivationalMessage, isClient, user]);
   
-   // Notifications logic
   useEffect(() => {
     if (!isClient) return;
 
@@ -188,32 +186,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 
   const addHabit = async (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates' | 'order'>) => {
-    if (!user) return;
-    const habitsCollectionRef = collection(firestore, `users/${user.uid}/habits`);
+    if (!user || !user.uid) return;
+    const habitsCollectionRef = collection(db, `users/${user.uid}/habits`);
+    
     const newHabit: Omit<Habit, 'id'> = {
       createdAt: new Date().toISOString(),
       completedDates: [],
-      order: habits.filter(h => h.id !== 'gratitude-habit').length,
+      order: habits.length,
       ...habitData,
     };
     await addDoc(habitsCollectionRef, newHabit);
   };
 
   const updateHabit = async (habitId: string, habitData: Partial<Omit<Habit, 'id' | 'icon' | 'createdAt' | 'completedDates'>>) => {
-    if (!user) return;
-    const habitDocRef = doc(firestore, `users/${user.uid}/habits`, habitId);
+    if (!user || !user.uid) return;
+    const habitDocRef = doc(db, `users/${user.uid}/habits`, habitId);
     await updateDoc(habitDocRef, habitData);
   };
   
   const deleteHabit = async (habitId: string) => {
-    if (!user) return;
-    const habitDocRef = doc(firestore, `users/${user.uid}/habits`, habitId);
+    if (!user || !user.uid) return;
+    const habitDocRef = doc(db, `users/${user.uid}/habits`, habitId);
     await deleteDoc(habitDocRef);
   }
 
   const toggleHabitCompletion = async (habitId: string, date: Date) => {
-    if (!user) return;
-    if (habitId === 'gratitude-habit') return; // Should be handled by addGratitudeEntry
+    if (!user || !user.uid) return;
+    if (habitId === 'gratitude-habit') return;
 
     const dateString = format(date, 'yyyy-MM-dd');
     const habit = habits.find(h => h.id === habitId);
@@ -224,7 +223,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       ? habit.completedDates.filter(d => d !== dateString)
       : [...habit.completedDates, dateString];
     
-    const habitDocRef = doc(firestore, `users/${user.uid}/habits`, habitId);
+    const habitDocRef = doc(db, `users/${user.uid}/habits`, habitId);
     await updateDoc(habitDocRef, { completedDates: newCompletedDates.sort() });
   };
   
@@ -286,8 +285,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
         const sortedWeeks = Array.from(completedWeeks).sort((a,b) => b - a);
 
-        let currentWeek = getWeek(today, weekOption);
-        let lastWeek = getWeek(subDays(today, 7), weekOption);
+        const currentWeek = getWeek(today, weekOption);
+        const lastWeek = getWeek(subDays(today, 7), weekOption);
         
         if (!sortedWeeks.includes(currentWeek) && !sortedWeeks.includes(lastWeek)) {
           return 0;
@@ -337,27 +336,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const addGratitudeEntry = async (content: string, date: Date, note?: string) => {
-    if(!user) return;
-    const dateString = format(date, 'yyyy-MM-dd');
-    const gratitudeCollectionRef = collection(firestore, `users/${user.uid}/gratitudeEntries`);
-    const q = query(gratitudeCollectionRef, where("date", "==", dateString));
+    if(!user || !user.uid) return;
+    const key = dayKey(toZoned(date));
+    const gratitudeCollectionRef = collection(db, `users/${user.uid}/gratitudeEntries`);
+    const q = query(gratitudeCollectionRef, where("dateKey", "==", key));
     
     const querySnapshot = await getDocs(q);
-
-    const entryData = { content, note, date: dateString };
   
     if (!querySnapshot.empty) {
       const docId = querySnapshot.docs[0].id;
-      const docRef = doc(firestore, `users/${user.uid}/gratitudeEntries`, docId);
+      const docRef = doc(db, `users/${user.uid}/gratitudeEntries`, docId);
       await updateDoc(docRef, { content, note });
     } else {
-      await addDoc(gratitudeCollectionRef, { content, note, date: dateString });
+      await addDoc(gratitudeCollectionRef, { 
+        content, 
+        note, 
+        dateKey: key, 
+        createdAt: serverTimestamp()
+      });
     }
   };
 
   const getGratitudeEntry = (date: Date) => {
-    const dateString = format(date, 'yyyy-MM-dd');
-    return gratitudeEntries.find(entry => entry.date === dateString);
+    const key = dayKey(toZoned(date));
+    return gratitudeEntries.find(entry => entry.dateKey === key);
   };
 
   const getTodaysMotivation = useCallback(async (userName: string) => {
@@ -378,14 +380,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const clearTodaysMotivation = () => {
     setMotivationalMessage(null);
-    if(user){
+    if(user && user.uid){
         localStorage.removeItem(`focusflow-motivation-${user.uid}`);
     }
   };
 
   const setBirthday = async (date: Date | undefined) => {
-    if (!user) return;
-    const userDocRef = doc(firestore, `users/${user.uid}`);
+    if (!user || !user.uid) return;
+    const userDocRef = doc(db, `users/${user.uid}`);
     const birthdayString = date ? format(date, 'yyyy-MM-dd') : null;
     await setDoc(userDocRef, { birthday: birthdayString }, { merge: true });
     setBirthdayState(birthdayString);

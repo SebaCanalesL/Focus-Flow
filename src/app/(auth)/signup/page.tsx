@@ -56,7 +56,8 @@ export default function SignupPage() {
         description: "Hemos creado tu cuenta exitosamente.",
       });
       router.push("/dashboard");
-    } catch (error: any) {
+    } catch (e: unknown) {
+      const error = e as { message: string };
       toast({
         title: "Error al registrarse",
         description: error.message,
