@@ -97,14 +97,21 @@ export function CreateHabitDialog() {
     }
 
     try {
-      await addHabit({
+      const habitData: any = {
         name: values.name,
         icon: iconName,
         frequency: values.frequency,
-        daysPerWeek: values.frequency === 'weekly' ? values.daysPerWeek : undefined,
         reminderEnabled: values.reminderEnabled,
-        reminderTime: values.reminderEnabled ? values.reminderTime : undefined,
-      });
+      };
+
+      if (values.frequency === 'weekly') {
+        habitData.daysPerWeek = values.daysPerWeek;
+      }
+      if (values.reminderEnabled) {
+        habitData.reminderTime = values.reminderTime;
+      }
+
+      await addHabit(habitData);
 
       toast({
         title: "¡Hábito Creado!",

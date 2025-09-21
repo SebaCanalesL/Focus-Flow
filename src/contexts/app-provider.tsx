@@ -33,7 +33,7 @@ interface AppContextType {
   habits: Habit[];
   setHabits: React.Dispatch<React.SetStateAction<Habit[]>>;
   gratitudeEntries: GratitudeEntry[];
-  addHabit: (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates'>) => Promise<void>;
+  addHabit: (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates' | 'order'>) => Promise<void>;
   updateHabit: (habitId: string, habitData: Partial<Omit<Habit, 'id' | 'icon' | 'createdAt' | 'completedDates'>>) => void;
   deleteHabit: (habitId: string) => void;
   toggleHabitCompletion: (habitId: string, date: Date) => void;
