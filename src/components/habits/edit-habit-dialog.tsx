@@ -1,10 +1,9 @@
+'use client';
 
-"use client";
-
-import React, { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import React, { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import {
   Dialog,
   DialogContent,
@@ -13,18 +12,18 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import {
   Form,
   FormControl,
@@ -32,23 +31,23 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useAppData } from "@/contexts/app-provider";
-import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
-import type { Habit } from "@/lib/types";
-import { Switch } from "../ui/switch";
-import { Bell, Clock } from "lucide-react";
-import { deleteField } from "firebase/firestore";
+} from '@/components/ui/form';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useAppData } from '@/contexts/app-provider';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import type { Habit } from '@/lib/types';
+import { Switch } from '../ui/switch';
+import { Bell, Clock } from 'lucide-react';
+import { deleteField, FieldValue } from 'firebase/firestore';
 
 const formSchema = z
   .object({
-    name: z.string().min(2, "El nombre debe tener al menos 2 caracteres."),
-    frequency: z.enum(["daily", "weekly"], {
-      required_error: "Debes seleccionar una frecuencia.",
+    name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres.'),
+    frequency: z.enum(['daily', 'weekly'], {
+      required_error: 'Debes seleccionar una frecuencia.',
     }),
     daysPerWeek: z.number().min(1).max(7).optional(),
     reminderEnabled: z.boolean().default(false),
@@ -56,29 +55,30 @@ const formSchema = z
   })
   .refine(
     (data) => {
-      if (data.frequency === "weekly") {
+      if (data.frequency === 'weekly') {
         return data.daysPerWeek !== undefined && data.daysPerWeek >= 1;
       }
       return true;
     },
     {
-      message: "Debes especificar cuántos días a la semana.",
-      path: ["daysPerWeek"],
+      message: 'Debes especificar cuántos días a la semana.',
+      path: ['daysPerWeek'],
     }
-  ).refine(
+  )
+  .refine(
     (data) => {
-        if (data.reminderEnabled) {
-            return !!data.reminderTime;
-        }
-        return true;
+      if (data.reminderEnabled) {
+        return !!data.reminderTime;
+      }
+      return true;
     },
     {
-        message: "Debes seleccionar una hora para el recordatorio.",
-        path: ["reminderTime"],
+      message: 'Debes seleccionar una hora para el recordatorio.',
+      path: ['reminderTime'],
     }
-    );
+  );
 
-export function EditHabitDialog({ habit, children }: { habit: Habit, children: React.ReactNode }) {
+export function EditHabitDialog({ habit, children }: { habit: Habit; children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const { updateHabit, deleteHabit } = useAppData();
   const { toast } = useToast();
@@ -90,77 +90,76 @@ export function EditHabitDialog({ habit, children }: { habit: Habit, children: R
       frequency: habit.frequency,
       daysPerWeek: habit.daysPerWeek,
       reminderEnabled: habit.reminderEnabled || false,
-      reminderTime: habit.reminderTime || "09:00",
+      reminderTime: habit.reminderTime || '09:00',
     },
   });
 
-  const frequency = form.watch("frequency");
-  const daysPerWeek = form.watch("daysPerWeek");
-  const reminderEnabled = form.watch("reminderEnabled");
+  const frequency = form.watch('frequency');
+  const daysPerWeek = form.watch('daysPerWeek');
+  const reminderEnabled = form.watch('reminderEnabled');
 
   useEffect(() => {
     form.reset({
-        name: habit.name,
-        frequency: habit.frequency,
-        daysPerWeek: habit.daysPerWeek || (habit.frequency === 'daily' ? 7 : undefined),
-        reminderEnabled: habit.reminderEnabled || false,
-        reminderTime: habit.reminderTime || "09:00",
+      name: habit.name,
+      frequency: habit.frequency,
+      daysPerWeek: habit.daysPerWeek || (habit.frequency === 'daily' ? 7 : undefined),
+      reminderEnabled: habit.reminderEnabled || false,
+      reminderTime: habit.reminderTime || '09:00',
     });
   }, [habit, form, isOpen]);
 
   useEffect(() => {
-    if(daysPerWeek === 7) {
-        form.setValue("frequency", "daily");
+    if (daysPerWeek === 7) {
+      form.setValue('frequency', 'daily');
     }
   }, [daysPerWeek, form]);
-  
+
   useEffect(() => {
-    if(frequency === "daily") {
-        form.setValue("daysPerWeek", 7);
+    if (frequency === 'daily') {
+      form.setValue('daysPerWeek', 7);
     } else if (frequency === 'weekly' && daysPerWeek === 7) {
-        form.setValue("daysPerWeek", 6);
+      form.setValue('daysPerWeek', 6);
     }
   }, [frequency, daysPerWeek, form]);
 
-
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const updateData: { [key: string]: any } = {
-        name: values.name,
-        frequency: values.frequency,
-        reminderEnabled: values.reminderEnabled,
+    const updateData: { [key: string]: string | number | boolean | FieldValue } = {
+      name: values.name,
+      frequency: values.frequency,
+      reminderEnabled: values.reminderEnabled,
     };
 
     if (values.frequency === 'weekly') {
-        updateData.daysPerWeek = values.daysPerWeek;
+      updateData.daysPerWeek = values.daysPerWeek;
     } else {
-        updateData.daysPerWeek = deleteField();
+      updateData.daysPerWeek = deleteField();
     }
 
     if (values.reminderEnabled) {
-        updateData.reminderTime = values.reminderTime;
+      updateData.reminderTime = values.reminderTime;
     } else {
-        updateData.reminderTime = deleteField();
+      updateData.reminderTime = deleteField();
     }
 
     await updateHabit(habit.id, updateData);
 
     toast({
-      title: "¡Hábito Actualizado!",
+      title: '¡Hábito Actualizado!',
       description: `El hábito "${values.name}" ha sido actualizado.`,
     });
-    
+
     setIsOpen(false);
   };
 
   const handleDelete = async () => {
     await deleteHabit(habit.id);
     toast({
-        title: "¡Hábito Eliminado!",
-        description: `El hábito "${habit.name}" ha sido eliminado.`,
-        variant: "destructive"
-      });
+      title: '¡Hábito Eliminado!',
+      description: `El hábito "${habit.name}" ha sido eliminado.`,
+      variant: 'destructive',
+    });
     setIsOpen(false);
-  }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -168,9 +167,7 @@ export function EditHabitDialog({ habit, children }: { habit: Habit, children: R
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Editar Hábito</DialogTitle>
-          <DialogDescription>
-            Modifica los detalles de tu hábito.
-          </DialogDescription>
+          <DialogDescription>Modifica los detalles de tu hábito.</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
@@ -194,7 +191,7 @@ export function EditHabitDialog({ habit, children }: { habit: Habit, children: R
               render={({ field }) => (
                 <FormItem className="space-y-3">
                   <FormLabel>Frecuencia</FormLabel>
-                   <FormControl>
+                  <FormControl>
                     <div className="grid grid-cols-2 gap-2">
                       <Button
                         type="button"
@@ -217,14 +214,14 @@ export function EditHabitDialog({ habit, children }: { habit: Habit, children: R
               )}
             />
 
-            {frequency === "weekly" && (
+            {frequency === 'weekly' && (
               <FormField
                 control={form.control}
                 name="daysPerWeek"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Días a la semana</FormLabel>
-                     <FormControl>
+                    <FormControl>
                       <RadioGroup
                         onValueChange={(value) => field.onChange(parseInt(value))}
                         value={field.value?.toString()}
@@ -235,12 +232,14 @@ export function EditHabitDialog({ habit, children }: { habit: Habit, children: R
                             <FormControl>
                               <RadioGroupItem value={(i + 1).toString()} className="sr-only" />
                             </FormControl>
-                            <FormLabel className={cn(
-                              "cursor-pointer rounded-full border-2 border-transparent px-3 py-1 transition-colors flex items-center justify-center",
-                              field.value === i + 1
-                                ? "bg-primary text-primary-foreground border-primary"
-                                : "bg-muted hover:bg-muted/80"
-                            )}>
+                            <FormLabel
+                              className={cn(
+                                'cursor-pointer rounded-full border-2 border-transparent px-3 py-1 transition-colors flex items-center justify-center',
+                                field.value === i + 1
+                                  ? 'bg-primary text-primary-foreground border-primary'
+                                  : 'bg-muted hover:bg-muted/80'
+                              )}
+                            >
                               {i + 1}
                             </FormLabel>
                           </FormItem>
@@ -254,64 +253,69 @@ export function EditHabitDialog({ habit, children }: { habit: Habit, children: R
             )}
 
             <div className="space-y-4 rounded-lg border p-4">
-                <FormField
+              <FormField
                 control={form.control}
                 name="reminderEnabled"
                 render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between">
-                         <div className="space-y-0.5">
-                            <FormLabel className="text-base flex items-center gap-2">
-                                <Bell className="h-4 w-4" />
-                                Recordatorio
-                            </FormLabel>
+                  <FormItem className="flex flex-row items-center justify-between">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base flex items-center gap-2">
+                        <Bell className="h-4 w-4" />
+                        Recordatorio
+                      </FormLabel>
+                    </div>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              {reminderEnabled && (
+                <FormField
+                  control={form.control}
+                  name="reminderTime"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Hora del recordatorio</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input type="time" {...field} className="pr-10" />
+                          <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         </div>
-                        <FormControl>
-                            <Switch
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                            />
-                        </FormControl>
+                      </FormControl>
+                      <FormMessage />
                     </FormItem>
-                )}
+                  )}
                 />
-                {reminderEnabled && (
-                  <FormField
-                    control={form.control}
-                    name="reminderTime"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Hora del recordatorio</FormLabel>
-                        <FormControl>
-                           <div className="relative">
-                            <Input type="time" {...field} className="pr-10" />
-                            <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
+              )}
             </div>
-            
+
             <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between w-full gap-2">
-                <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                        <Button variant="destructive" className="w-full sm:w-auto">Eliminar Hábito</Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                        <AlertDialogTitle>¿Estás seguro de que quieres eliminar este hábito?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Esta acción no se puede deshacer. Esto eliminará permanentemente tu hábito y todo su historial de progreso.
-                        </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">Continuar</AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" className="w-full sm:w-auto">Eliminar Hábito</Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      ¿Estás seguro de que quieres eliminar este hábito?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Esta acción no se puede deshacer. Esto eliminará permanentemente tu hábito y
+                      todo su historial de progreso.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDelete}
+                      className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                    >
+                      Continuar
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
               <Button type="submit" className="w-full sm:w-auto">Guardar Cambios</Button>
             </DialogFooter>
           </form>

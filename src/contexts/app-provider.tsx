@@ -1,5 +1,4 @@
-
-"use client";
+'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import type { User } from 'firebase/auth';
@@ -18,7 +17,7 @@ import {
   where,
   orderBy,
   serverTimestamp,
-  deleteField
+  FieldValue
 } from 'firebase/firestore';
 import type { Habit, GratitudeEntry } from '@/lib/types';
 import { format, subDays, differenceInCalendarDays, parseISO, startOfWeek, endOfWeek, isWithinInterval, getWeek } from 'date-fns';
@@ -35,7 +34,7 @@ interface AppContextType {
   setHabits: React.Dispatch<React.SetStateAction<Habit[]>>;
   gratitudeEntries: GratitudeEntry[];
   addHabit: (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates' | 'order'>) => Promise<void>;
-  updateHabit: (habitId: string, habitData: { [key: string]: any }) => void;
+  updateHabit: (habitId: string, habitData: { [key: string]: string | number | boolean | string[] | FieldValue }) => void;
   deleteHabit: (habitId: string) => void;
   toggleHabitCompletion: (habitId: string, date: Date) => void;
   getHabitById: (habitId: string) => Habit | undefined;
@@ -198,7 +197,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await addDoc(habitsCollectionRef, newHabit);
   };
 
-  const updateHabit = async (habitId: string, habitData: { [key: string]: any }) => {
+  const updateHabit = async (habitId: string, habitData: { [key: string]: string | number | boolean | string[] | FieldValue }) => {
     if (!user || !user.uid) return;
     const habitDocRef = doc(db, `users/${user.uid}/habits`, habitId);
     await updateDoc(habitDocRef, habitData);
