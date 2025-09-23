@@ -39,7 +39,7 @@ interface AppContextType {
   toggleHabitCompletion: (habitId: string, date: Date) => void;
   getHabitById: (habitId: string) => Habit | undefined;
   getStreak: (habit: Habit) => number;
-  addGratitudeEntry: (content: string, date: Date, note?: string) => void;
+  addGratitudeEntry: (content: string, date: Date, note?: string, motivation?: string) => void;
   getGratitudeEntry: (date: Date) => GratitudeEntry | undefined;
   isClient: boolean;
   getWeekCompletion: (habit: Habit) => { completed: number; total: number };
@@ -334,25 +334,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return { completed: completedThisWeek, total: habit.daysPerWeek };
   };
 
-  const addGratitudeEntry = async (content: string, date: Date, note?: string) => {
+  const addGratitudeEntry = async (content: string, date: Date, note?: string, motivation?: string) => {
     if(!user || !user.uid) return;
     const key = dayKey(toZoned(date));
     const gratitudeCollectionRef = collection(db, `users/${user.uid}/gratitudeEntries`);
     const q = query(gratitudeCollectionRef, where("dateKey", "==", key));
     
     const querySnapshot = await getDocs(q);
-  
+    
+    const dataToSave = {
+      content,
+      note,
+      motivation,
+      dateKey: key,
+      createdAt: serverTimestamp()
+    }
+
     if (!querySnapshot.empty) {
       const docId = querySnapshot.docs[0].id;
       const docRef = doc(db, `users/${user.uid}/gratitudeEntries`, docId);
-      await updateDoc(docRef, { content, note });
+      const { createdAt, ...dataToUpdate } = dataToSave;
+      await updateDoc(docRef, dataToUpdate);
     } else {
-      await addDoc(gratitudeCollectionRef, { 
-        content, 
-        note, 
-        dateKey: key, 
-        createdAt: serverTimestamp()
-      });
+      await addDoc(gratitudeCollectionRef, dataToSave);
     }
   };
 

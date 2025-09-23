@@ -17,28 +17,7 @@ import { BookHeart, WandSparkles, Pencil, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 
-function MotivationalMessage({ userName }: { userName: string }) {
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(true);
-  const { getTodaysMotivation } = useAppData();
-
-  useEffect(() => {
-    const fetchMessage = async () => {
-      setLoading(true);
-      try {
-        const motivation = await getTodaysMotivation(userName);
-        setMessage(motivation);
-      } catch (error: unknown) {
-        console.error("Error fetching motivational message:", error);
-        setMessage("¡Sigue así! Mañana te espera un nuevo día para agradecer.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMessage();
-  }, [userName, getTodaysMotivation]);
-
+function MotivationalMessageDisplay({ message, loading }: { message: string, loading: boolean }) {
   if (loading) {
     return (
       <div className="flex items-center gap-2 text-sm text-muted-foreground animate-pulse mb-4">
@@ -67,15 +46,23 @@ const gratitudePlaceholders = [
 
 
 export function GratitudeJournal() {
-  const { user, addGratitudeEntry, getGratitudeEntry } = useAppData()
+  const { user, addGratitudeEntry, getGratitudeEntry, getTodaysMotivation } = useAppData()
   const [gratitudeItems, setGratitudeItems] = useState<string[]>(["", "", ""]);
   const [note, setNote] = useState("");
   const [showNote, setShowNote] = useState(false);
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
   const [isSaved, setIsSaved] = useState(false);
+  const [motivationalMessage, setMotivationalMessage] = useState("");
+  const [motivationLoading, setMotivationLoading] = useState(true);
   const { toast } = useToast()
   
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const getUsername = () => {
+    if (user?.displayName) return user.displayName;
+    if (user?.email) return user.email.split('@')[0];
+    return 'Hola';
+  }
 
   useEffect(() => {
     setCurrentDate(new Date());
@@ -90,6 +77,10 @@ export function GratitudeJournal() {
         setNote(entry.note || "");
         setShowNote(!!entry.note);
         setIsSaved(true);
+        if(entry.motivation) {
+            setMotivationalMessage(entry.motivation);
+            setMotivationLoading(false);
+        }
       } else {
         setGratitudeItems(["", "", ""]);
         setNote("");
@@ -98,6 +89,24 @@ export function GratitudeJournal() {
       }
     }
   }, [getGratitudeEntry, currentDate])
+
+  useEffect(() => {
+    if (isSaved && !motivationalMessage) {
+        const fetchMessage = async () => {
+            setMotivationLoading(true);
+            try {
+                const motivation = await getTodaysMotivation(getUsername());
+                setMotivationalMessage(motivation);
+            } catch (error: unknown) {
+                console.error("Error fetching motivational message:", error);
+                setMotivationalMessage("¡Sigue así! Mañana te espera un nuevo día para agradecer.");
+            } finally {
+                setMotivationLoading(false);
+            }
+        };
+        fetchMessage();
+    }
+  }, [isSaved, motivationalMessage, getTodaysMotivation]);
 
   useEffect(() => {
     if(!isSaved && gratitudeItems.length > inputRefs.current.filter(Boolean).length) {
@@ -109,10 +118,21 @@ export function GratitudeJournal() {
   }, [gratitudeItems.length, isSaved]);
 
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const contentToSave = gratitudeItems.map(item => item.trim()).filter(item => item !== '').join('\n');
     if ((contentToSave || note) && currentDate) {
-      addGratitudeEntry(contentToSave, currentDate, note)
+      let motivationToSave = motivationalMessage;
+      if (!motivationToSave) {
+          try {
+              motivationToSave = await getTodaysMotivation(getUsername());
+              setMotivationalMessage(motivationToSave);
+          } catch (error) {
+              console.error("Error fetching motivation on save:", error);
+              motivationToSave = "¡Sigue así! Mañana te espera un nuevo día para agradecer."; // Fallback
+          }
+      }
+
+      addGratitudeEntry(contentToSave, currentDate, note, motivationToSave)
       setIsSaved(true);
       toast({
         title: "¡Entrada guardada!",
@@ -174,12 +194,6 @@ export function GratitudeJournal() {
     }
   };
 
-  const getUsername = () => {
-    if (user?.displayName) return user.displayName;
-    if (user?.email) return user.email.split('@')[0];
-    return 'Hola';
-  }
-  
   const handleNoteToggle = () => {
     if (showNote) {
       setNote("");
@@ -216,7 +230,7 @@ export function GratitudeJournal() {
       </CardHeader>
       <CardContent>
         {isSaved && (
-            <MotivationalMessage userName={getUsername()} />
+            <MotivationalMessageDisplay message={motivationalMessage} loading={motivationLoading} />
         )}
         {isSaved ? (
            <div className="space-y-4">

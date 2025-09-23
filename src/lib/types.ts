@@ -20,6 +20,7 @@ export interface GratitudeEntry {
   dateKey: string; // ISO string 'YYYY-MM-DD' in 'America/Santiago' timezone
   content: string;
   note?: string;
+  motivation?: string;
   createdAt?: Timestamp;
 }
 

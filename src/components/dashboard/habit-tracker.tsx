@@ -9,12 +9,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
 import { useAppData } from "@/contexts/app-provider"
-import { Flame, Target, CheckCircle } from "lucide-react"
+import { Flame, Target, CheckCircle, Circle, CheckCircle2 } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import type { Habit } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
 type IconName = keyof typeof LucideIcons;
 
@@ -56,6 +56,9 @@ export function TodaysHabitsCard({ habits }: { habits: Habit[]}) {
   
   const todayString = today.toISOString().split("T")[0]
 
+  const pendingHabits = habits.filter(h => !h.completedDates.includes(todayString));
+  const completedHabits = habits.filter(h => h.completedDates.includes(todayString));
+
   return (
     <Card>
       <CardHeader>
@@ -67,14 +70,12 @@ export function TodaysHabitsCard({ habits }: { habits: Habit[]}) {
       </CardHeader>
       <CardContent>
         {habits.length > 0 ? (
-          <div className="space-y-4">
-            {habits.map((habit) => {
-              const isCompleted = habit.completedDates.includes(todayString)
+          <div className="space-y-3">
+            {pendingHabits.map((habit) => {
               const streak = getStreak(habit)
               const isWeekly = habit.frequency === 'weekly';
               const streakUnit = isWeekly ? (streak === 1 ? "semana" : "semanas") : (streak === 1 ? "día" : "días");
               const weekCompletion = isWeekly ? getWeekCompletion(habit) : null;
-              const isWeeklyGoalMet = isWeekly && weekCompletion && weekCompletion.completed >= weekCompletion.total;
 
               return (
                 <div
@@ -82,14 +83,11 @@ export function TodaysHabitsCard({ habits }: { habits: Habit[]}) {
                   className="flex items-center justify-between rounded-lg border p-3"
                 >
                   <div className="flex items-center gap-3">
-                    <Checkbox
-                      id={`habit-today-${habit.id}`}
-                      checked={isCompleted}
-                      onCheckedChange={() => toggleHabitCompletion(habit.id, today)}
-                    />
-                    <label
-                      htmlFor={`habit-today-${habit.id}`}
-                      className="flex items-center gap-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    <button onClick={() => toggleHabitCompletion(habit.id, today)} aria-label={`Marcar ${habit.name} como completado`}>
+                        <Circle className="h-6 w-6 text-muted-foreground/50" />
+                    </button>
+                    <div
+                      className="flex items-center gap-2 text-sm font-medium leading-none"
                     >
                       <Icon name={habit.icon as IconName} className="h-5 w-5 text-muted-foreground" />
                       {habit.name}
@@ -98,10 +96,9 @@ export function TodaysHabitsCard({ habits }: { habits: Habit[]}) {
                               ({weekCompletion.completed}/{weekCompletion.total})
                           </span>
                       )}
-                    </label>
+                    </div>
                   </div>
                     <div className="flex items-center gap-2">
-                         {isWeeklyGoalMet && <CheckCircle className="h-5 w-5 text-green-500" />}
                         {streak > 0 && (
                             <Badge variant="secondary" className="flex flex-col items-center justify-center p-1 px-2 h-auto leading-none rounded-md">
                                 <div className="flex items-center gap-1">
@@ -115,6 +112,62 @@ export function TodaysHabitsCard({ habits }: { habits: Habit[]}) {
                 </div>
               )
             })}
+
+            {completedHabits.length > 0 && pendingHabits.length > 0 && (
+                 <div className="relative pt-2 pb-1">
+                    <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                        <div className="w-full border-t border-dashed border-muted-foreground/20" />
+                    </div>
+                    <div className="relative flex justify-center">
+                        <span className="bg-card px-3 text-xs uppercase text-muted-foreground">Completados</span>
+                    </div>
+                </div>
+            )}
+
+            {completedHabits.map((habit) => {
+                const streak = getStreak(habit)
+                const isWeekly = habit.frequency === 'weekly';
+                const streakUnit = isWeekly ? (streak === 1 ? "semana" : "semanas") : (streak === 1 ? "día" : "días");
+                const weekCompletion = isWeekly ? getWeekCompletion(habit) : null;
+                const isWeeklyGoalMet = isWeekly && weekCompletion && weekCompletion.completed >= weekCompletion.total;
+
+                return (
+                    <div
+                    key={habit.id}
+                    className="flex items-center justify-between rounded-lg border p-3 bg-muted/20"
+                    >
+                    <div className="flex items-center gap-3">
+                        <button onClick={() => toggleHabitCompletion(habit.id, today)} aria-label={`Marcar ${habit.name} como pendiente`}>
+                            <CheckCircle2 className="h-6 w-6 text-green-500" />
+                        </button>
+                        <div
+                            className="flex items-center gap-2 text-sm font-medium leading-none text-muted-foreground"
+                        >
+                            <Icon name={habit.icon as IconName} className="h-5 w-5 text-muted-foreground" />
+                            {habit.name}
+                            {isWeekly && weekCompletion && (
+                                <span className="text-xs font-normal">
+                                    ({weekCompletion.completed}/{weekCompletion.total})
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                        <div className="flex items-center gap-2">
+                            {isWeeklyGoalMet && <CheckCircle className="h-5 w-5 text-green-500" />}
+                            {streak > 0 && (
+                                <Badge variant="secondary" className="flex flex-col items-center justify-center p-1 px-2 h-auto leading-none rounded-md bg-background/70">
+                                    <div className="flex items-center gap-1">
+                                        <Flame className="h-4 w-4 text-orange-500/70" />
+                                        <span className="font-semibold text-sm">{streak}</span>
+                                    </div>
+                                    <span className="text-xs font-normal">{streakUnit}</span>
+                                </Badge>
+                            )}
+                        </div>
+                    </div>
+                )
+            })}
+
           </div>
         ) : (
           <p className="text-sm text-muted-foreground text-center py-8">¡Felicidades! No tienes hábitos pendientes por ahora.</p>

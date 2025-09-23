@@ -8,7 +8,7 @@ import { useAppData } from '@/contexts/app-provider'
 import { format, addDays, subDays, isToday, addMonths } from 'date-fns'
 import { es } from 'date-fns/locale'
 import * as LucideIcons from 'lucide-react'
-import { Target, ChevronLeft, ChevronRight, BookHeart } from 'lucide-react'
+import { Target, ChevronLeft, ChevronRight, BookHeart, WandSparkles } from 'lucide-react'
 import { Button } from '../ui/button'
 
 type IconName = keyof typeof LucideIcons
@@ -33,6 +33,7 @@ export function HistoryView() {
   const gratitudeItems =
     selectedGratitudeEntry?.content.split('\n').filter((item) => item.trim() !== '') || []
   const gratitudeNote = selectedGratitudeEntry?.note
+  const motivationalMessage = selectedGratitudeEntry?.motivation
 
   const completedHabitsOnDate = habits.filter((habit) =>
     habit.completedDates.includes(selectedDateString)
@@ -142,6 +143,12 @@ export function HistoryView() {
               <CardContent>
                 {selectedGratitudeEntry ? (
                   <div className="space-y-4">
+                    {motivationalMessage && (
+                        <div className="flex items-center gap-3 text-sm text-primary-foreground bg-primary/90 rounded-lg p-3">
+                            <WandSparkles className="h-6 w-6" />
+                            <p className="font-medium">{motivationalMessage}</p>
+                        </div>
+                    )}
                     <ul className="space-y-2">
                       {gratitudeItems.map((item, index) => (
                         <li
