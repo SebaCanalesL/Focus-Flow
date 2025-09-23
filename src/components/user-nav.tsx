@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
@@ -99,6 +99,11 @@ export function UserNav() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
+        <Link href="/feedback">
+            <DropdownMenuItem>
+                Feedback
+            </DropdownMenuItem>
+        </Link>
         <DropdownMenuItem onClick={handleLogout}>
           Cerrar sesión
           <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
