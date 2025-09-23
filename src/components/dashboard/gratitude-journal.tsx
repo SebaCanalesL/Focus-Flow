@@ -54,9 +54,11 @@ export function GratitudeJournal() {
   const [isSaved, setIsSaved] = useState(false);
   const [motivationalMessage, setMotivationalMessage] = useState("");
   const [motivationLoading, setMotivationLoading] = useState(true);
+  const [focusLastInput, setFocusLastInput] = useState(false);
   const { toast } = useToast()
   
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const noteInputRef = useRef<HTMLTextAreaElement | null>(null);
 
   const getUsername = () => {
     if (user?.displayName) return user.displayName;
@@ -109,13 +111,23 @@ export function GratitudeJournal() {
   }, [isSaved, motivationalMessage, getTodaysMotivation]);
 
   useEffect(() => {
-    if(!isSaved && gratitudeItems.length > inputRefs.current.filter(Boolean).length) {
-        const lastInput = inputRefs.current[gratitudeItems.length - 1];
-        if (lastInput) {
-            lastInput.focus();
-        }
+    if (focusLastInput) {
+      const lastInput = inputRefs.current[gratitudeItems.length - 1];
+      if (lastInput) {
+        lastInput.focus();
+      }
+      setFocusLastInput(false);
     }
-  }, [gratitudeItems.length, isSaved]);
+  }, [focusLastInput, gratitudeItems.length]);
+
+  useEffect(() => {
+    if (showNote) {
+      const timer = setTimeout(() => {
+        noteInputRef.current?.focus();
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [showNote]);
 
 
   const handleSave = async () => {
@@ -161,7 +173,8 @@ export function GratitudeJournal() {
   }
 
   const addItem = () => {
-    setGratitudeItems([...gratitudeItems, ""]);
+    setGratitudeItems(prevItems => [...prevItems, ""]);
+    setFocusLastInput(true);
   }
 
   const removeItem = (index: number) => {
@@ -272,6 +285,7 @@ export function GratitudeJournal() {
              {showNote && (
                 <div className="pt-2">
                     <Textarea 
+                        ref={noteInputRef}
                         placeholder="Escribe aquí una nota más extensa, tus reflexiones o lo que sientas..."
                         value={note}
                         onChange={(e) => setNote(e.target.value)}
