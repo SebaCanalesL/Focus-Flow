@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React from "react"
 import {
   Card,
   CardContent,
@@ -15,6 +15,7 @@ import * as LucideIcons from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import type { Habit } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import { format } from "date-fns"
 
 type IconName = keyof typeof LucideIcons;
 
@@ -27,13 +28,8 @@ const Icon = ({ name, className }: { name: IconName; className?: string }) => {
 
 export function TodaysHabitsCard({ habits }: { habits: Habit[]}) {
   const { toggleHabitCompletion, getStreak, getWeekCompletion, isClient } = useAppData()
-  const [today, setToday] = useState<Date | null>(null);
   
-  useEffect(() => {
-    setToday(new Date());
-  }, []);
-
-  if (!isClient || !today) {
+  if (!isClient) {
     return (
        <Card>
         <CardHeader>
@@ -54,7 +50,8 @@ export function TodaysHabitsCard({ habits }: { habits: Habit[]}) {
     )
   }
   
-  const todayString = today.toISOString().split("T")[0]
+  const today = new Date();
+  const todayString = format(today, 'yyyy-MM-dd');
 
   const pendingHabits = habits.filter(h => !h.completedDates.includes(todayString));
   const completedHabits = habits.filter(h => h.completedDates.includes(todayString));

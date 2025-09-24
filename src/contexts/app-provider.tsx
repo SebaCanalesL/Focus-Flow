@@ -210,20 +210,39 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }
 
   const toggleHabitCompletion = async (habitId: string, date: Date) => {
-    if (!user || !user.uid) return;
-    if (habitId === 'gratitude-habit') return;
-
+    if (!user || !user.uid || habitId === 'gratitude-habit') return;
+  
     const dateString = format(date, 'yyyy-MM-dd');
-    const habit = habits.find(h => h.id === habitId);
-    if (!habit) return;
-
-    const completed = habit.completedDates.includes(dateString);
-    const newCompletedDates = completed
-      ? habit.completedDates.filter(d => d !== dateString)
-      : [...habit.completedDates, dateString];
-    
-    const habitDocRef = doc(db, `users/${user.uid}/habits`, habitId);
-    await updateDoc(habitDocRef, { completedDates: newCompletedDates.sort() });
+    const originalHabits = habits;
+    let updatedHabit: Habit | undefined;
+  
+    // Optimistic UI update
+    setHabits(prevHabits => {
+      return prevHabits.map(h => {
+        if (h.id === habitId) {
+          const completed = h.completedDates.includes(dateString);
+          const newCompletedDates = completed
+            ? h.completedDates.filter(d => d !== dateString)
+            : [...h.completedDates, dateString].sort();
+          
+          updatedHabit = { ...h, completedDates: newCompletedDates };
+          return updatedHabit;
+        }
+        return h;
+      });
+    });
+  
+    // Firestore update
+    try {
+      if (updatedHabit) {
+        const habitDocRef = doc(db, `users/${user.uid}/habits`, habitId);
+        await updateDoc(habitDocRef, { completedDates: updatedHabit.completedDates });
+      }
+    } catch (error) {
+      console.error("Failed to toggle habit completion:", error);
+      // Revert on error
+      setHabits(originalHabits);
+    }
   };
   
   const getHabitById = (habitId: string) => {

@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -12,7 +11,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -26,7 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAppData } from "@/contexts/app-provider";
-import { PlusCircle, WandSparkles, Bell, Clock } from "lucide-react";
+import { WandSparkles, Bell, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import type { Habit } from "@/lib/types";
@@ -67,8 +65,12 @@ const formSchema = z
     }
   );
 
-export function CreateHabitDialog() {
-  const [isOpen, setIsOpen] = useState(false);
+interface CreateHabitDialogProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+}
+
+export function CreateHabitDialog({ open, onOpenChange }: CreateHabitDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { addHabit, user } = useAppData();
   const { toast } = useToast();
@@ -82,6 +84,12 @@ export function CreateHabitDialog() {
       reminderTime: "09:00",
     },
   });
+  
+  useEffect(() => {
+    if (!open) {
+      form.reset();
+    }
+  }, [open, form]);
 
   const frequency = form.watch("frequency");
 
@@ -114,8 +122,7 @@ export function CreateHabitDialog() {
         description: `El hábito \"${values.name}\" ha sido añadido a tu lista.`,
       });
 
-      setIsOpen(false);
-      form.reset();
+      onOpenChange(false);
 
     } catch (error) {
       console.error("Error creating habit:", error);
@@ -130,13 +137,7 @@ export function CreateHabitDialog() {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Crear Hábito
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Crear un nuevo hábito</DialogTitle>
