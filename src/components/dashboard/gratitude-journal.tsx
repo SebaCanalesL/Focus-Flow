@@ -1,6 +1,6 @@
-"use client"
+'use client';
 
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -8,14 +8,14 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
-import { useAppData } from "@/contexts/app-provider"
-import { BookHeart, WandSparkles, Pencil, X } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import { cn } from "@/lib/utils"
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { useAppData } from '@/contexts/app-provider';
+import { BookHeart, WandSparkles, Pencil, X } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 function MotivationalMessageDisplay({ message, loading }: { message: string, loading: boolean }) {
   if (loading) {
@@ -44,6 +44,9 @@ const gratitudePlaceholders = [
     "Algo que lograste, por pequeño que sea."
 ];
 
+export function GratitudeTracker() {
+    return <GratitudeJournal />
+}
 
 export function GratitudeJournal() {
   const { user, addGratitudeEntry, getGratitudeEntry, getTodaysMotivation } = useAppData()
@@ -60,11 +63,11 @@ export function GratitudeJournal() {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const noteInputRef = useRef<HTMLTextAreaElement | null>(null);
 
-  const getUsername = () => {
+  const getUsername = useCallback(() => {
     if (user?.displayName) return user.displayName;
     if (user?.email) return user.email.split('@')[0];
     return 'Hola';
-  }
+  }, [user])
 
   useEffect(() => {
     setCurrentDate(new Date());
@@ -108,7 +111,7 @@ export function GratitudeJournal() {
         };
         fetchMessage();
     }
-  }, [isSaved, motivationalMessage, getTodaysMotivation]);
+  }, [isSaved, motivationalMessage, getTodaysMotivation, getUsername]);
 
   useEffect(() => {
     if (focusLastInput) {

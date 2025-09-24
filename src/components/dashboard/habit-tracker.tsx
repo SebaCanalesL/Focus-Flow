@@ -1,21 +1,19 @@
+'use client';
 
-"use client"
-
-import React from "react"
+import React from 'react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { useAppData } from "@/contexts/app-provider"
-import { Flame, Target, CheckCircle, Circle, CheckCircle2 } from "lucide-react"
-import * as LucideIcons from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import type { Habit } from "@/lib/types"
-import { cn } from "@/lib/utils"
-import { format } from "date-fns"
+} from '@/components/ui/card';
+import { useAppData } from '@/contexts/app-provider';
+import { Flame, Target, CheckCircle, Circle, CheckCircle2 } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import type { Habit } from '@/lib/types';
+import { format } from 'date-fns';
 
 type IconName = keyof typeof LucideIcons;
 
@@ -25,6 +23,25 @@ const Icon = ({ name, className }: { name: IconName; className?: string }) => {
   return <LucideIcon className={className} />;
 };
 
+export function HabitTracker() {
+  const { habits, getWeekCompletion } = useAppData();
+  const today = new Date();
+
+  const weeklyCompletedHabits = habits.filter(habit => {
+      if (habit.frequency !== 'weekly') return false;
+      const weekCompletion = getWeekCompletion(habit, today);
+      return weekCompletion.completed >= weekCompletion.total;
+  });
+
+  const otherHabits = habits.filter(habit => !weeklyCompletedHabits.includes(habit));
+
+  return (
+      <div className="space-y-6">
+          <TodaysHabitsCard habits={otherHabits} />
+          <CompletedWeeklyHabitsCard habits={weeklyCompletedHabits} />
+      </div>
+  );
+}
 
 export function TodaysHabitsCard({ habits }: { habits: Habit[]}) {
   const { toggleHabitCompletion, getStreak, getWeekCompletion, isClient } = useAppData()

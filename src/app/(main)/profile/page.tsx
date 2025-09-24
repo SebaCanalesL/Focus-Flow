@@ -30,7 +30,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
-import { User, sendPasswordResetEmail, updateProfile, deleteUser } from "firebase/auth"
+import { sendPasswordResetEmail, updateProfile, deleteUser, AuthError } from "firebase/auth"
 import { auth, db } from "@/lib/firebase"
 import { doc, updateDoc } from 'firebase/firestore'
 import { Pencil, Save, CalendarIcon, User as UserIcon } from "lucide-react"
@@ -170,9 +170,10 @@ export default function ProfilePage() {
         await deleteUser(user)
         toast.success("Cuenta eliminada con éxito.", { id: toastId })
         router.push("/signup")
-      } catch (error: any) {
+      } catch (error) {
         console.error("Error deleting account:", error)
-        if (error.code === 'auth/requires-recent-login') {
+        const authError = error as AuthError
+        if (authError.code === 'auth/requires-recent-login') {
             toast.error("Esta operación es sensible y requiere una nueva autenticación. Por favor, vuelve a iniciar sesión e inténtalo de nuevo.", { id: toastId, duration: 6000 })
         } else {
             toast.error("Error al eliminar la cuenta.", { id: toastId })
