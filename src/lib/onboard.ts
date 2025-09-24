@@ -1,7 +1,7 @@
 // src/lib/onboard.ts
 import {
   doc, getDoc, setDoc, writeBatch,
-  serverTimestamp, collection, Timestamp
+  serverTimestamp, collection
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { INITIAL_HABITS } from './data'; // Use single source of truth
