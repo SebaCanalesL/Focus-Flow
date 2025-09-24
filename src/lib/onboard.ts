@@ -1,7 +1,7 @@
 // src/lib/onboard.ts
 import {
   doc, getDoc, setDoc, writeBatch,
-  serverTimestamp, collection
+  serverTimestamp, collection, Timestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { INITIAL_HABITS } from './data'; // Use single source of truth
@@ -18,6 +18,7 @@ export async function ensureUserSeed(uid: string, profile?: Omit<UserProfile, 'u
   const userDoc = await getDoc(userRef);
   const userData = userDoc.data();
   const now = serverTimestamp();
+  const userCreationTimestamp = userData?.createdAt ?? now;
 
   // 1. If seeding is already done, do nothing.
   if (userDoc.exists() && userData.seedState === 'done') {
@@ -29,7 +30,7 @@ export async function ensureUserSeed(uid: string, profile?: Omit<UserProfile, 'u
     email: profile?.email ?? null,
     displayName: profile?.displayName ?? null,
     photoURL: profile?.photoURL ?? null,
-    createdAt: userData?.createdAt ?? now, // Persist original creation date if it exists
+    createdAt: userCreationTimestamp, // Persist original creation date if it exists
     updatedAt: now,
     seedState: 'pending' as SeedState,
   }, { merge: true });
@@ -38,7 +39,21 @@ export async function ensureUserSeed(uid: string, profile?: Omit<UserProfile, 'u
   const habitsCol = collection(db, `users/${uid}/habits`);
   const batch = writeBatch(db);
 
+  // Special handling for the gratitude habit
+  const gratitudeHabit = INITIAL_HABITS.find(h => h.id === 'gratitude');
+  if (gratitudeHabit) {
+    const { id, ...habitData } = gratitudeHabit;
+    const habitRef = doc(habitsCol, id);
+    batch.set(habitRef, {
+      ...habitData,
+      createdAt: userCreationTimestamp, // Use user creation time
+      updatedAt: now,
+    });
+  }
+
+  // Add other initial habits as before
   INITIAL_HABITS.forEach(habit => {
+    if (habit.id === 'gratitude') return; // Already handled
     const { id, ...habitData } = habit;
     const habitRef = doc(habitsCol, id);
     batch.set(habitRef, {

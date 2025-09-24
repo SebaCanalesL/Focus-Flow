@@ -51,11 +51,8 @@ export function HabitCardWithGrid({
   const isCompletedToday = habit.completedDates.includes(todayString);
   const streak = getStreak(habit);
 
-  // Convertimos las fechas completadas (string) a objetos Date para el calendario
-  // Se usa parseISO para interpretar correctamente el string YYYY-MM-DD
   const completedDatesAsDates = habit.completedDates.map(isoString => parseISO(isoString));
 
-  // Manejador para marcar/desmarcar días desde el calendario
   const handleDayClick = (day: Date | undefined) => {
     if (day) {
       toggleHabitCompletion(habit.id, day);
@@ -72,8 +69,6 @@ export function HabitCardWithGrid({
     ? 'día'
     : 'días';
 
-  const isGratitudeHabit = habit.id === 'gratitude-habit';
-
   return (
     <Card
       className={cn('flex flex-col transition-shadow', isDragging && 'shadow-2xl')}
@@ -82,12 +77,10 @@ export function HabitCardWithGrid({
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-start gap-3">
-            {!isGratitudeHabit && (
-              <div {...listeners} className="touch-none cursor-grab py-2">
-                <GripVertical className="h-5 w-5 text-muted-foreground" />
-              </div>
-            )}
-            <div className={cn('p-2 rounded-lg bg-primary/20', isGratitudeHabit && 'ml-4')}>
+            <div {...listeners} className="touch-none cursor-grab py-2">
+              <GripVertical className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <div className={'p-2 rounded-lg bg-primary/20'}>
               <Icon name={habit.icon as IconName} className="h-6 w-6 text-primary" />
             </div>
             <div>
@@ -95,7 +88,7 @@ export function HabitCardWithGrid({
             </div>
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
-            {!isGratitudeHabit && (
+            {habit.id !== 'gratitude' && (
               <EditHabitDialog habit={habit}>
                 <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9">
                   <Pencil className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -116,9 +109,9 @@ export function HabitCardWithGrid({
                   mode="multiple"
                   selected={completedDatesAsDates}
                   onDayClick={handleDayClick}
-                  weekStartsOn={1} // La semana comienza en Lunes
+                  weekStartsOn={1}
                   showOutsideDays={true}
-                  locale={es} // Usamos el locale en español para meses y días de la semana
+                  locale={es}
                   modifiers={{
                     completed: completedDatesAsDates,
                   }}
