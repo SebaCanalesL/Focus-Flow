@@ -4,14 +4,19 @@ import { buttonVariants } from '@/components/ui/button';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import Link from 'next/link';
 import { useState } from 'react';
 import Image from 'next/image';
+import {
+  CreateRoutineDialog,
+  routineSteps,
+} from '@/components/routines/create-routine-dialog';
+import { PerformRoutineSheet } from '@/components/routines/perform-routine-sheet';
 
-const filters = ['Todas', 'Partir el día', 'Terminar el día'];
+const filters = ['Mis rutinas', 'Todas', 'Partir el día', 'Terminar el día'];
 
-const routines = [
+const defaultRoutines = [
   {
+    id: 'default-1',
     title: 'Mañana Energizada',
     category: 'Partir el día',
     imageUrl: '/routines/routine-morning-energized.png',
@@ -20,8 +25,72 @@ const routines = [
   },
 ];
 
-function RoutineCard({ routine }: { routine: (typeof routines)[0] }) {
+function RoutineCard({
+  routine,
+  onSave,
+  isUserRoutine,
+}: {
+  routine: any;
+  onSave: (newRoutine: any) => void;
+  isUserRoutine: boolean;
+}) {
   const [isOpen, setIsOpen] = useState(false);
+
+  const renderDescription = () => {
+    if (isUserRoutine) {
+      const stepsToDisplay = (routine.stepIds || [])
+        .map((stepId: string) => routineSteps.find((s) => s.id === stepId))
+        .filter(Boolean);
+
+      if (stepsToDisplay.length === 0) {
+        return <p>Esta rutina no tiene pasos. ¡Edítala para agregarle!</p>;
+      }
+      return (
+        <div className="space-y-2">
+          {stepsToDisplay.map((step) => (
+            <p key={step.id}>{step.title.split(' (')[0]}</p>
+          ))}
+        </div>
+      );
+    } else {
+      return routine.description.split('\n\n').map((paragraph: string, pIndex: number) => (
+        <div key={pIndex} className="space-y-1">
+          {paragraph.split('\n').map((line: string, lIndex: number) => {
+            if (line.trim() === '') return null;
+            if (line.trim().startsWith('* ')) {
+              return (
+                <div key={lIndex} className="flex items-start pl-4">
+                  <span className="mr-2 mt-1">∙</span>
+                  <span>{line.trim().substring(2)}</span>
+                </div>
+              );
+            }
+            const isKey = /^[☀️💧🤸🧘🥑📝]/.test(line);
+            if (isKey && line.includes(':')) {
+              const parts = line.split(':');
+              const keyTitle = parts[0] + ':';
+              const keyDescription = parts.slice(1).join(':').trim();
+              return (
+                <p key={lIndex}>
+                  <span className="font-bold text-primary">{keyTitle}</span>
+                  <span className="text-muted-foreground">{` ${keyDescription}`}</span>
+                </p>
+              );
+            }
+            const isMainTitle = /^[🌞🌱💡🔑✨🚀]/.test(line);
+            if (isMainTitle) {
+              return (
+                <p key={lIndex} className="font-bold text-primary">
+                  {line}
+                </p>
+              );
+            }
+            return <p key={lIndex}>{line}</p>;
+          })}
+        </div>
+      ));
+    }
+  };
 
   return (
     <Card className="overflow-hidden rounded-lg">
@@ -32,55 +101,32 @@ function RoutineCard({ routine }: { routine: (typeof routines)[0] }) {
             alt={routine.title}
             fill
             className="object-contain"
+            priority
           />
         </div>
       </div>
       {isOpen && (
         <CardContent className="pt-4">
-        <div className="text-muted-foreground mb-4 space-y-4">
-          {routine.description.split('\n\n').map((paragraph, pIndex) => (
-            <div key={pIndex} className="space-y-1">
-              {paragraph.split('\n').map((line, lIndex) => {
-                if (line.trim() === '') return null;
-
-                if (line.trim().startsWith('* ')) {
-                  return (
-                    <div key={lIndex} className="flex items-start pl-4">
-                      <span className="mr-2 mt-1">∙</span>
-                      <span>{line.trim().substring(2)}</span>
-                    </div>
-                  );
-                }
-
-                const isKey = /^[☀️💧🤸🧘🥑📝]/.test(line);
-                if (isKey && line.includes(':')) {
-                  const parts = line.split(':');
-                  const keyTitle = parts[0] + ':';
-                  const keyDescription = parts.slice(1).join(':').trim();
-                  return (
-                    <p key={lIndex}>
-                      <span className="font-bold text-primary">{keyTitle}</span>
-                      <span className="text-muted-foreground">{` ${keyDescription}`}</span>
-                    </p>
-                  );
-                }
-
-                const isMainTitle = /^[🌞🌱💡🔑✨🚀]/.test(line);
-                if (isMainTitle) {
-                  return (
-                    <p key={lIndex} className="font-bold text-primary">
-                      {line}
-                    </p>
-                  );
-                }
-
-                return <p key={lIndex}>{line}</p>;
-              })}
+          <div className="text-muted-foreground mb-4 space-y-4">
+            {renderDescription()}
+          </div>
+          {isUserRoutine ? (
+            <div className="flex items-center gap-2">
+              <CreateRoutineDialog onSave={onSave} routineToEdit={routine}>
+                <Button variant="outline" className="w-full">
+                  Editar
+                </Button>
+              </CreateRoutineDialog>
+              <PerformRoutineSheet routine={routine}>
+                <Button className="w-full">Realizar rutina</Button>
+              </PerformRoutineSheet>
             </div>
-          ))}
-        </div>
-        <Button className="w-full">+ Agregar a mi rutina</Button>
-      </CardContent>
+          ) : (
+            <CreateRoutineDialog onSave={onSave}>
+              <Button className="w-full">+ Agregar a mi rutina</Button>
+            </CreateRoutineDialog>
+          )}
+        </CardContent>
       )}
     </Card>
   );
@@ -88,25 +134,44 @@ function RoutineCard({ routine }: { routine: (typeof routines)[0] }) {
 
 export default function RoutinesPage() {
   const [selectedFilter, setSelectedFilter] = useState('Todas');
+  const [userRoutines, setUserRoutines] = useState<any[]>([]);
 
-  const filteredRoutines = routines.filter(
-    (routine) =>
-      selectedFilter === 'Todas' || routine.category === selectedFilter
-  );
+  const handleSaveRoutine = (newRoutine: any) => {
+    if (newRoutine.id) {
+      setUserRoutines((prev) =>
+        prev.map((r) => (r.id === newRoutine.id ? newRoutine : r))
+      );
+    } else {
+      const routineWithId = { ...newRoutine, id: `user-${Date.now()}` };
+      setUserRoutines((prev) => [...prev, routineWithId]);
+    }
+    setSelectedFilter('Mis rutinas');
+  };
+
+  const routinesToShow = (() => {
+    if (selectedFilter === 'Mis rutinas') {
+      return userRoutines;
+    }
+    if (selectedFilter === 'Todas') {
+      return defaultRoutines;
+    }
+    return defaultRoutines.filter(
+      (routine) => routine.category === selectedFilter
+    );
+  })();
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold md:text-3xl">Rutinas</h1>
-        <Link
-          href="/routines/create"
-          className={cn(buttonVariants({ size: 'sm' }))}
-        >
-          Crear Rutina
-        </Link>
+        <CreateRoutineDialog onSave={handleSaveRoutine}>
+          <div className={cn(buttonVariants({ size: 'sm' }), "cursor-pointer")}>
+            Crear Rutina
+          </div>
+        </CreateRoutineDialog>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 overflow-x-auto pb-2">
         {filters.map((filter) => (
           <button
             key={filter}
@@ -116,7 +181,7 @@ export default function RoutinesPage() {
                 variant: selectedFilter === filter ? 'default' : 'outline',
                 size: 'sm',
               }),
-              'rounded-full px-4'
+              'rounded-full px-4 whitespace-nowrap'
             )}
           >
             {filter}
@@ -125,9 +190,22 @@ export default function RoutinesPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-        {filteredRoutines.map((routine) => (
-          <RoutineCard key={routine.title} routine={routine} />
-        ))}
+        {routinesToShow.length > 0 ? (
+          routinesToShow.map((routine) => (
+            <RoutineCard
+              key={routine.id}
+              routine={routine}
+              onSave={handleSaveRoutine}
+              isUserRoutine={selectedFilter === 'Mis rutinas'}
+            />
+          ))
+        ) : (
+          <p className="text-muted-foreground col-span-full text-center">
+            {selectedFilter === 'Mis rutinas'
+              ? "Aún no has creado ninguna rutina. ¡Crea una para empezar!"
+              : "No se encontraron rutinas para este filtro."}
+          </p>
+        )}
       </div>
     </div>
   );
