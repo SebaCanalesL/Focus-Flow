@@ -38,10 +38,16 @@ const HabitCompletionGrid = ({ habit }: { habit: Habit }) => {
   const today = useMemo(() => startOfDay(new Date()), []);
 
   const monthsToShow = useMemo(() => {
-    const currentMonth = startOfMonth(today);
-    const nextMonth = startOfMonth(addMonths(today, 1));
-    return [currentMonth, nextMonth];
-  }, [today]);
+    const start = startOfMonth(habitCreationDate);
+    const end = startOfMonth(addMonths(today, 1));
+    const months = [];
+    let current = start;
+    while (isBefore(current, end) || isSameMonth(current, end)) {
+      months.push(current);
+      current = addMonths(current, 1);
+    }
+    return months;
+  }, [habitCreationDate, today]);
 
   const getDaysForMonth = (month: Date) => {
     const monthStart = startOfMonth(month);
