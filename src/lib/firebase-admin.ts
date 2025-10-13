@@ -15,9 +15,14 @@ try {
       
       admin.initializeApp({
         projectId: 'studio-808864941-b51ba',
+        // For emulator, we need to disable token verification or use a mock credential
+        credential: admin.credential.applicationDefault(),
       });
       
       console.log('Firebase Admin initialized with emulator');
+      console.log('Emulator hosts set:');
+      console.log('- FIRESTORE_EMULATOR_HOST:', process.env.FIRESTORE_EMULATOR_HOST);
+      console.log('- FIREBASE_AUTH_EMULATOR_HOST:', process.env.FIREBASE_AUTH_EMULATOR_HOST);
     } else {
       const projectId = process.env.FIREBASE_PROJECT_ID;
       const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;

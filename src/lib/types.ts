@@ -36,7 +36,7 @@ export interface UserProfile {
 export interface CustomStep {
   id: string;
   title: string;
-  description: string;
+  description?: string;
   duration?: string;
   isCustom: true;
 }

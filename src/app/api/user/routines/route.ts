@@ -8,13 +8,45 @@ async function verifyUser(request: Request) {
   if (!authorization?.startsWith('Bearer ')) {
     return null;
   }
+  
   const token = authorization.split('Bearer ')[1];
+  
   try {
     if (!auth) {
       throw new Error('Firebase Auth not initialized');
     }
-    const decodedToken = await auth.verifyIdToken(token);
-    return decodedToken.uid;
+    
+    // Check if we're using emulators
+    const isUsingEmulators = process.env.NODE_ENV === 'development' && 
+                            process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === 'true';
+    
+    if (isUsingEmulators) {
+      try {
+        // For emulators, try standard verification first
+        const decodedToken = await auth.verifyIdToken(token, true);
+        return decodedToken.uid;
+      } catch (emulatorError) {
+        // For development with emulators, decode token manually if standard verification fails
+        if (token && token.length > 100) {
+          try {
+            const tokenParts = token.split('.');
+            if (tokenParts.length === 3) {
+              const payload = JSON.parse(atob(tokenParts[1]));
+              if (payload.user_id || payload.sub) {
+                return payload.user_id || payload.sub;
+              }
+            }
+          } catch (decodeError) {
+            console.error('Error decoding token manually:', decodeError);
+          }
+        }
+        throw emulatorError;
+      }
+    } else {
+      // Production token verification
+      const decodedToken = await auth.verifyIdToken(token);
+      return decodedToken.uid;
+    }
   } catch (error) {
     console.error('Error verifying token:', error);
     return null;

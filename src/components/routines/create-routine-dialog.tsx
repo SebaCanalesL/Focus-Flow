@@ -11,6 +11,8 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -255,6 +257,7 @@ export function CreateRoutineDialog({
   routineToEdit?: Routine; // Optional: The routine to edit
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [routineName, setRoutineName] = useState("");
   const [selectedSteps, setSelectedSteps] = useState<Set<string>>(new Set());
   const [stepOrder, setStepOrder] = useState<string[]>([]);
   const [customSteps, setCustomSteps] = useState<CustomStep[]>([]);
@@ -272,26 +275,20 @@ export function CreateRoutineDialog({
   // Effect to initialize state when the dialog opens
   useEffect(() => {
     if (isOpen) {
-      console.log('Dialog opened, isEditMode:', isEditMode);
-      console.log('routineToEdit:', routineToEdit);
-      
       if (isEditMode) {
         // If editing, load the data from the routine
         const stepIds = routineToEdit.stepIds || [];
         const customStepsData = routineToEdit.customSteps || [];
         const remindersData = routineToEdit.reminders || [];
         
-        console.log('Loading existing data:');
-        console.log('- stepIds:', stepIds);
-        console.log('- customSteps:', customStepsData);
-        console.log('- reminders:', remindersData);
-        
+        setRoutineName(routineToEdit.title || "");
         setSelectedSteps(new Set(stepIds));
         setCustomSteps(customStepsData);
         setReminders(remindersData);
         setStepOrder(stepIds.length > 0 ? stepIds : routineSteps.map(step => step.id));
       } else {
         // If creating, reset to default (all steps selected)
+        setRoutineName("Mañana Energizada Personalizada");
         const allStepIds = routineSteps.map((step) => step.id);
         setSelectedSteps(new Set(allStepIds));
         setCustomSteps([]);
@@ -384,25 +381,24 @@ export function CreateRoutineDialog({
   };
 
   const handleSaveClick = () => {
+    // Validate that routine name is not empty
+    if (!routineName.trim()) {
+      return;
+    }
+
     // Get selected steps in the correct order
     const orderedStepIds = stepOrder.filter(stepId => selectedSteps.has(stepId));
     
     const routineData: Partial<Routine> = {
       id: isEditMode ? routineToEdit.id : undefined,
-      title: isEditMode
-        ? routineToEdit.title
-        : "Mañana Energizada Personalizada",
+      title: routineName.trim() || "Mañana Energizada Personalizada",
       category: "Partir el día",
       imageUrl: "/routines/routine-morning-energized.png",
+      description: "Rutina personalizada creada por el usuario",
       stepIds: orderedStepIds, // Save step IDs in the correct order
       customSteps: customSteps, // Save custom steps
       reminders: reminders, // Save reminders
     };
-    
-    console.log('Saving routine data:', routineData);
-    console.log('Selected steps:', orderedStepIds);
-    console.log('Custom steps:', customSteps);
-    console.log('Reminders:', reminders);
     
     onSave(routineData);
     setIsOpen(false);
@@ -429,6 +425,17 @@ export function CreateRoutineDialog({
         </SheetHeader>
 
         <div className="flex-grow overflow-y-auto px-6 space-y-4">
+          {/* Routine Name Input */}
+          <div className="space-y-2">
+            <Label htmlFor="routine-name">Nombre de la rutina</Label>
+            <Input
+              id="routine-name"
+              placeholder="Ej: Mi Rutina Matutina"
+              value={routineName}
+              onChange={(e) => setRoutineName(e.target.value)}
+            />
+          </div>
+
           <div className="flex justify-end">
             <Button variant="link" onClick={handleSelectAll} className="p-0">
               {selectedSteps.size === routineSteps.length
@@ -530,20 +537,10 @@ export function CreateRoutineDialog({
               </AlertDialog>
             )}
             <Button 
-              variant="outline" 
-              onClick={() => {
-                console.log('=== DEBUG INFO ===');
-                console.log('Current state:');
-                console.log('- selectedSteps:', Array.from(selectedSteps));
-                console.log('- customSteps:', customSteps);
-                console.log('- reminders:', reminders);
-                console.log('- stepOrder:', stepOrder);
-                console.log('==================');
-              }}
+              className="flex-1" 
+              onClick={handleSaveClick}
+              disabled={!routineName.trim()}
             >
-              Debug
-            </Button>
-            <Button className="flex-1" onClick={handleSaveClick}>
               {isEditMode ? "Guardar Cambios" : "Guardar en mis rutinas"}
             </Button>
           </div>

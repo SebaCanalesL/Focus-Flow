@@ -284,7 +284,7 @@ export default function RoutinesPage() {
           const createdRoutine = await response.json();
           console.log('Routine created successfully:', createdRoutine);
           setUserRoutines((prev) => [...prev, createdRoutine]);
-          // Force a re-render by updating the state
+          // Switch to "Mis rutinas" to show the newly created routine
           setSelectedFilter('Mis rutinas');
         } else {
           const errorText = await response.text();
