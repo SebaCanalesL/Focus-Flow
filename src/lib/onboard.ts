@@ -40,7 +40,7 @@ export async function ensureUserSeed(uid: string, profile?: Omit<UserProfile, 'u
   const batch = writeBatch(db);
 
   // Special handling for the gratitude habit
-  const gratitudeHabit = INITIAL_HABITS.find(h => h.id === 'gratitude');
+  const gratitudeHabit = INITIAL_HABITS.find(h => h.id === 'gratitude-habit');
   if (gratitudeHabit) {
     const { id, ...habitData } = gratitudeHabit;
     const habitRef = doc(habitsCol, id);
@@ -53,7 +53,7 @@ export async function ensureUserSeed(uid: string, profile?: Omit<UserProfile, 'u
 
   // Add other initial habits as before
   INITIAL_HABITS.forEach(habit => {
-    if (habit.id === 'gratitude') return; // Already handled
+    if (habit.id === 'gratitude-habit') return; // Already handled
     const { id, ...habitData } = habit;
     const habitRef = doc(habitsCol, id);
     batch.set(habitRef, {

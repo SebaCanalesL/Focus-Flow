@@ -37,6 +37,9 @@ export const routines = sqliteTable("routines", {
   image: text("image"),
   benefits: text("benefits", { mode: "json" }).$type<string[]>(),
   category: text("category"),
+  frequency: text("frequency"),
+  days: text("days", { mode: "json" }).$type<string[]>(),
+  stepIds: text("stepIds", { mode: "json" }).$type<string[]>(),
 });
 
 export type Habit = typeof habits.$inferSelect;

@@ -132,14 +132,14 @@ export function HabitList() {
             <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
                 {completedHabits
                     .map(habit => (
-                        <HabitCardWithGrid key={habit.id} habit={habit} />
+                        <SortableHabitItem key={habit.id} habit={habit} />
                 ))}
             </div>
         </div>
       )}
 
       <DragOverlay>
-        {activeHabit ? <HabitCardWithGrid habit={activeHabit} isDragging /> : null}
+        {activeHabit ? <HabitCardWithGrid key={`drag-${activeHabit.id}`} habit={activeHabit} isDragging /> : null}
       </DragOverlay>
     </DndContext>
   );

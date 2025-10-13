@@ -33,11 +33,32 @@ export interface UserProfile {
   email?: string | null;
 }
 
+export interface CustomStep {
+  id: string;
+  title: string;
+  description: string;
+  duration?: string;
+  isCustom: true;
+}
+
+export interface Reminder {
+  id: string;
+  day: string; // 'L', 'M', 'X', 'J', 'V', 'S', 'D'
+  time: string; // 'HH:MM' format
+  enabled: boolean;
+}
+
 export interface Routine {
   id: string;
   title: string;
   category: string;
   imageUrl: string;
-  description: string;
+  description?: string;
   stepIds?: string[];
+  customSteps?: CustomStep[];
+  reminders?: Reminder[];
+  frequency?: string;
+  days?: string[];
+  createdAt?: string;
+  updatedAt?: string;
 }

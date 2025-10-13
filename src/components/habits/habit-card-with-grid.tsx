@@ -88,7 +88,7 @@ export function HabitCardWithGrid({
             </div>
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
-            {habit.id !== 'gratitude' && (
+            {habit.id !== 'gratitude-habit' && (
               <EditHabitDialog habit={habit}>
                 <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9">
                   <Pencil className="h-4 w-4 sm:h-5 sm:w-5" />

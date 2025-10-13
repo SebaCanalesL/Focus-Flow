@@ -57,77 +57,141 @@ const HabitCompletionGrid = ({ habit }: { habit: Habit }) => {
     return eachDayOfInterval({ start: startDate, end: endDate });
   };
 
+  // Get all days from all months in a continuous sequence
+  const allDays = useMemo(() => {
+    const days = [];
+    for (const month of monthsToShow) {
+      days.push(...getDaysForMonth(month));
+    }
+    return days;
+  }, [monthsToShow]);
+
+  // Get month labels for display - corrected logic
+  const monthLabels = useMemo(() => {
+    const labels = [];
+    let currentMonth = null;
+    let monthStartIndex = 0;
+    
+    for (let i = 0; i < allDays.length; i++) {
+      const day = allDays[i];
+      const dayMonth = startOfMonth(day);
+      
+      if (currentMonth === null) {
+        // First day
+        currentMonth = dayMonth;
+        monthStartIndex = i;
+      } else if (!isSameMonth(dayMonth, currentMonth)) {
+        // Month changed, save previous month
+        labels.push({
+          month: currentMonth,
+          startIndex: monthStartIndex,
+          endIndex: i - 1
+        });
+        
+        // Start new month
+        currentMonth = dayMonth;
+        monthStartIndex = i;
+      }
+    }
+    
+    // Don't forget the last month
+    if (currentMonth !== null) {
+      labels.push({
+        month: currentMonth,
+        startIndex: monthStartIndex,
+        endIndex: allDays.length - 1
+      });
+    }
+    
+    return labels;
+  }, [allDays]);
+
+  // Use CSS grid positioning instead of pixel calculations
+  const totalDays = allDays.length;
+
   return (
     <div className="flex justify-start items-end gap-x-3 overflow-x-auto pb-2">
       <div className="grid grid-rows-7 gap-[var(--dot-gap)] shrink-0">
         {weekDays.map((day, i) => (
-          <div key={i} className="text-xs text-muted-foreground w-4 h-[var(--dot-size)] flex items-center justify-center">{day}</div>
+          <div key={`${habit.id}-weekday-${i}`} className="text-xs text-muted-foreground w-4 h-[var(--dot-size)] flex items-center justify-center">{day}</div>
         ))}
       </div>
-      <div className="flex justify-start items-end gap-x-3 overflow-x-auto">
-        {monthsToShow.map((month) => (
-          <div key={format(month, 'yyyy-MM')} className="flex flex-col items-center gap-1 shrink-0">
-            <p className="text-xs text-muted-foreground capitalize">{format(month, 'MMM', { locale: es })}</p>
-            <div className="grid grid-flow-col grid-rows-7 gap-[var(--dot-gap)]">
-              {getDaysForMonth(month).map((day) => {
-                const dayString = format(day, 'yyyy-MM-dd');
-                const isCompleted = completedDatesSet.has(dayString);
-                const isFuture = day > today;
-                const isPast = isBefore(day, today);
-                const isCurrentMonth = isSameMonth(day, month);
-                const isBeforeCreation = isBefore(day, habitCreationDate);
+      <div className="flex flex-col items-start">
+        {/* Month labels using CSS Grid for perfect alignment */}
+        <div className="grid grid-flow-col mb-1" style={{ gridTemplateColumns: `repeat(${totalDays}, 1fr)` }}>
+          {monthLabels.map((label, index) => {
+            return (
+              <div 
+                key={`${habit.id}-month-${format(label.month, 'yyyy-MM')}-${index}`}
+                className="flex justify-center items-center"
+                style={{ 
+                  gridColumn: `${label.startIndex + 1} / span ${label.endIndex - label.startIndex + 1}`
+                }}
+              >
+                <p className="text-xs text-muted-foreground capitalize">{format(label.month, 'MMM', { locale: es })}</p>
+              </div>
+            );
+          })}
+        </div>
+        {/* Continuous grid */}
+        <div className="grid grid-flow-col grid-rows-7 gap-[var(--dot-gap)]">
+          {allDays.map((day) => {
+            const dayString = format(day, 'yyyy-MM-dd');
+            const isCompleted = completedDatesSet.has(dayString);
+            const isFuture = day > today;
+            const isPast = isBefore(day, today);
+            const isCurrentMonth = monthsToShow.some(month => isSameMonth(day, month));
+            const isBeforeCreation = isBefore(day, habitCreationDate);
 
-                let dayBgClass = 'bg-transparent';
+            let dayBgClass = 'bg-transparent';
 
-                if (isCurrentMonth) {
-                    if (isFuture) {
-                        dayBgClass = 'bg-muted/50';
-                    } else if (isBeforeCreation) {
-                        dayBgClass = 'bg-transparent';
-                    } else if (isCompleted) {
-                        dayBgClass = 'bg-green-500'; // Green for completed
-                    } else if (isPast) {
-                        if (isWeekly) {
-                            const weekStart = startOfWeek(day, { weekStartsOn: 1 });
-                            const weekEnd = endOfWeek(day, { weekStartsOn: 1 });
-                            const daysInWeek = eachDayOfInterval({ start: weekStart, end: weekEnd });
-                            
-                            const completionsInWeek = daysInWeek.reduce((count, weekDay) => {
-                                return completedDatesSet.has(format(weekDay, 'yyyy-MM-dd')) ? count + 1 : count;
-                            }, 0);
+            if (isCurrentMonth) {
+                if (isFuture) {
+                    dayBgClass = 'bg-muted/50';
+                } else if (isBeforeCreation) {
+                    dayBgClass = 'bg-transparent';
+                } else if (isCompleted) {
+                    dayBgClass = 'bg-green-500'; // Green for completed
+                } else if (isPast) {
+                    if (isWeekly) {
+                        const weekStart = startOfWeek(day, { weekStartsOn: 1 });
+                        const weekEnd = endOfWeek(day, { weekStartsOn: 1 });
+                        const daysInWeek = eachDayOfInterval({ start: weekStart, end: weekEnd });
+                        
+                        const completionsInWeek = daysInWeek.reduce((count, weekDay) => {
+                            return completedDatesSet.has(format(weekDay, 'yyyy-MM-dd')) ? count + 1 : count;
+                        }, 0);
 
-                            const daysLeft = differenceInDays(weekEnd, day) + 1;
-                            const completionsStillNeeded = (daysPerWeek || 1) - completionsInWeek;
+                        const daysLeft = differenceInDays(weekEnd, day) + 1;
+                        const completionsStillNeeded = (daysPerWeek || 1) - completionsInWeek;
 
-                            if (completionsStillNeeded > daysLeft) {
-                                dayBgClass = 'bg-red-500'; // Impossible to meet goal
-                            } else {
-                                dayBgClass = 'bg-yellow-500'; // Missed, but goal was still possible
-                            }
+                        if (completionsStillNeeded > daysLeft) {
+                            dayBgClass = 'bg-red-500'; // Impossible to meet goal
                         } else {
-                            const previousDay = subDays(day, 1);
-                            if (completedDatesSet.has(format(previousDay, 'yyyy-MM-dd')) && !isBefore(previousDay, habitCreationDate)) {
-                                dayBgClass = 'bg-red-500'; // Red for broken daily streaks
-                            } else {
-                                dayBgClass = 'bg-yellow-500'; // Yellow for other missed days
-                            }
+                            dayBgClass = 'bg-yellow-500'; // Missed, but goal was still possible
                         }
                     } else {
-                        dayBgClass = 'bg-muted/50'; // Today, not completed yet
+                        const previousDay = subDays(day, 1);
+                        if (completedDatesSet.has(format(previousDay, 'yyyy-MM-dd')) && !isBefore(previousDay, habitCreationDate)) {
+                            dayBgClass = 'bg-red-500'; // Red for broken daily streaks
+                        } else {
+                            dayBgClass = 'bg-yellow-500'; // Yellow for other missed days
+                        }
                     }
+                } else {
+                    dayBgClass = 'bg-muted/50'; // Today, not completed yet
                 }
+            }
 
-                return (
-                  <div
-                    key={dayString}
-                    className={cn('w-[var(--dot-size)] h-[var(--dot-size)] rounded-[3px]', dayBgClass)}
-                    title={dayString}
-                  />
-                );
-              })}
-            </div>
-          </div>
-        ))}
+            return (
+              <div
+                key={`${habit.id}-day-${dayString}`}
+                className={cn('w-[var(--dot-size)] h-[var(--dot-size)] rounded-[3px]', dayBgClass)}
+                title={dayString}
+              />
+            );
+          })}
+        </div>
       </div>
     </div>
   );

@@ -13,7 +13,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import React, { useState, useMemo } from "react";
 import { routineSteps } from "./create-routine-dialog";
-import { Routine } from "@/lib/types";
+import { Routine, CustomStep } from "@/lib/types";
 
 export function PerformRoutineSheet({
   children,
@@ -26,9 +26,26 @@ export function PerformRoutineSheet({
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   const stepsInRoutine = useMemo(() => {
-    return (routine.stepIds || [])
-      .map((stepId: string) => routineSteps.find((s) => s.id === stepId))
-      .filter(Boolean); // Filter out potential undefined steps
+    const allSteps: Array<typeof routineSteps[0] | CustomStep> = [];
+    
+    // Add predefined steps
+    if (routine.stepIds) {
+      routine.stepIds.forEach((stepId: string) => {
+        const predefinedStep = routineSteps.find((s) => s.id === stepId);
+        if (predefinedStep) {
+          allSteps.push(predefinedStep);
+        }
+      });
+    }
+    
+    // Add custom steps
+    if (routine.customSteps) {
+      routine.customSteps.forEach((customStep: CustomStep) => {
+        allSteps.push(customStep);
+      });
+    }
+    
+    return allSteps;
   }, [routine]);
 
   const totalSteps = stepsInRoutine.length;
@@ -71,8 +88,18 @@ export function PerformRoutineSheet({
                 <Progress value={progress} />
               </div>
               <div className="py-8 text-center space-y-2">
-                <h3 className="text-xl font-bold">{currentStep.title.split(' (')[0]}</h3>
+                <h3 className="text-xl font-bold">
+                  {'isCustom' in currentStep 
+                    ? currentStep.title 
+                    : currentStep.title.split(' (')[0]
+                  }
+                </h3>
                 <p className="text-muted-foreground">{currentStep.description}</p>
+                {'duration' in currentStep && currentStep.duration && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Duración: {currentStep.duration}
+                  </p>
+                )}
               </div>
             </>
           ) : (

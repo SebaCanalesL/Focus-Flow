@@ -19,14 +19,13 @@ const db = initializeFirestore(
   { 
     experimentalForceLongPolling: true,
     cacheSizeBytes: CACHE_SIZE_UNLIMITED,
-  },
-  'focusflowv2'
+  }
 );
 const auth = getAuth(app);
 const storage = getStorage(app);
 
-// Connect to emulators if in development
-if (process.env.NODE_ENV === 'development') {
+// Connect to emulators if in development and emulators are enabled
+if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === 'true') {
   console.log('Connecting to Firebase emulators');
   try {
     connectFirestoreEmulator(db, 'localhost', 8080);
