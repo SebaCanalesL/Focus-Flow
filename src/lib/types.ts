@@ -11,8 +11,9 @@ export interface Habit {
   daysPerWeek?: number; // Target days per week for weekly habits
   createdAt: string;
   completedDates: string[]; // Store dates as ISO strings 'YYYY-MM-DD'
-  reminderEnabled?: boolean;
-  reminderTime?: string; // e.g., "09:00"
+  reminderEnabled?: boolean; // Deprecated: use reminders array instead
+  reminderTime?: string; // Deprecated: use reminders array instead
+  reminders?: Reminder[]; // New: array of reminders like in routines
   order?: number; // For drag and drop ordering
 }
 

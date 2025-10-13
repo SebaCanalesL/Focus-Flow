@@ -42,6 +42,8 @@ import type { Habit } from '@/lib/types';
 import { Switch } from '../ui/switch';
 import { Bell, Clock } from 'lucide-react';
 import { deleteField, FieldValue } from 'firebase/firestore';
+import { RemindersSection } from '../routines/reminders-section';
+import type { Reminder } from '@/lib/types';
 
 const formSchema = z
   .object({
@@ -50,8 +52,6 @@ const formSchema = z
       required_error: 'Debes seleccionar una frecuencia.',
     }),
     daysPerWeek: z.number().min(1).max(7).optional(),
-    reminderEnabled: z.boolean().default(false),
-    reminderTime: z.string().optional(),
   })
   .refine(
     (data) => {
@@ -64,22 +64,11 @@ const formSchema = z
       message: 'Debes especificar cuántos días a la semana.',
       path: ['daysPerWeek'],
     }
-  )
-  .refine(
-    (data) => {
-      if (data.reminderEnabled) {
-        return !!data.reminderTime;
-      }
-      return true;
-    },
-    {
-      message: 'Debes seleccionar una hora para el recordatorio.',
-      path: ['reminderTime'],
-    }
   );
 
 export function EditHabitDialog({ habit, children }: { habit: Habit; children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [reminders, setReminders] = useState<Reminder[]>([]);
   const { updateHabit, deleteHabit } = useAppData();
   const { toast } = useToast();
 
@@ -89,23 +78,20 @@ export function EditHabitDialog({ habit, children }: { habit: Habit; children: R
       name: habit.name,
       frequency: habit.frequency,
       daysPerWeek: habit.daysPerWeek,
-      reminderEnabled: habit.reminderEnabled || false,
-      reminderTime: habit.reminderTime || '09:00',
     },
   });
 
   const frequency = form.watch('frequency');
   const daysPerWeek = form.watch('daysPerWeek');
-  const reminderEnabled = form.watch('reminderEnabled');
 
   useEffect(() => {
     form.reset({
       name: habit.name,
       frequency: habit.frequency,
       daysPerWeek: habit.daysPerWeek || (habit.frequency === 'daily' ? 7 : undefined),
-      reminderEnabled: habit.reminderEnabled || false,
-      reminderTime: habit.reminderTime || '09:00',
     });
+    // Initialize reminders from habit data
+    setReminders(habit.reminders || []);
   }, [habit, form, isOpen]);
 
   useEffect(() => {
@@ -123,10 +109,9 @@ export function EditHabitDialog({ habit, children }: { habit: Habit; children: R
   }, [frequency, daysPerWeek, form]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const updateData: { [key: string]: string | number | boolean | FieldValue } = {
+    const updateData: { [key: string]: string | number | boolean | FieldValue | Reminder[] } = {
       name: values.name,
       frequency: values.frequency,
-      reminderEnabled: values.reminderEnabled,
     };
 
     if (values.frequency === 'weekly') {
@@ -135,11 +120,16 @@ export function EditHabitDialog({ habit, children }: { habit: Habit; children: R
       updateData.daysPerWeek = deleteField();
     }
 
-    if (values.reminderEnabled) {
-      updateData.reminderTime = values.reminderTime || '';
+    // Handle reminders
+    if (reminders.length > 0) {
+      updateData.reminders = reminders;
     } else {
-      updateData.reminderTime = deleteField();
+      updateData.reminders = deleteField();
     }
+
+    // Clear old reminder fields
+    updateData.reminderEnabled = deleteField();
+    updateData.reminderTime = deleteField();
 
     await updateHabit(habit.id, updateData);
 
@@ -252,42 +242,12 @@ export function EditHabitDialog({ habit, children }: { habit: Habit; children: R
               />
             )}
 
-            <div className="space-y-4 rounded-lg border p-4">
-              <FormField
-                control={form.control}
-                name="reminderEnabled"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base flex items-center gap-2">
-                        <Bell className="h-4 w-4" />
-                        Recordatorio
-                      </FormLabel>
-                    </div>
-                    <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                  </FormItem>
-                )}
+            {/* Reminders Section */}
+            <div className="pt-6">
+              <RemindersSection 
+                reminders={reminders} 
+                onRemindersChange={setReminders} 
               />
-              {reminderEnabled && (
-                <FormField
-                  control={form.control}
-                  name="reminderTime"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Hora del recordatorio</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input type="time" {...field} className="pr-10" />
-                          <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
             </div>
 
             <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between w-full gap-2">

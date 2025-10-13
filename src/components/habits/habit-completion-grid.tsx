@@ -30,7 +30,7 @@ const toDate = (date: string | Date | { toDate: () => Date } | null | undefined)
 
 const weekDays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
-const HabitCompletionGrid = ({ habit }: { habit: Habit }) => {
+const HabitCompletionGrid = ({ habit, section = 'default' }: { habit: Habit; section?: string }) => {
   const { completedDates, createdAt, frequency, daysPerWeek } = habit;
   const isWeekly = frequency === 'weekly';
   const completedDatesSet = useMemo(() => new Set(completedDates), [completedDates]);
@@ -113,7 +113,7 @@ const HabitCompletionGrid = ({ habit }: { habit: Habit }) => {
     <div className="flex justify-start items-end gap-x-3 overflow-x-auto pb-2">
       <div className="grid grid-rows-7 gap-[var(--dot-gap)] shrink-0">
         {weekDays.map((day, i) => (
-          <div key={`${habit.id}-weekday-${i}`} className="text-xs text-muted-foreground w-4 h-[var(--dot-size)] flex items-center justify-center">{day}</div>
+          <div key={`${habit.id}-${section}-weekday-${i}-${Date.now()}`} className="text-xs text-muted-foreground w-4 h-[var(--dot-size)] flex items-center justify-center">{day}</div>
         ))}
       </div>
       <div className="flex flex-col items-start">
@@ -122,7 +122,7 @@ const HabitCompletionGrid = ({ habit }: { habit: Habit }) => {
           {monthLabels.map((label, index) => {
             return (
               <div 
-                key={`${habit.id}-month-${format(label.month, 'yyyy-MM')}-${index}`}
+                key={`${habit.id}-${section}-month-${format(label.month, 'yyyy-MM')}-${index}-${Date.now()}`}
                 className="flex justify-center items-center"
                 style={{ 
                   gridColumn: `${label.startIndex + 1} / span ${label.endIndex - label.startIndex + 1}`
@@ -135,7 +135,7 @@ const HabitCompletionGrid = ({ habit }: { habit: Habit }) => {
         </div>
         {/* Continuous grid */}
         <div className="grid grid-flow-col grid-rows-7 gap-[var(--dot-gap)]">
-          {allDays.map((day) => {
+          {allDays.map((day, dayIndex) => {
             const dayString = format(day, 'yyyy-MM-dd');
             const isCompleted = completedDatesSet.has(dayString);
             const isFuture = day > today;
@@ -185,7 +185,7 @@ const HabitCompletionGrid = ({ habit }: { habit: Habit }) => {
 
             return (
               <div
-                key={`${habit.id}-day-${dayString}`}
+                key={`${habit.id}-${section}-day-${dayIndex}-${dayString}`}
                 className={cn('w-[var(--dot-size)] h-[var(--dot-size)] rounded-[3px]', dayBgClass)}
                 title={dayString}
               />

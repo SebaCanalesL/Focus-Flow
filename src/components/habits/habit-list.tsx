@@ -29,7 +29,7 @@ import { db } from '@/lib/firebase';
 import { format } from 'date-fns';
 import { CheckCircle2 } from 'lucide-react';
 
-function SortableHabitItem({ habit }: { habit: Habit }) {
+function SortableHabitItem({ habit, section = 'default' }: { habit: Habit; section?: string }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ 
     id: habit.id,
   });
@@ -42,7 +42,7 @@ function SortableHabitItem({ habit }: { habit: Habit }) {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes}>
-      <HabitCardWithGrid habit={habit} isDragging={isDragging} listeners={listeners} />
+      <HabitCardWithGrid habit={habit} isDragging={isDragging} listeners={listeners} section={section} />
     </div>
   );
 }
@@ -117,8 +117,8 @@ export function HabitList() {
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
         <SortableContext items={pendingHabits.map((h) => h.id)} strategy={verticalListSortingStrategy}>
-          {pendingHabits.map((habit) => (
-            <SortableHabitItem key={habit.id} habit={habit} />
+          {pendingHabits.map((habit, index) => (
+            <SortableHabitItem key={`pending-${habit.id}-${index}`} habit={habit} section="pending" />
           ))}
         </SortableContext>
       </div>
@@ -131,15 +131,15 @@ export function HabitList() {
             </h2>
             <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
                 {completedHabits
-                    .map(habit => (
-                        <SortableHabitItem key={habit.id} habit={habit} />
+                    .map((habit, index) => (
+                        <SortableHabitItem key={`completed-${habit.id}-${index}`} habit={habit} section="completed" />
                 ))}
             </div>
         </div>
       )}
 
       <DragOverlay>
-        {activeHabit ? <HabitCardWithGrid key={`drag-${activeHabit.id}`} habit={activeHabit} isDragging /> : null}
+        {activeHabit ? <HabitCardWithGrid key={`drag-${activeHabit.id}`} habit={activeHabit} isDragging section="drag" /> : null}
       </DragOverlay>
     </DndContext>
   );

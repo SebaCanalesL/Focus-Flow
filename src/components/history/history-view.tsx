@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Calendar } from '@/components/ui/calendar'
+import { CustomCalendar } from '@/components/ui/custom-calendar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAppData } from '@/contexts/app-provider'
-import { format, addDays, subDays, isToday, addMonths } from 'date-fns'
+import { format, addDays, subDays, isToday } from 'date-fns'
 import { es } from 'date-fns/locale'
 import * as LucideIcons from 'lucide-react'
 import { Target, ChevronLeft, ChevronRight, BookHeart, WandSparkles } from 'lucide-react'
@@ -22,7 +22,6 @@ const Icon = ({ name, className }: { name: IconName; className?: string }) => {
 export function HistoryView() {
   const { gratitudeEntries, habits, isClient } = useAppData()
   const [date, setDate] = useState<Date | undefined>(new Date())
-  const [month, setMonth] = useState<Date>(new Date())
 
   const selectedDateString = date ? format(date, 'yyyy-MM-dd') : ''
 
@@ -81,37 +80,15 @@ export function HistoryView() {
         >
           <div className="md:col-span-1">
             <Card>
-              <CardContent className="relative p-0">
-                <div className="absolute right-3 top-3 z-10 flex items-center gap-2">
-                  <button
-                    aria-label="Mes anterior"
-                    onClick={() => setMonth((m) => addMonths(m, -1))}
-                    className="h-8 w-8 rounded-md border border-border/50 bg-transparent hover:bg-accent/20"
-                  >
-                    <ChevronLeft className="mx-auto h-4 w-4" />
-                  </button>
-                  <button
-                    aria-label="Mes siguiente"
-                    onClick={() => setMonth((m) => addMonths(m, 1))}
-                    className="h-8 w-8 rounded-md border border-border/50 bg-transparent hover:bg-accent/20"
-                  >
-                    <ChevronRight className="mx-auto h-4 w-4" />
-                  </button>
-                </div>
-                <Calendar
-                  hideNav
-                  month={month}
-                  onMonthChange={setMonth}
+              <CardContent className="p-0">
+                <CustomCalendar
+                  selectedDates={date ? [date] : []}
+                  onDateClick={setDate}
+                  highlightedDates={gratitudeDays}
+                  highlightColor="#3b82f6"
                   mode="single"
-                  selected={date}
-                  onSelect={setDate}
-                  locale={es}
-                  weekStartsOn={1}
-                  className="p-3 pt-10"
-                  modifiers={{ highlighted: gratitudeDays }}
-                  modifiersClassNames={{
-                    highlighted: 'bg-primary/20 text-primary-foreground rounded-full',
-                  }}
+                  fullWidth={true}
+                  className="border-0"
                 />
               </CardContent>
             </Card>
@@ -183,37 +160,15 @@ export function HistoryView() {
         >
           <div className="md:col-span-1">
             <Card>
-              <CardContent className="relative p-0">
-                <div className="absolute right-3 top-3 z-10 flex items-center gap-2">
-                  <button
-                    aria-label="Mes anterior"
-                    onClick={() => setMonth((m) => addMonths(m, -1))}
-                    className="h-8 w-8 rounded-md border border-border/50 bg-transparent hover:bg-accent/20"
-                  >
-                    <ChevronLeft className="mx-auto h-4 w-4" />
-                  </button>
-                  <button
-                    aria-label="Mes siguiente"
-                    onClick={() => setMonth((m) => addMonths(m, 1))}
-                    className="h-8 w-8 rounded-md border border-border/50 bg-transparent hover:bg-accent/20"
-                  >
-                    <ChevronRight className="mx-auto h-4 w-4" />
-                  </button>
-                </div>
-                <Calendar
-                  hideNav
-                  month={month}
-                  onMonthChange={setMonth}
+              <CardContent className="p-0">
+                <CustomCalendar
+                  selectedDates={date ? [date] : []}
+                  onDateClick={setDate}
+                  highlightedDates={habitDays}
+                  highlightColor="#10b981"
                   mode="single"
-                  selected={date}
-                  onSelect={setDate}
-                  locale={es}
-                  weekStartsOn={1}
-                  className="p-3 pt-10"
-                  modifiers={{ highlighted: habitDays }}
-                  modifiersClassNames={{
-                    highlighted: 'bg-primary/20 text-primary-foreground rounded-full',
-                  }}
+                  fullWidth={true}
+                  className="border-0"
                 />
               </CardContent>
             </Card>

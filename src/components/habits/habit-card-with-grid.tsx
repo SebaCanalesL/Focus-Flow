@@ -16,7 +16,7 @@ import { useAppData } from '@/contexts/app-provider';
 import { cn } from '@/lib/utils';
 import { HabitCompletionGrid } from './habit-completion-grid';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
+import { CustomCalendar } from '@/components/ui/custom-calendar';
 import { Button } from '../ui/button';
 import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
@@ -37,11 +37,13 @@ export function HabitCardWithGrid({
   isDragging,
   style,
   listeners,
+  section = 'default',
 }: {
   habit: Habit;
   isDragging?: boolean;
   style?: React.CSSProperties;
   listeners?: React.HTMLAttributes<HTMLDivElement>;
+  section?: string;
 }) {
   const { toggleHabitCompletion, getStreak, getWeekCompletion } = useAppData();
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -99,33 +101,16 @@ export function HabitCardWithGrid({
 
             <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9">
+                <Button variant="outline" size="icon" className="h-8 w-8">
                   <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5" />
                   <span className="sr-only">Ver</span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="multiple"
-                  selected={completedDatesAsDates}
-                  onDayClick={handleDayClick}
-                  weekStartsOn={1}
-                  showOutsideDays={true}
-                  locale={es}
-                  modifiers={{
-                    completed: completedDatesAsDates,
-                  }}
-                  modifiersStyles={{
-                    completed: { 
-                        backgroundColor: habit.color, 
-                        color: '#fff',
-                        borderRadius: '100%'
-                    },
-                  }}
-                  classNames={{
-                    day_today: "bg-accent text-accent-foreground rounded-full",
-                    day_outside: "text-muted-foreground opacity-50",
-                  }}
+                <CustomCalendar
+                  selectedDates={completedDatesAsDates}
+                  onDateClick={handleDayClick}
+                  habitColor={habit.color || '#10b981'}
                 />
               </PopoverContent>
             </Popover>
@@ -148,7 +133,7 @@ export function HabitCardWithGrid({
         </div>
       </CardHeader>
       <CardContent className="flex-grow flex items-end justify-between gap-4">
-        <HabitCompletionGrid habit={habit} />
+        <HabitCompletionGrid habit={habit} section={section} />
         <div className="flex flex-col items-center justify-center p-2 sm:p-4 rounded-lg bg-secondary/50 shrink-0">
           <div className="flex items-center gap-2 text-xl sm:text-2xl font-bold">
             <Flame

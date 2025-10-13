@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils";
 import type { Habit } from "@/lib/types";
 import { suggestHabitIcon } from "@/ai/flows/suggest-habit-icon-flow";
 import { Switch } from "../ui/switch";
+import { RemindersSection } from "../routines/reminders-section";
 
 const formSchema = z
   .object({
@@ -38,8 +39,6 @@ const formSchema = z
       required_error: "Debes seleccionar una frecuencia.",
     }),
     daysPerWeek: z.number().min(1).max(7).optional(),
-    reminderEnabled: z.boolean().default(false),
-    reminderTime: z.string().optional(),
   })
   .refine(
     (data) => {
@@ -52,17 +51,6 @@ const formSchema = z
       message: "Debes especificar cuántos días a la semana.",
       path: ["daysPerWeek"],
     }
-  ).refine(
-    (data) => {
-        if (data.reminderEnabled) {
-            return !!data.reminderTime;
-        }
-        return true;
-    },
-    {
-        message: "Debes seleccionar una hora para el recordatorio.",
-        path: ["reminderTime"],
-    }
   );
 
 interface CreateHabitDialogProps {
@@ -72,6 +60,7 @@ interface CreateHabitDialogProps {
 
 export function CreateHabitDialog({ open, onOpenChange }: CreateHabitDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [reminders, setReminders] = useState<Reminder[]>([]);
   const { addHabit, user } = useAppData();
   const { toast } = useToast();
 
@@ -80,14 +69,13 @@ export function CreateHabitDialog({ open, onOpenChange }: CreateHabitDialogProps
     defaultValues: {
       name: "",
       frequency: "daily",
-      reminderEnabled: false,
-      reminderTime: "09:00",
     },
   });
   
   useEffect(() => {
     if (!open) {
       form.reset();
+      setReminders([]);
     }
   }, [open, form]);
 
@@ -110,9 +98,8 @@ export function CreateHabitDialog({ open, onOpenChange }: CreateHabitDialogProps
         name: values.name,
         icon: iconName,
         frequency: values.frequency,
-        reminderEnabled: values.reminderEnabled,
         ...(values.frequency === 'weekly' && { daysPerWeek: values.daysPerWeek }),
-        ...(values.reminderEnabled && { reminderTime: values.reminderTime }),
+        ...(reminders.length > 0 && { reminders }),
       };
 
       await addHabit(habitData);
@@ -227,45 +214,12 @@ export function CreateHabitDialog({ open, onOpenChange }: CreateHabitDialogProps
               />
             )}
             
-            <div className="space-y-4 rounded-lg border p-4">
-                <FormField
-                control={form.control}
-                name="reminderEnabled"
-                render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between">
-                         <div className="space-y-0.5">
-                            <FormLabel className="text-base flex items-center gap-2">
-                                <Bell className="h-4 w-4" />
-                                Recordatorio
-                            </FormLabel>
-                        </div>
-                        <FormControl>
-                            <Switch
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                            />
-                        </FormControl>
-                    </FormItem>
-                )}
-                />
-                {form.watch("reminderEnabled") && (
-                  <FormField
-                    control={form.control}
-                    name="reminderTime"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Hora del recordatorio</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Input type="time" {...field} className="pr-10" />
-                            <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
+            {/* Reminders Section */}
+            <div className="pt-6">
+              <RemindersSection 
+                reminders={reminders} 
+                onRemindersChange={setReminders} 
+              />
             </div>
 
             <DialogFooter>
