@@ -11,10 +11,11 @@ import {
   routineSteps,
 } from '@/components/routines/create-routine-dialog';
 import { PerformRoutineSheet } from '@/components/routines/perform-routine-sheet';
+import { Routine } from '@/lib/types';
 
 const filters = ['Mis rutinas', 'Todas', 'Partir el día', 'Terminar el día'];
 
-const defaultRoutines = [
+const defaultRoutines: Routine[] = [
   {
     id: 'default-1',
     title: 'Mañana Energizada',
@@ -30,8 +31,8 @@ function RoutineCard({
   onSave,
   isUserRoutine,
 }: {
-  routine: any;
-  onSave: (newRoutine: any) => void;
+  routine: Routine;
+  onSave: (newRoutine: Partial<Routine>) => void;
   isUserRoutine: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -48,7 +49,7 @@ function RoutineCard({
       return (
         <div className="space-y-2">
           {stepsToDisplay.map((step) => (
-            <p key={step.id}>{step.title.split(' (')[0]}</p>
+            <p key={step!.id}>{step!.title.split(' (')[0]}</p>
           ))}
         </div>
       );
@@ -134,15 +135,15 @@ function RoutineCard({
 
 export default function RoutinesPage() {
   const [selectedFilter, setSelectedFilter] = useState('Todas');
-  const [userRoutines, setUserRoutines] = useState<any[]>([]);
+  const [userRoutines, setUserRoutines] = useState<Routine[]>([]);
 
-  const handleSaveRoutine = (newRoutine: any) => {
+  const handleSaveRoutine = (newRoutine: Partial<Routine>) => {
     if (newRoutine.id) {
       setUserRoutines((prev) =>
-        prev.map((r) => (r.id === newRoutine.id ? newRoutine : r))
+        prev.map((r) => (r.id === newRoutine.id ? { ...r, ...newRoutine } as Routine : r))
       );
     } else {
-      const routineWithId = { ...newRoutine, id: `user-${Date.now()}` };
+      const routineWithId = { ...newRoutine, id: `user-${Date.now()}` } as Routine;
       setUserRoutines((prev) => [...prev, routineWithId]);
     }
     setSelectedFilter('Mis rutinas');

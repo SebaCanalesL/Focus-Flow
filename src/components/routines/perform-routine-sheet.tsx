@@ -13,13 +13,14 @@ import {
 import { Progress } from "@/components/ui/progress";
 import React, { useState, useMemo } from "react";
 import { routineSteps } from "./create-routine-dialog";
+import { Routine } from "@/lib/types";
 
 export function PerformRoutineSheet({
   children,
   routine,
 }: {
   children: React.ReactNode;
-  routine: any;
+  routine: Routine;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -61,7 +62,7 @@ export function PerformRoutineSheet({
         </SheetHeader>
 
         <div className="flex-grow overflow-y-auto px-6 space-y-4">
-          {totalSteps > 0 ? (
+          {totalSteps > 0 && currentStep ? (
             <>
               <div className="space-y-2 pt-4">
                 <p className="text-sm text-muted-foreground">

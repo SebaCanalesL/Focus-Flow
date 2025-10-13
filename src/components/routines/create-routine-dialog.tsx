@@ -16,6 +16,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { Routine } from "@/lib/types";
 
 // Moved routineSteps to be exportable, so other components can use it.
 export const routineSteps = [
@@ -65,8 +66,8 @@ export function CreateRoutineDialog({
   routineToEdit,
 }: {
   children: React.ReactNode;
-  onSave: (newRoutine: any) => void;
-  routineToEdit?: any; // Optional: The routine to edit
+  onSave: (newRoutine: Partial<Routine>) => void;
+  routineToEdit?: Routine; // Optional: The routine to edit
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedSteps, setSelectedSteps] = useState<Set<string>>(new Set());
@@ -121,7 +122,7 @@ export function CreateRoutineDialog({
   };
 
   const handleSaveClick = () => {
-    const routineData = {
+    const routineData: Partial<Routine> = {
       id: isEditMode ? routineToEdit.id : undefined,
       title: isEditMode
         ? routineToEdit.title

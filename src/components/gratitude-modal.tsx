@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAppData } from '@/contexts/app-provider';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { format, toZoned, isToday, parseISO } from '@/lib/dates';
+import { format, toZoned, isToday } from '@/lib/dates';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Pencil2Icon, Cross2Icon, SparklesIcon } from '@/components/ui/icons';
 import { Separator } from '@/components/ui/separator';
@@ -37,7 +37,7 @@ export function GratitudeModal({ date, onClose }: GratitudeModalProps) {
 
   const gratitudeItems = useMemo(() => {
     if (!entry || !entry.content) return [];
-    return entry.content.split('\n').map((item, index) => item.trim());
+    return entry.content.split('\n').map((item) => item.trim());
   }, [entry]);
 
   const canEdit = isToday(toZoned(date));
@@ -77,8 +77,8 @@ export function GratitudeModal({ date, onClose }: GratitudeModalProps) {
                 </>
               )}
               <ul className="space-y-2 text-sm list-decimal list-inside">
-                {gratitudeItems.map((item, index) => (
-                  <li key={index}>{item.split('. ').slice(1).join('. ')}</li>
+                {gratitudeItems.map((item, i) => (
+                  <li key={i}>{item.split('. ').slice(1).join('. ')}</li>
                 ))}
               </ul>
               {canEdit && (

@@ -30,3 +30,12 @@ export interface UserProfile {
   photoURL?: string | null;
   email?: string | null;
 }
+
+export interface Routine {
+  id: string;
+  title: string;
+  category: string;
+  imageUrl: string;
+  description: string;
+  stepIds?: string[];
+}
