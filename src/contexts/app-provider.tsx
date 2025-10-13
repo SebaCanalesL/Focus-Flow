@@ -67,6 +67,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [motivationalMessage, setMotivationalMessage] = useState<MotivationalMessage | null>(null);
   const [birthday, setBirthdayState] = useState<string | null>(null);
 
+  const getTodaysMotivation = useCallback(async (userName: string) => {
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+
+    if (motivationalMessage && motivationalMessage.date === todayStr) {
+      return motivationalMessage.quote;
+    }
+
+    const response = await dailyMotivation({ userName });
+    const newMotivation: MotivationalMessage = {
+      quote: response.quote,
+      date: todayStr,
+    };
+    setMotivationalMessage(newMotivation);
+    return newMotivation.quote;
+  }, [motivationalMessage]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -93,8 +108,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
           email: user.email ?? undefined,
           photoURL: user.photoURL ?? undefined,
         });
-
-        getTodaysMotivation(user.displayName || 'amigo');
 
         const habitsQuery = query(collection(db, `users/${user.uid}/habits`), orderBy("order", "asc"));
         const gratitudeQuery = query(collection(db, `users/${user.uid}/gratitudeEntries`), orderBy("createdAt", "desc"));
@@ -133,6 +146,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         };
     }
   }, [isClient, user]);
+
+  // New useEffect for calling getTodaysMotivation when user changes
+  useEffect(() => {
+    if (isClient && user && user.uid) {
+      getTodaysMotivation(user.displayName || 'amigo');
+    }
+  }, [isClient, user, getTodaysMotivation]); // getTodaysMotivation is stable due to useCallback
 
   useEffect(() => {
     if (!user || !user.uid) return;
@@ -387,21 +407,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return gratitudeEntries.find(entry => entry.dateKey === key);
   };
 
-  const getTodaysMotivation = useCallback(async (userName: string) => {
-    const todayStr = format(new Date(), 'yyyy-MM-dd');
-
-    if (motivationalMessage && motivationalMessage.date === todayStr) {
-      return motivationalMessage.quote;
-    }
-
-    const response = await dailyMotivation({ userName });
-    const newMotivation: MotivationalMessage = {
-      quote: response.quote,
-      date: todayStr,
-    };
-    setMotivationalMessage(newMotivation);
-    return newMotivation.quote;
-  }, [motivationalMessage]);
 
   const clearTodaysMotivation = () => {
     setMotivationalMessage(null);
