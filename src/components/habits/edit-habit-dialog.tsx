@@ -130,13 +130,13 @@ export function EditHabitDialog({ habit, children }: { habit: Habit; children: R
     };
 
     if (values.frequency === 'weekly') {
-      updateData.daysPerWeek = values.daysPerWeek;
+      updateData.daysPerWeek = values.daysPerWeek || 0;
     } else {
       updateData.daysPerWeek = deleteField();
     }
 
     if (values.reminderEnabled) {
-      updateData.reminderTime = values.reminderTime;
+      updateData.reminderTime = values.reminderTime || '';
     } else {
       updateData.reminderTime = deleteField();
     }

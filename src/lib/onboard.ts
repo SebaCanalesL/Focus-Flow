@@ -21,7 +21,7 @@ export async function ensureUserSeed(uid: string, profile?: Omit<UserProfile, 'u
   const userCreationTimestamp = userData?.createdAt ?? now;
 
   // 1. If seeding is already done, do nothing.
-  if (userDoc.exists() && userData.seedState === 'done') {
+  if (userDoc.exists() && userData?.seedState === 'done') {
     return;
   }
 

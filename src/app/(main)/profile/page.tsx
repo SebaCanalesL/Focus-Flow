@@ -297,7 +297,7 @@ export default function ProfilePage() {
                                 mode="single"
                                 selected={birthdayDate}
                                 onSelect={(date) => handleBirthdaySave(date)}
-                                captionLayout="dropdown-buttons"
+                                captionLayout="dropdown"
                                 fromYear={1920}
                                 toYear={new Date().getFullYear()}
                                 initialFocus

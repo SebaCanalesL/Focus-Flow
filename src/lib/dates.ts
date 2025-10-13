@@ -23,3 +23,34 @@ export const toZoned = (d: Date | string): DateTime => {
   }
   return DateTime.fromJSDate(d).setZone(TZ);
 };
+
+/**
+ * Formats a date to a readable string
+ * @param date - The date to format
+ * @param format - The format string (default: 'dd/MM/yyyy')
+ * @returns Formatted date string
+ */
+export const format = (date: Date | string | DateTime, format: string = 'dd/MM/yyyy'): string => {
+  const dt = date instanceof DateTime ? date : toZoned(date);
+  return dt.toFormat(format);
+};
+
+/**
+ * Checks if a date is today
+ * @param date - The date to check
+ * @returns True if the date is today
+ */
+export const isToday = (date: Date | string | DateTime): boolean => {
+  const dt = date instanceof DateTime ? date : toZoned(date);
+  const today = DateTime.now().setZone(TZ);
+  return dt.hasSame(today, 'day');
+};
+
+/**
+ * Parses an ISO string to a DateTime object
+ * @param isoString - The ISO string to parse
+ * @returns DateTime object
+ */
+export const parseISO = (isoString: string): DateTime => {
+  return DateTime.fromISO(isoString, { zone: TZ });
+};

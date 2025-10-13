@@ -4,6 +4,9 @@ import { db } from "@/lib/firebase";
 import { idOrThrow } from "@/lib/utils/ref-guards";
 import { GratitudeEntry } from "@/lib/types";
 
+// Export the GratitudeEntry type for use in other files
+export type { GratitudeEntry };
+
 export async function createGratitude(input: Omit<GratitudeEntry, "id">) {
   const col = collection(db, "gratitudes");
   return addDoc(col, input);

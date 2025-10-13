@@ -6,6 +6,7 @@ export interface Habit {
   id: string;
   name: string;
   icon: string;
+  color?: string; // Color for the habit
   frequency: Frequency;
   daysPerWeek?: number; // Target days per week for weekly habits
   createdAt: string;
@@ -18,6 +19,7 @@ export interface Habit {
 export interface GratitudeEntry {
   id: string;
   dateKey: string; // ISO string 'YYYY-MM-DD' in 'America/Santiago' timezone
+  date?: string; // Alternative date field for compatibility
   content: string;
   note?: string;
   motivation?: string;

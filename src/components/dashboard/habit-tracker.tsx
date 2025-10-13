@@ -25,11 +25,10 @@ const Icon = ({ name, className }: { name: IconName; className?: string }) => {
 
 export function HabitTracker() {
   const { habits, getWeekCompletion } = useAppData();
-  const today = new Date();
 
   const weeklyCompletedHabits = habits.filter(habit => {
       if (habit.frequency !== 'weekly') return false;
-      const weekCompletion = getWeekCompletion(habit, today);
+      const weekCompletion = getWeekCompletion(habit);
       return weekCompletion.completed >= weekCompletion.total;
   });
 

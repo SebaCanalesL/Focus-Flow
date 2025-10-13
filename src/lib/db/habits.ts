@@ -4,6 +4,9 @@ import { db } from "@/lib/firebase";
 import { idOrThrow } from "@/lib/utils/ref-guards";
 import { Habit } from "@/lib/types";
 
+// Export the Habit type for use in other files
+export type { Habit };
+
 export async function createHabit(input: Omit<Habit, "id">) {
   // create NO usa id externo
   const { /* id: _omit, */ ...payload } = input;

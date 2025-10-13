@@ -147,7 +147,7 @@ export function GratitudeJournal() {
           }
       }
 
-      addGratitudeEntry(contentToSave, currentDate, note, motivationToSave)
+      addGratitudeEntry(contentToSave, currentDate, note)
       setIsSaved(true);
       toast({
         title: "¡Entrada guardada!",

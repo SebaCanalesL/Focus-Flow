@@ -85,42 +85,49 @@ export const SEED_HABITS: Habit[] = [
 export const SEED_GRATITUDE_ENTRIES: GratitudeEntry[] = [
   {
     id: 'gratitude-1',
+    dateKey: formatISO(subDays(new Date(), 1), { representation: 'date' }),
     date: formatISO(subDays(new Date(), 1), { representation: 'date' }),
     content: 'Mi familia, mi salud, y tener un trabajo que me gusta',
     note: 'Fue un día muy productivo en el trabajo',
   },
   {
     id: 'gratitude-2',
+    dateKey: formatISO(subDays(new Date(), 2), { representation: 'date' }),
     date: formatISO(subDays(new Date(), 2), { representation: 'date' }),
     content: 'El sol brillando, una buena conversación con un amigo, y la comida deliciosa',
     note: 'Me sentí muy agradecido por las pequeñas cosas',
   },
   {
     id: 'gratitude-3',
+    dateKey: formatISO(subDays(new Date(), 3), { representation: 'date' }),
     date: formatISO(subDays(new Date(), 3), { representation: 'date' }),
     content: 'Mi mascota, la música que me inspira, y tener un hogar cómodo',
     note: 'Mi gato me hizo reír mucho hoy',
   },
   {
     id: 'gratitude-4',
+    dateKey: formatISO(subDays(new Date(), 4), { representation: 'date' }),
     date: formatISO(subDays(new Date(), 4), { representation: 'date' }),
     content: 'La oportunidad de aprender algo nuevo, mi creatividad, y la naturaleza',
     note: 'Hice una caminata muy relajante',
   },
   {
     id: 'gratitude-5',
+    dateKey: formatISO(subDays(new Date(), 5), { representation: 'date' }),
     date: formatISO(subDays(new Date(), 5), { representation: 'date' }),
     content: 'La tecnología que me conecta con otros, mi capacidad de adaptación, y la risa',
     note: 'Vi una película muy divertida con mi pareja',
   },
   {
     id: 'gratitude-6',
+    dateKey: formatISO(subDays(new Date(), 6), { representation: 'date' }),
     date: formatISO(subDays(new Date(), 6), { representation: 'date' }),
     content: 'Mi libertad, las oportunidades que tengo, y la paz interior',
     note: 'Medité por 15 minutos y me sentí muy centrado',
   },
   {
     id: 'gratitude-7',
+    dateKey: formatISO(subDays(new Date(), 7), { representation: 'date' }),
     date: formatISO(subDays(new Date(), 7), { representation: 'date' }),
     content: 'Mi capacidad de perdonar, la sabiduría que he ganado, y la esperanza',
     note: 'Tuve una conversación muy profunda con mi hermana',
@@ -153,7 +160,7 @@ function generateWeeklyCompletedDates(startDate: Date, weeks: number, daysPerWee
     const weekStart = addDays(startDate, week * 7);
     
     // Generar días aleatorios de la semana (0-6, donde 0 es domingo)
-    const weekDays = [];
+    const weekDays: number[] = [];
     while (weekDays.length < daysPerWeek) {
       const randomDay = Math.floor(Math.random() * 7);
       if (!weekDays.includes(randomDay)) {
