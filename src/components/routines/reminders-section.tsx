@@ -116,26 +116,73 @@ export function RemindersSection({ reminders, onRemindersChange }: RemindersSect
       e.stopPropagation();
     }
     
-    const newReminder: Reminder = {
-      id: `reminder-${Date.now()}`,
-      day: 'L',
-      time: '08:00',
-      enabled: true,
+    // Find a unique day and time combination
+    const findUniqueReminder = (): Reminder => {
+      const defaultDay = 'L';
+      const defaultTime = '08:00';
+      
+      // First try with default values
+      let newReminder: Reminder = {
+        id: `reminder-${Date.now()}`,
+        day: defaultDay,
+        time: defaultTime,
+        enabled: true,
+      };
+      
+      // Check if default combination is already used
+      const isDefaultDuplicate = reminders.some(reminder => 
+        reminder.day === newReminder.day && reminder.time === newReminder.time
+      );
+      
+      if (!isDefaultDuplicate) {
+        return newReminder;
+      }
+      
+      // If default is duplicate, try to find a unique time for the same day
+      const existingTimesForDay = reminders
+        .filter(reminder => reminder.day === defaultDay)
+        .map(reminder => reminder.time);
+      
+      // Try different times for the same day
+      for (let hour = 7; hour <= 22; hour++) {
+        for (let minute = 0; minute < 60; minute += 15) {
+          const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+          if (!existingTimesForDay.includes(timeString)) {
+            return {
+              id: `reminder-${Date.now()}`,
+              day: defaultDay,
+              time: timeString,
+              enabled: true,
+            };
+          }
+        }
+      }
+      
+      // If no unique time found for default day, try different days
+      for (const dayOption of weekDays) {
+        for (let hour = 7; hour <= 22; hour++) {
+          for (let minute = 0; minute < 60; minute += 15) {
+            const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+            const isDuplicate = reminders.some(reminder => 
+              reminder.day === dayOption.value && reminder.time === timeString
+            );
+            if (!isDuplicate) {
+              return {
+                id: `reminder-${Date.now()}`,
+                day: dayOption.value,
+                time: timeString,
+                enabled: true,
+              };
+            }
+          }
+        }
+      }
+      
+      // Fallback: return default (shouldn't happen in normal usage)
+      return newReminder;
     };
     
-    // Check if a reminder with the same day and time already exists
-    const isDuplicate = reminders.some(reminder => 
-      reminder.day === newReminder.day && reminder.time === newReminder.time
-    );
-    
-    if (isDuplicate) {
-      toast({
-        title: "Recordatorio duplicado",
-        description: "Ya existe un recordatorio para este día y hora.",
-        variant: "destructive",
-      });
-      return;
-    }
+    const newReminder = findUniqueReminder();
     
     console.log('Adding new reminder:', newReminder);
     console.log('Current reminders:', reminders);

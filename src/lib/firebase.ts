@@ -2,6 +2,7 @@ import {initializeApp, getApps, getApp} from 'firebase/app';
 import {getAuth, connectAuthEmulator} from 'firebase/auth';
 import {initializeFirestore, CACHE_SIZE_UNLIMITED, connectFirestoreEmulator} from 'firebase/firestore';
 import {getStorage, connectStorageEmulator} from 'firebase/storage';
+import {getMessaging, isSupported} from 'firebase/messaging';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -24,6 +25,16 @@ const db = initializeFirestore(
 const auth = getAuth(app);
 const storage = getStorage(app);
 
+// Initialize messaging only in browser environment
+let messaging: any = null;
+if (typeof window !== 'undefined') {
+  isSupported().then((supported) => {
+    if (supported) {
+      messaging = getMessaging(app);
+    }
+  });
+}
+
 // Connect to emulators if in development and emulators are enabled
 if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === 'true') {
   console.log('Connecting to Firebase emulators');
@@ -36,4 +47,4 @@ if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_FIREBA
   }
 }
 
-export {app, db, auth, storage};
+export {app, db, auth, storage, messaging};

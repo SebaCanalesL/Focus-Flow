@@ -24,6 +24,7 @@ import { format, subDays, differenceInCalendarDays, parseISO, startOfWeek, endOf
 import { dailyMotivation } from '@/ai/flows/daily-motivation-flow';
 import { ensureUserSeed } from '@/lib/onboard';
 import { dayKey, toZoned } from '@/lib/dates';
+import { useFCM } from '@/hooks/use-fcm';
 
 
 interface AppContextType {
@@ -66,6 +67,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [gratitudeEntries, setGratitudeEntries] = useState<GratitudeEntry[]>([]);
   const [motivationalMessage, setMotivationalMessage] = useState<MotivationalMessage | null>(null);
   const [birthday, setBirthdayState] = useState<string | null>(null);
+  
+  // Initialize FCM
+  const { token: fcmToken, isSupported: fcmSupported } = useFCM();
 
   const getTodaysMotivation = useCallback(async (userName: string) => {
     const todayStr = format(new Date(), 'yyyy-MM-dd');
@@ -174,6 +178,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(`focusflow-motivation-${user.uid}`, JSON.stringify(motivationalMessage));
     }
   }, [motivationalMessage, isClient, user]);
+
+  // Save FCM token to user profile
+  useEffect(() => {
+    if (fcmToken && user && user.uid) {
+      const userDocRef = doc(db, 'users', user.uid);
+      updateDoc(userDocRef, {
+        fcmToken: fcmToken,
+        fcmTokenUpdatedAt: serverTimestamp()
+      }).catch((error) => {
+        console.error('Error saving FCM token:', error);
+      });
+    }
+  }, [fcmToken, user]);
   
   useEffect(() => {
     if (!isClient) return;
@@ -188,9 +205,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const now = new Date();
       const currentTime = format(now, 'HH:mm');
       const todayString = format(now, 'yyyy-MM-dd');
+      // Map day of week to our reminder format (L, M, X, J, V, S, D)
+      const dayMap = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
+      const currentDay = dayMap[now.getDay()];
       
       habits.forEach(habit => {
-        if (
+        // Check new reminders system first
+        if (habit.reminders && habit.reminders.length > 0) {
+          habit.reminders.forEach(reminder => {
+            if (
+              reminder.enabled &&
+              reminder.day === currentDay &&
+              reminder.time === currentTime &&
+              !habit.completedDates.includes(todayString)
+            ) {
+              new Notification('¡Es hora de tu hábito!', {
+                body: `No te olvides de completar: "${habit.name}"`,
+                icon: '/logo.png' 
+              });
+            }
+          });
+        } else if (
+          // Fallback to deprecated system for backward compatibility
           habit.reminderEnabled &&
           habit.reminderTime === currentTime &&
           !habit.completedDates.includes(todayString)
