@@ -20,7 +20,8 @@ const db = initializeFirestore(
   { 
     experimentalForceLongPolling: true,
     cacheSizeBytes: CACHE_SIZE_UNLIMITED,
-  }
+  },
+  'focusflowv2' // Especificar la base de datos correcta
 );
 const auth = getAuth(app);
 const storage = getStorage(app);
