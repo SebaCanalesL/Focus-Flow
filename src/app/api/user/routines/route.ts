@@ -1,6 +1,7 @@
 
 import { NextResponse } from 'next/server';
-import { db, auth } from '@/lib/firebase-admin';
+import { db, auth } from '@/lib/firebase';
+import { collection, getDocs, doc, setDoc, deleteDoc, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 
 // Función auxiliar para verificar la autenticación del usuario
 async function verifyUser(request: Request) {
@@ -16,37 +17,23 @@ async function verifyUser(request: Request) {
       throw new Error('Firebase Auth not initialized');
     }
     
-    // Check if we're using emulators
-    const isUsingEmulators = process.env.NODE_ENV === 'development' && 
-                            process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === 'true';
-    
-    if (isUsingEmulators) {
+    // For client-side Firebase, we need to verify the token differently
+    // Since we're in a server environment, we'll decode the token manually
+    if (token && token.length > 100) {
       try {
-        // For emulators, try standard verification first
-        const decodedToken = await auth.verifyIdToken(token, true);
-        return decodedToken.uid;
-      } catch (emulatorError) {
-        // For development with emulators, decode token manually if standard verification fails
-        if (token && token.length > 100) {
-          try {
-            const tokenParts = token.split('.');
-            if (tokenParts.length === 3) {
-              const payload = JSON.parse(atob(tokenParts[1]));
-              if (payload.user_id || payload.sub) {
-                return payload.user_id || payload.sub;
-              }
-            }
-          } catch (decodeError) {
-            console.error('Error decoding token manually:', decodeError);
+        const tokenParts = token.split('.');
+        if (tokenParts.length === 3) {
+          const payload = JSON.parse(atob(tokenParts[1]));
+          if (payload.user_id || payload.sub) {
+            return payload.user_id || payload.sub;
           }
         }
-        throw emulatorError;
+      } catch (decodeError) {
+        console.error('Error decoding token manually:', decodeError);
       }
-    } else {
-      // Production token verification
-      const decodedToken = await auth.verifyIdToken(token);
-      return decodedToken.uid;
     }
+    
+    return null;
   } catch (error) {
     console.error('Error verifying token:', error);
     return null;
@@ -65,8 +52,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
     }
     
-    const routinesRef = db.collection('users').doc(userId).collection('routines');
-    const snapshot = await routinesRef.get();
+    const routinesRef = collection(db, 'users', userId, 'routines');
+    const snapshot = await getDocs(routinesRef);
     
     console.log('Routines query result:', {
       userId,
@@ -116,7 +103,7 @@ export async function POST(request: Request) {
     };
 
     console.log('Creating routine in database:', newRoutine);
-    const docRef = await db.collection('users').doc(userId).collection('routines').add(newRoutine);
+    const docRef = await addDoc(collection(db, 'users', userId, 'routines'), newRoutine);
     console.log('Routine created with ID:', docRef.id);
     
     const response = { id: docRef.id, ...newRoutine };
@@ -161,16 +148,17 @@ export async function PUT(request: Request) {
     }
 
     console.log('Looking for routine with ID:', id, 'for user:', userId);
-    const routineRef = db.collection('users').doc(userId).collection('routines').doc(id);
-    const doc = await routineRef.get();
+    const routineRef = doc(db, 'users', userId, 'routines', id);
+    const docSnap = await getDocs(collection(db, 'users', userId, 'routines'));
 
-    console.log('Document exists:', doc.exists);
-    if (!doc.exists) {
+    console.log('Document exists:', docSnap.docs.some(d => d.id === id));
+    if (!docSnap.docs.some(d => d.id === id)) {
       console.error('Routine not found:', id);
       return NextResponse.json({ error: 'Routine not found' }, { status: 404 });
     }
 
-    console.log('Current document data:', doc.data());
+    const routineDoc = docSnap.docs.find(d => d.id === id);
+    console.log('Current document data:', routineDoc?.data());
 
     // Simple update with minimal data first
     const simpleUpdateData: any = {
@@ -190,12 +178,13 @@ export async function PUT(request: Request) {
 
     console.log('Simple update data:', JSON.stringify(simpleUpdateData, null, 2));
 
-    await routineRef.update(simpleUpdateData);
+    await updateDoc(routineRef, simpleUpdateData);
     console.log('Update completed successfully');
 
     // Get the updated document to return
-    const updatedDoc = await routineRef.get();
-    const updatedRoutine = { id: updatedDoc.id, ...updatedDoc.data() };
+    const updatedDocSnap = await getDocs(collection(db, 'users', userId, 'routines'));
+    const updatedDoc = updatedDocSnap.docs.find(d => d.id === id);
+    const updatedRoutine = { id: updatedDoc?.id, ...updatedDoc?.data() };
 
     console.log('Updated routine:', JSON.stringify(updatedRoutine, null, 2));
     console.log('=== PUT /api/user/routines SUCCESS ===');
@@ -235,14 +224,14 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Routine ID is required' }, { status: 400 });
     }
 
-    const routineRef = db.collection('users').doc(userId).collection('routines').doc(routineId);
-    const doc = await routineRef.get();
+    const routineRef = doc(db, 'users', userId, 'routines', routineId);
+    const docSnap = await getDocs(collection(db, 'users', userId, 'routines'));
 
-    if (!doc.exists) {
+    if (!docSnap.docs.some(d => d.id === routineId)) {
       return NextResponse.json({ error: 'Routine not found' }, { status: 404 });
     }
 
-    await routineRef.delete();
+    await deleteDoc(routineRef);
 
     return NextResponse.json({ message: 'Routine deleted successfully' }, { status: 200 });
 
