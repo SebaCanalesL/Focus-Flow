@@ -24,24 +24,12 @@ try {
       console.log('- FIRESTORE_EMULATOR_HOST:', process.env.FIRESTORE_EMULATOR_HOST);
       console.log('- FIREBASE_AUTH_EMULATOR_HOST:', process.env.FIREBASE_AUTH_EMULATOR_HOST);
     } else {
-      const projectId = process.env.FIREBASE_PROJECT_ID;
-      const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-      const privateKey = process.env.FIREBASE_PRIVATE_KEY;
-
-      if (projectId && clientEmail && privateKey) {
-        admin.initializeApp({
-          credential: admin.credential.cert({
-            projectId,
-            clientEmail,
-            privateKey: privateKey.replace(/\\n/g, '\n'),
-          }),
-        });
-        console.log('Firebase Admin SDK initialized successfully.');
-      } else {
-        console.warn(
-          'Firebase Admin SDK not initialized. Missing environment variables.'
-        );
-      }
+      // Use default credentials in production (App Hosting provides these automatically)
+      admin.initializeApp({
+        projectId: 'studio-808864941-b51ba',
+        credential: admin.credential.applicationDefault(),
+      });
+      console.log('Firebase Admin SDK initialized with default credentials.');
     }
   }
 

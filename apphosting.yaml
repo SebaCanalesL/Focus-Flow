@@ -59,3 +59,22 @@ env:
     availability:
       - BUILD
       - RUNTIME
+  
+  # Firebase Admin SDK Configuration
+  - variable: FIREBASE_PROJECT_ID
+    value: studio-808864941-b51ba
+    availability:
+      - BUILD
+      - RUNTIME
+  
+  - variable: FIREBASE_CLIENT_EMAIL
+    value: firebase-adminsdk-xxxxx@studio-808864941-b51ba.iam.gserviceaccount.com
+    availability:
+      - BUILD
+      - RUNTIME
+  
+  - variable: FIREBASE_PRIVATE_KEY
+    value: "-----BEGIN PRIVATE KEY-----\nYour private key here\n-----END PRIVATE KEY-----\n"
+    availability:
+      - BUILD
+      - RUNTIME
