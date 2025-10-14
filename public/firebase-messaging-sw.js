@@ -4,12 +4,12 @@ importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compa
 
 // Initialize Firebase in service worker
 firebase.initializeApp({
-  apiKey: "AIzaSyBvQvQvQvQvQvQvQvQvQvQvQvQvQvQvQvQ",
+  apiKey: "AIzaSyBJqudC8uilNGktrFFHxI8YVmd-DprZxXY",
   authDomain: "studio-808864941-b51ba.firebaseapp.com",
   projectId: "studio-808864941-b51ba",
   storageBucket: "studio-808864941-b51ba.firebasestorage.app",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abcdef1234567890abcdef"
+  messagingSenderId: "444464760523",
+  appId: "1:444464760523:web:9a8b22189650d710747d4e"
 });
 
 // Initialize Firebase Messaging
