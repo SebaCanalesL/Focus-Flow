@@ -13,6 +13,8 @@ import {
 import { PerformRoutineSheet } from '@/components/routines/perform-routine-sheet';
 import { Routine } from '@/lib/types';
 import { useAppData } from '@/contexts/app-provider';
+import { collection, addDoc, updateDoc, deleteDoc, getDocs, query, orderBy, onSnapshot, doc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const filters = ['Mis rutinas', 'Todas', 'Partir el día', 'Terminar el día'];
 
@@ -184,112 +186,116 @@ function RoutineCard({
   );
 }
 
+// Función para limpiar datos antes de enviar a Firestore
+function cleanRoutineData(data: any): any {
+  const cleaned = { ...data };
+  
+  // Eliminar el campo 'id' si existe
+  delete cleaned.id;
+  
+  // Recursivamente limpiar campos undefined
+  function cleanObject(obj: any): any {
+    if (obj === null || obj === undefined) {
+      return undefined;
+    }
+    
+    if (Array.isArray(obj)) {
+      return obj.map(cleanObject).filter(item => item !== undefined);
+    }
+    
+    if (typeof obj === 'object') {
+      const cleanedObj: any = {};
+      for (const [key, value] of Object.entries(obj)) {
+        const cleanedValue = cleanObject(value);
+        if (cleanedValue !== undefined) {
+          cleanedObj[key] = cleanedValue;
+        }
+      }
+      return Object.keys(cleanedObj).length > 0 ? cleanedObj : undefined;
+    }
+    
+    return obj;
+  }
+  
+  return cleanObject(cleaned);
+}
+
 export default function RoutinesPage() {
   const { user } = useAppData();
   const [selectedFilter, setSelectedFilter] = useState('Todas');
   const [userRoutines, setUserRoutines] = useState<Routine[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load user routines from API on component mount
+  // Load user routines from Firestore using real-time listener
   useEffect(() => {
-    const loadUserRoutines = async () => {
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
+    if (!user || !user.uid) {
+      setUserRoutines([]);
+      setIsLoading(false);
+      return;
+    }
 
-      try {
-        const token = await user.getIdToken();
-        const response = await fetch('/api/user/routines', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-        
-        if (response.ok) {
-          const routines = await response.json();
-          console.log('Loaded user routines:', routines);
-          setUserRoutines(routines);
-        } else {
-          console.error('Failed to load user routines');
-        }
-      } catch (error) {
-        console.error('Error loading user routines:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    console.log('🔄 Setting up routines listener for user:', user.uid);
+    const routinesQuery = query(collection(db, `users/${user.uid}/routines`), orderBy("createdAt", "desc"));
+    
+    const unsubscribe = onSnapshot(routinesQuery, (snapshot) => {
+      const serverRoutines = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Routine));
+      console.log('🔄 Routines loaded from Firestore:', serverRoutines);
+      setUserRoutines(serverRoutines);
+      setIsLoading(false);
+    }, (error) => {
+      console.error('Error loading routines:', error);
+      setIsLoading(false);
+    });
 
-    loadUserRoutines();
+    return () => unsubscribe();
   }, [user]);
 
   const handleSaveRoutine = async (newRoutine: Partial<Routine>) => {
-    if (!user) {
+    if (!user || !user.uid) {
       console.error('User not authenticated');
       return;
     }
 
     try {
-      const token = await user.getIdToken();
-      
       if (newRoutine.id) {
         // Update existing routine
-        console.log('=== SAVING ROUTINE ===');
-        console.log('Routine ID:', newRoutine.id);
-        console.log('Full routine data:', newRoutine);
-        console.log('Step IDs:', newRoutine.stepIds);
-        console.log('Custom Steps:', newRoutine.customSteps);
-        console.log('Reminders:', newRoutine.reminders);
+        console.log('✏️ Updating routine:', newRoutine.id, 'with data:', newRoutine);
         
-        const response = await fetch('/api/user/routines', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify(newRoutine),
-        });
-
-        console.log('Response status:', response.status);
-        console.log('Response ok:', response.ok);
-
-        if (response.ok) {
-          const updatedRoutine = await response.json();
-          console.log('Routine updated successfully:', updatedRoutine);
-          setUserRoutines((prev) =>
-            prev.map((r) => (r.id === newRoutine.id ? updatedRoutine as Routine : r))
-          );
-          console.log('State updated in frontend');
-        } else {
-          const errorText = await response.text();
-          console.error('Failed to update routine:', response.status, errorText);
-        }
+        const routineDocRef = doc(db, `users/${user.uid}/routines`, newRoutine.id);
+        
+        // Limpiar datos usando la función robusta
+        const cleanedData = cleanRoutineData(newRoutine);
+        
+        console.log('📝 Cleaned update data:', cleanedData);
+        console.log('🔍 Custom steps in update:', cleanedData.customSteps);
+        console.log('🔔 Reminders in update:', cleanedData.reminders);
+        
+        await updateDoc(routineDocRef, cleanedData);
+        console.log('✅ Routine updated in Firestore');
       } else {
         // Create new routine
-        console.log('Creating new routine with data:', newRoutine);
-        const response = await fetch('/api/user/routines', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify(newRoutine),
-        });
+        console.log('➕ Creating new routine with data:', newRoutine);
         
-        console.log('Create routine response status:', response.status);
+        const routinesCollectionRef = collection(db, `users/${user.uid}/routines`);
         
-        if (response.ok) {
-          const createdRoutine = await response.json();
-          console.log('Routine created successfully:', createdRoutine);
-          setUserRoutines((prev) => [...prev, createdRoutine]);
-          // Switch to "Mis rutinas" to show the newly created routine
-          setSelectedFilter('Mis rutinas');
-        } else {
-          const errorText = await response.text();
-          console.error('Failed to create routine:', response.status, errorText);
-        }
+        // Preparar datos para nueva rutina
+        const newRoutineData = {
+          createdAt: new Date().toISOString(),
+          ...newRoutine,
+        };
+        
+        // Limpiar datos usando la función robusta
+        const cleanedData = cleanRoutineData(newRoutineData);
+        
+        console.log('📝 Cleaned routine data:', cleanedData);
+        console.log('🔍 Custom steps:', cleanedData.customSteps);
+        console.log('🔔 Reminders:', cleanedData.reminders);
+        
+        await addDoc(routinesCollectionRef, cleanedData);
+        console.log('✅ Routine added to Firestore');
+        
+        // Switch to "Mis rutinas" to show the newly created routine
+        setSelectedFilter('Mis rutinas');
       }
     } catch (error) {
       console.error('Error saving routine:', error);
@@ -297,30 +303,16 @@ export default function RoutinesPage() {
   };
 
   const handleDeleteRoutine = async (routineId: string) => {
-    if (!user) {
+    if (!user || !user.uid) {
       console.error('User not authenticated');
       return;
     }
 
     try {
-      const token = await user.getIdToken();
-      const response = await fetch(`/api/user/routines?id=${routineId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        setUserRoutines((prev) => prev.filter((r) => r.id !== routineId));
-        // If we're currently viewing the deleted routine's filter, switch to "Mis rutinas"
-        if (selectedFilter === 'Mis rutinas') {
-          setSelectedFilter('Mis rutinas');
-        }
-      } else {
-        console.error('Failed to delete routine');
-      }
+      console.log('🗑️ Deleting routine:', routineId);
+      const routineDocRef = doc(db, `users/${user.uid}/routines`, routineId);
+      await deleteDoc(routineDocRef);
+      console.log('✅ Routine deleted from Firestore');
     } catch (error) {
       console.error('Error deleting routine:', error);
     }
