@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import React from "react";
 import { Reminder } from "@/lib/types";
 import { Plus, Trash2, Clock, Calendar } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const weekDays = [
   { value: 'L', label: 'Lunes' },
@@ -107,13 +108,35 @@ interface RemindersSectionProps {
 }
 
 export function RemindersSection({ reminders, onRemindersChange }: RemindersSectionProps) {
-  const addReminder = () => {
+  const { toast } = useToast();
+  
+  const addReminder = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     const newReminder: Reminder = {
       id: `reminder-${Date.now()}`,
       day: 'L',
       time: '08:00',
       enabled: true,
     };
+    
+    // Check if a reminder with the same day and time already exists
+    const isDuplicate = reminders.some(reminder => 
+      reminder.day === newReminder.day && reminder.time === newReminder.time
+    );
+    
+    if (isDuplicate) {
+      toast({
+        title: "Recordatorio duplicado",
+        description: "Ya existe un recordatorio para este día y hora.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     console.log('Adding new reminder:', newReminder);
     console.log('Current reminders:', reminders);
     onRemindersChange([...reminders, newReminder]);
@@ -122,6 +145,23 @@ export function RemindersSection({ reminders, onRemindersChange }: RemindersSect
   const updateReminder = (updatedReminder: Reminder) => {
     console.log('Updating reminder:', updatedReminder);
     console.log('Current reminders before update:', reminders);
+    
+    // Check if updating would create a duplicate (excluding the current reminder being updated)
+    const isDuplicate = reminders.some(reminder => 
+      reminder.id !== updatedReminder.id && 
+      reminder.day === updatedReminder.day && 
+      reminder.time === updatedReminder.time
+    );
+    
+    if (isDuplicate) {
+      toast({
+        title: "Recordatorio duplicado",
+        description: "Ya existe un recordatorio para este día y hora.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const newReminders = reminders.map(r => r.id === updatedReminder.id ? updatedReminder : r);
     console.log('New reminders after update:', newReminders);
     onRemindersChange(newReminders);
@@ -136,6 +176,7 @@ export function RemindersSection({ reminders, onRemindersChange }: RemindersSect
       <div className="flex items-center justify-between">
         <Label className="text-base font-medium">¿Cuándo quieres realizar esta rutina?</Label>
         <Button
+          type="button"
           variant="outline"
           size="sm"
           onClick={addReminder}

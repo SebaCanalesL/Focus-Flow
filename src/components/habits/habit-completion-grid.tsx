@@ -5,7 +5,6 @@ import {
   addMonths,
   differenceInDays,
   eachDayOfInterval,
-  endOfMonth,
   endOfWeek,
   format,
   isBefore,
@@ -37,34 +36,13 @@ const HabitCompletionGrid = ({ habit, section = 'default' }: { habit: Habit; sec
   const habitCreationDate = useMemo(() => startOfDay(toDate(createdAt)), [createdAt]);
   const today = useMemo(() => startOfDay(new Date()), []);
 
-  const monthsToShow = useMemo(() => {
-    const start = startOfMonth(habitCreationDate);
-    const end = startOfMonth(addMonths(today, 1));
-    const months = [];
-    let current = start;
-    while (isBefore(current, end) || isSameMonth(current, end)) {
-      months.push(current);
-      current = addMonths(current, 1);
-    }
-    return months;
-  }, [habitCreationDate, today]);
 
-  const getDaysForMonth = (month: Date) => {
-    const monthStart = startOfMonth(month);
-    const monthEnd = endOfMonth(month);
-    const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
-    const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
-    return eachDayOfInterval({ start: startDate, end: endDate });
-  };
-
-  // Get all days from all months in a continuous sequence
+  // Get all days from habit creation date to today + some future days
   const allDays = useMemo(() => {
-    const days = [];
-    for (const month of monthsToShow) {
-      days.push(...getDaysForMonth(month));
-    }
-    return days;
-  }, [monthsToShow]);
+    const startDate = habitCreationDate;
+    const endDate = addMonths(today, 1); // Show one month into the future
+    return eachDayOfInterval({ start: startDate, end: endDate });
+  }, [habitCreationDate, today]);
 
   // Get month labels for display - corrected logic
   const monthLabels = useMemo(() => {
@@ -140,46 +118,70 @@ const HabitCompletionGrid = ({ habit, section = 'default' }: { habit: Habit; sec
             const isCompleted = completedDatesSet.has(dayString);
             const isFuture = day > today;
             const isPast = isBefore(day, today);
-            const isCurrentMonth = monthsToShow.some(month => isSameMonth(day, month));
             const isBeforeCreation = isBefore(day, habitCreationDate);
 
             let dayBgClass = 'bg-transparent';
 
-            if (isCurrentMonth) {
-                if (isFuture) {
-                    dayBgClass = 'bg-muted/50';
-                } else if (isBeforeCreation) {
-                    dayBgClass = 'bg-transparent';
-                } else if (isCompleted) {
-                    dayBgClass = 'bg-green-500'; // Green for completed
-                } else if (isPast) {
-                    if (isWeekly) {
-                        const weekStart = startOfWeek(day, { weekStartsOn: 1 });
-                        const weekEnd = endOfWeek(day, { weekStartsOn: 1 });
-                        const daysInWeek = eachDayOfInterval({ start: weekStart, end: weekEnd });
-                        
-                        const completionsInWeek = daysInWeek.reduce((count, weekDay) => {
-                            return completedDatesSet.has(format(weekDay, 'yyyy-MM-dd')) ? count + 1 : count;
-                        }, 0);
+            // Only show days from habit creation date onwards
+            if (isBeforeCreation) {
+                dayBgClass = 'bg-transparent';
+            } else if (isFuture) {
+                dayBgClass = 'bg-muted/50';
+            } else if (isCompleted) {
+                dayBgClass = 'bg-green-500'; // Green for completed
+            } else if (isPast) {
+                if (isWeekly) {
+                    const weekStart = startOfWeek(day, { weekStartsOn: 1 });
+                    const weekEnd = endOfWeek(day, { weekStartsOn: 1 });
+                    const daysInWeek = eachDayOfInterval({ start: weekStart, end: weekEnd });
+                    
+                    const completionsInWeek = daysInWeek.reduce((count, weekDay) => {
+                        return completedDatesSet.has(format(weekDay, 'yyyy-MM-dd')) ? count + 1 : count;
+                    }, 0);
 
-                        const daysLeft = differenceInDays(weekEnd, day) + 1;
-                        const completionsStillNeeded = (daysPerWeek || 1) - completionsInWeek;
+                    const daysLeft = differenceInDays(weekEnd, day) + 1;
+                    const completionsStillNeeded = (daysPerWeek || 1) - completionsInWeek;
 
-                        if (completionsStillNeeded > daysLeft) {
-                            dayBgClass = 'bg-red-500'; // Impossible to meet goal
-                        } else {
-                            dayBgClass = 'bg-yellow-500'; // Missed, but goal was still possible
-                        }
+                    // Solo el último día posible debe ser rojo (donde se rompe la racha)
+                    if (completionsStillNeeded === daysLeft && daysLeft === 1) {
+                        dayBgClass = 'bg-red-500'; // Último día - rompe la racha si no se completa
+                    } else if (completionsStillNeeded > daysLeft) {
+                        dayBgClass = 'bg-transparent'; // Ya se rompió la racha - sin color
                     } else {
-                        const previousDay = subDays(day, 1);
-                        if (completedDatesSet.has(format(previousDay, 'yyyy-MM-dd')) && !isBefore(previousDay, habitCreationDate)) {
-                            dayBgClass = 'bg-red-500'; // Red for broken daily streaks
-                        } else {
-                            dayBgClass = 'bg-yellow-500'; // Yellow for other missed days
-                        }
+                        dayBgClass = 'bg-yellow-500'; // No rompe la racha - aún alcanzable
                     }
                 } else {
-                    dayBgClass = 'bg-muted/50'; // Today, not completed yet
+                    const previousDay = subDays(day, 1);
+                    if (completedDatesSet.has(format(previousDay, 'yyyy-MM-dd')) && !isBefore(previousDay, habitCreationDate)) {
+                        dayBgClass = 'bg-red-500'; // Red for broken daily streaks
+                    } else {
+                        dayBgClass = 'bg-yellow-500'; // Yellow for other missed days
+                    }
+                }
+            } else {
+                // Día actual (hoy) no completado
+                if (isWeekly) {
+                    const weekStart = startOfWeek(day, { weekStartsOn: 1 });
+                    const weekEnd = endOfWeek(day, { weekStartsOn: 1 });
+                    const daysInWeek = eachDayOfInterval({ start: weekStart, end: weekEnd });
+                    
+                    const completionsInWeek = daysInWeek.reduce((count, weekDay) => {
+                        return completedDatesSet.has(format(weekDay, 'yyyy-MM-dd')) ? count + 1 : count;
+                    }, 0);
+
+                    const daysLeft = differenceInDays(weekEnd, day) + 1;
+                    const completionsStillNeeded = (daysPerWeek || 1) - completionsInWeek;
+
+                    // Solo el último día posible debe ser rojo (donde se rompe la racha)
+                    if (completionsStillNeeded === daysLeft && daysLeft === 1) {
+                        dayBgClass = 'bg-red-500'; // Último día - urgencia: rompe la racha si no completa hoy
+                    } else if (completionsStillNeeded > daysLeft) {
+                        dayBgClass = 'bg-transparent'; // Ya se rompió la racha - sin color
+                    } else {
+                        dayBgClass = 'bg-yellow-500'; // No rompe la racha - aún alcanzable
+                    }
+                } else {
+                    dayBgClass = 'bg-muted/50'; // Hábito diario - hoy no completado
                 }
             }
 

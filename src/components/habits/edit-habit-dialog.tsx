@@ -85,13 +85,15 @@ export function EditHabitDialog({ habit, children }: { habit: Habit; children: R
   const daysPerWeek = form.watch('daysPerWeek');
 
   useEffect(() => {
-    form.reset({
-      name: habit.name,
-      frequency: habit.frequency,
-      daysPerWeek: habit.daysPerWeek || (habit.frequency === 'daily' ? 7 : undefined),
-    });
-    // Initialize reminders from habit data
-    setReminders(habit.reminders || []);
+    if (isOpen) {
+      form.reset({
+        name: habit.name,
+        frequency: habit.frequency,
+        daysPerWeek: habit.daysPerWeek || (habit.frequency === 'daily' ? 7 : undefined),
+      });
+      // Initialize reminders from habit data only when opening
+      setReminders(habit.reminders || []);
+    }
   }, [habit, form, isOpen]);
 
   useEffect(() => {
@@ -251,31 +253,33 @@ export function EditHabitDialog({ habit, children }: { habit: Habit; children: R
             </div>
 
             <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between w-full gap-2">
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" className="w-full sm:w-auto">Eliminar Hábito</Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>
-                      ¿Estás seguro de que quieres eliminar este hábito?
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Esta acción no se puede deshacer. Esto eliminará permanentemente tu hábito y
-                      todo su historial de progreso.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleDelete}
-                      className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
-                    >
-                      Continuar
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              {habit.id !== 'gratitude-habit' && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" className="w-full sm:w-auto">Eliminar Hábito</Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>
+                        ¿Estás seguro de que quieres eliminar este hábito?
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta acción no se puede deshacer. Esto eliminará permanentemente tu hábito y
+                        todo su historial de progreso.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDelete}
+                        className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                      >
+                        Continuar
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
               <Button type="submit" className="w-full sm:w-auto">Guardar Cambios</Button>
             </DialogFooter>
           </form>
