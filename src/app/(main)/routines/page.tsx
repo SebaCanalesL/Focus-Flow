@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
-import Image from 'next/image';
 import {
   CreateRoutineDialog,
   predefinedSteps as routineSteps,
@@ -56,8 +55,9 @@ function RoutineCard({
         }
       });
 
-      // Get active reminders
+      // Get active reminders and schedules
       const activeReminders = routine.reminders?.filter(r => r.enabled) || [];
+      const activeSchedules = routine.schedules?.filter(s => s.executionEnabled) || [];
       const weekDays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
       const dayNames = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
@@ -73,18 +73,30 @@ function RoutineCard({
             ))}
           </div>
           
-          {activeReminders.length > 0 && (
+          {(activeReminders.length > 0 || activeSchedules.length > 0) && (
             <div className="border-t pt-3">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs font-medium text-muted-foreground">🔔 Recordatorios activos:</span>
+                <span className="text-xs font-medium text-muted-foreground">⏰ Horarios programados:</span>
               </div>
               <div className="space-y-1">
+                {/* Show schedules first (new format) */}
+                {activeSchedules.map((schedule) => {
+                  const dayIndex = weekDays.indexOf(schedule.day);
+                  const dayName = dayIndex !== -1 ? dayNames[dayIndex] : schedule.day;
+                  const notificationStatus = schedule.notificationEnabled ? '🔔' : '🔕';
+                  return (
+                    <p key={schedule.id} className="text-xs text-muted-foreground">
+                      {dayName} a las {schedule.time} {notificationStatus}
+                    </p>
+                  );
+                })}
+                {/* Show legacy reminders */}
                 {activeReminders.map((reminder) => {
                   const dayIndex = weekDays.indexOf(reminder.day);
                   const dayName = dayIndex !== -1 ? dayNames[dayIndex] : reminder.day;
                   return (
                     <p key={reminder.id} className="text-xs text-muted-foreground">
-                      {dayName} a las {reminder.time}
+                      {dayName} a las {reminder.time} 🔔
                     </p>
                   );
                 })}
@@ -134,40 +146,81 @@ function RoutineCard({
   };
 
   return (
-    <Card className="overflow-hidden rounded-lg">
+    <Card className="overflow-hidden rounded-lg border-2 hover:border-primary/50 transition-all duration-200 hover:shadow-lg">
       <div onClick={() => setIsOpen(!isOpen)} className="cursor-pointer">
-        <div className="relative w-full h-32">
-          <Image
-            src={routine.imageUrl}
-            alt={routine.title}
-            fill
-            className="object-contain"
-            priority
-          />
-        </div>
-      </div>
-      {isOpen && (
-        <CardContent className="pt-4">
-          <div className="text-muted-foreground mb-4 space-y-4">
-            {renderDescription()}
-          </div>
-          {isUserRoutine ? (
-            <div className="flex items-center gap-2">
-              <CreateRoutineDialog onSave={onSave} onDelete={onDelete} routineToEdit={routine}>
-                <Button variant="outline" className="w-full">
-                  Editar
-                </Button>
-              </CreateRoutineDialog>
-              <PerformRoutineSheet routine={routine}>
-                <Button className="w-full">Realizar rutina</Button>
-              </PerformRoutineSheet>
+        <CardContent className="p-6">
+          {/* Header with title and expand icon */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-foreground mb-1">
+                {routine.title}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {routine.stepIds?.length || 0} pasos • {
+                  (routine.schedules?.filter(s => s.executionEnabled).length || 0) + 
+                  (routine.reminders?.filter(r => r.enabled).length || 0)
+                } horarios programados
+              </p>
             </div>
-          ) : (
-            <CreateRoutineDialog onSave={onSave}>
-              <Button className="w-full">+ Agregar a mi rutina</Button>
-            </CreateRoutineDialog>
+            <div className="ml-4">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
+                <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick preview when collapsed */}
+          {!isOpen && (
+            <div className="space-y-2">
+              {routine.stepOrder?.slice(0, 3).map((stepId: string, index: number) => {
+                const predefinedStep = routineSteps.find((s) => s.id === stepId);
+                const customStep = routine.customSteps?.find((cs) => cs.id === stepId);
+                const step = predefinedStep || customStep;
+                if (!step) return null;
+                
+                return (
+                  <div key={stepId} className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
+                    <span className="truncate">{step.title.split(' (')[0]}</span>
+                  </div>
+                );
+              })}
+              {(routine.stepOrder?.length || 0) > 3 && (
+                <p className="text-xs text-muted-foreground">
+                  +{(routine.stepOrder?.length || 0) - 3} pasos más
+                </p>
+              )}
+            </div>
           )}
         </CardContent>
+      </div>
+      
+      {isOpen && (
+        <div className="border-t bg-muted/30">
+          <CardContent className="p-6 pt-4">
+            <div className="text-muted-foreground mb-6 space-y-4">
+              {renderDescription()}
+            </div>
+            {isUserRoutine ? (
+              <div className="flex items-center gap-3">
+                <CreateRoutineDialog onSave={onSave} onDelete={onDelete} routineToEdit={routine}>
+                  <Button variant="outline" className="flex-1">
+                    Editar
+                  </Button>
+                </CreateRoutineDialog>
+                <PerformRoutineSheet routine={routine}>
+                  <Button className="flex-1">Realizar rutina</Button>
+                </PerformRoutineSheet>
+              </div>
+            ) : (
+              <CreateRoutineDialog onSave={onSave}>
+                <Button className="w-full">+ Agregar a mi rutina</Button>
+              </CreateRoutineDialog>
+            )}
+          </CardContent>
+        </div>
       )}
     </Card>
   );
@@ -228,13 +281,15 @@ export default function RoutinesPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between w-full">
         <h1 className="text-2xl font-bold md:text-3xl">Rutinas</h1>
-        <RoutineTemplateSelector onSave={handleSaveRoutine}>
-          <div className={cn(buttonVariants({ size: 'sm' }), "cursor-pointer")}>
-            Crear Rutina
-          </div>
-        </RoutineTemplateSelector>
+        <div className="flex-shrink-0">
+          <RoutineTemplateSelector onSave={handleSaveRoutine}>
+            <div className={cn(buttonVariants({ size: 'sm' }), "cursor-pointer")}>
+              Crear Rutina
+            </div>
+          </RoutineTemplateSelector>
+        </div>
       </div>
 
       <div className="flex items-center gap-2 overflow-x-auto pb-2">

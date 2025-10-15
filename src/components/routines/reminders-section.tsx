@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import React from "react";
-import { Reminder } from "@/lib/types";
+import { Reminder, RoutineSchedule } from "@/lib/types";
 import { Plus, Trash2, Clock, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -37,12 +37,13 @@ const timeOptions = Array.from({ length: 96 }, (_, i) => {
 });
 
 interface ReminderCardProps {
-  reminder: Reminder;
-  onUpdate: (reminder: Reminder) => void;
+  reminder: Reminder | RoutineSchedule;
+  onUpdate: (reminder: Reminder | RoutineSchedule) => void;
   onRemove: (reminderId: string) => void;
 }
 
 function ReminderCard({ reminder, onUpdate, onRemove }: ReminderCardProps) {
+  const isSchedule = 'executionEnabled' in reminder;
 
   return (
     <Card className="border-muted-foreground/20">
@@ -89,10 +90,29 @@ function ReminderCard({ reminder, onUpdate, onRemove }: ReminderCardProps) {
           </div>
           
           <div className="flex items-center gap-2">
-            <Switch
-              checked={reminder.enabled}
-              onCheckedChange={(enabled) => onUpdate({ ...reminder, enabled })}
-            />
+            {isSchedule ? (
+              <>
+                <div className="flex flex-col items-center gap-1">
+                  <Label className="text-xs">Ejecutar</Label>
+                  <Switch
+                    checked={reminder.executionEnabled}
+                    onCheckedChange={(executionEnabled) => onUpdate({ ...reminder, executionEnabled })}
+                  />
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <Label className="text-xs">Notificar</Label>
+                  <Switch
+                    checked={reminder.notificationEnabled}
+                    onCheckedChange={(notificationEnabled) => onUpdate({ ...reminder, notificationEnabled })}
+                  />
+                </div>
+              </>
+            ) : (
+              <Switch
+                checked={reminder.enabled}
+                onCheckedChange={(enabled) => onUpdate({ ...reminder, enabled })}
+              />
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -109,12 +129,19 @@ function ReminderCard({ reminder, onUpdate, onRemove }: ReminderCardProps) {
 }
 
 interface RemindersSectionProps {
-  reminders: Reminder[];
-  onRemindersChange: (reminders: Reminder[]) => void;
+  reminders?: Reminder[];
+  schedules?: RoutineSchedule[];
+  onRemindersChange?: (reminders: Reminder[]) => void;
+  onSchedulesChange?: (schedules: RoutineSchedule[]) => void;
 }
 
-export function RemindersSection({ reminders, onRemindersChange }: RemindersSectionProps) {
+export function RemindersSection({ reminders = [], schedules = [], onRemindersChange, onSchedulesChange }: RemindersSectionProps) {
   const { toast } = useToast();
+  
+  // Determine if we're using schedules or reminders
+  const isUsingSchedules = schedules.length > 0 || (schedules.length === 0 && reminders.length === 0 && onSchedulesChange);
+  const currentItems = isUsingSchedules ? schedules : reminders;
+  const onChangeHandler = isUsingSchedules ? onSchedulesChange : onRemindersChange;
   
   const addReminder = (e?: React.MouseEvent) => {
     if (e) {
@@ -123,43 +150,55 @@ export function RemindersSection({ reminders, onRemindersChange }: RemindersSect
     }
     
     // Find a unique day and time combination
-    const findUniqueReminder = (): Reminder => {
+    const findUniqueReminder = () => {
       const defaultDay = 'L';
       const defaultTime = '08:00';
       
       // First try with default values
-      const newReminder: Reminder = {
+      const newItem = isUsingSchedules ? {
+        id: generateUniqueId(),
+        day: defaultDay,
+        time: defaultTime,
+        notificationEnabled: true,
+        executionEnabled: true,
+      } as RoutineSchedule : {
         id: generateUniqueId(),
         day: defaultDay,
         time: defaultTime,
         enabled: true,
-      };
+      } as Reminder;
       
       // Check if default combination is already used
-      const isDefaultDuplicate = reminders.some(reminder => 
-        reminder.day === newReminder.day && reminder.time === newReminder.time
+      const isDefaultDuplicate = currentItems.some(item => 
+        item.day === newItem.day && item.time === newItem.time
       );
       
       if (!isDefaultDuplicate) {
-        return newReminder;
+        return newItem;
       }
       
       // If default is duplicate, try to find a unique time for the same day
-      const existingTimesForDay = reminders
-        .filter(reminder => reminder.day === defaultDay)
-        .map(reminder => reminder.time);
+      const existingTimesForDay = currentItems
+        .filter(item => item.day === defaultDay)
+        .map(item => item.time);
       
       // Try different times for the same day
       for (let hour = 7; hour <= 22; hour++) {
         for (let minute = 0; minute < 60; minute += 15) {
           const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
           if (!existingTimesForDay.includes(timeString)) {
-            return {
+            return isUsingSchedules ? {
+              id: generateUniqueId(),
+              day: defaultDay,
+              time: timeString,
+              notificationEnabled: true,
+              executionEnabled: true,
+            } as RoutineSchedule : {
               id: generateUniqueId(),
               day: defaultDay,
               time: timeString,
               enabled: true,
-            };
+            } as Reminder;
           }
         }
       }
@@ -169,59 +208,71 @@ export function RemindersSection({ reminders, onRemindersChange }: RemindersSect
         for (let hour = 7; hour <= 22; hour++) {
           for (let minute = 0; minute < 60; minute += 15) {
             const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-            const isDuplicate = reminders.some(reminder => 
-              reminder.day === dayOption.value && reminder.time === timeString
+            const isDuplicate = currentItems.some(item => 
+              item.day === dayOption.value && item.time === timeString
             );
             if (!isDuplicate) {
-              return {
+              return isUsingSchedules ? {
+                id: generateUniqueId(),
+                day: dayOption.value,
+                time: timeString,
+                notificationEnabled: true,
+                executionEnabled: true,
+              } as RoutineSchedule : {
                 id: generateUniqueId(),
                 day: dayOption.value,
                 time: timeString,
                 enabled: true,
-              };
+              } as Reminder;
             }
           }
         }
       }
       
       // Fallback: return default (shouldn't happen in normal usage)
-      return newReminder;
+      return newItem;
     };
     
-    const newReminder = findUniqueReminder();
+    const newItem = findUniqueReminder();
     
-    console.log('Adding new reminder:', newReminder);
-    console.log('Current reminders:', reminders);
-    onRemindersChange([...reminders, newReminder]);
+    console.log('Adding new item:', newItem);
+    console.log('Current items:', currentItems);
+    if (onChangeHandler) {
+      onChangeHandler([...currentItems, newItem] as any);
+    }
   };
 
-  const updateReminder = (updatedReminder: Reminder) => {
-    console.log('Updating reminder:', updatedReminder);
-    console.log('Current reminders before update:', reminders);
+  const updateReminder = (updatedItem: Reminder | RoutineSchedule) => {
+    console.log('Updating item:', updatedItem);
+    console.log('Current items before update:', currentItems);
     
-    // Check if updating would create a duplicate (excluding the current reminder being updated)
-    const isDuplicate = reminders.some(reminder => 
-      reminder.id !== updatedReminder.id && 
-      reminder.day === updatedReminder.day && 
-      reminder.time === updatedReminder.time
+    // Check if updating would create a duplicate (excluding the current item being updated)
+    const isDuplicate = currentItems.some(item => 
+      item.id !== updatedItem.id && 
+      item.day === updatedItem.day && 
+      item.time === updatedItem.time
     );
     
     if (isDuplicate) {
       toast({
-        title: "Recordatorio duplicado",
-        description: "Ya existe un recordatorio para este día y hora.",
+        title: "Horario duplicado",
+        description: "Ya existe un horario para este día y hora.",
         variant: "destructive",
       });
       return;
     }
     
-    const newReminders = reminders.map(r => r.id === updatedReminder.id ? updatedReminder : r);
-    console.log('New reminders after update:', newReminders);
-    onRemindersChange(newReminders);
+    const newItems = currentItems.map(item => item.id === updatedItem.id ? updatedItem : item);
+    console.log('New items after update:', newItems);
+    if (onChangeHandler) {
+      onChangeHandler(newItems as any);
+    }
   };
 
-  const removeReminder = (reminderId: string) => {
-    onRemindersChange(reminders.filter(r => r.id !== reminderId));
+  const removeReminder = (itemId: string) => {
+    if (onChangeHandler) {
+      onChangeHandler(currentItems.filter(item => item.id !== itemId) as any);
+    }
   };
 
   return (
@@ -236,28 +287,28 @@ export function RemindersSection({ reminders, onRemindersChange }: RemindersSect
           className="flex items-center gap-2"
         >
           <Plus className="h-4 w-4" />
-          Agregar recordatorio
+          Agregar horario
         </Button>
       </div>
       
-      {reminders.length === 0 ? (
+      {currentItems.length === 0 ? (
         <Card className="border-dashed border-2 border-muted-foreground/25">
           <CardContent className="p-6 text-center">
             <Calendar className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
             <p className="text-muted-foreground text-sm">
-              No hay recordatorios configurados
+              No hay horarios configurados
             </p>
             <p className="text-muted-foreground text-xs mt-1">
-              Agrega recordatorios para recibir notificaciones push
+              Agrega horarios para programar cuándo realizar esta rutina
             </p>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-3">
-          {reminders.map((reminder) => (
+          {currentItems.map((item) => (
             <ReminderCard
-              key={reminder.id}
-              reminder={reminder}
+              key={item.id}
+              reminder={item}
               onUpdate={updateReminder}
               onRemove={removeReminder}
             />
@@ -265,9 +316,9 @@ export function RemindersSection({ reminders, onRemindersChange }: RemindersSect
         </div>
       )}
       
-      {reminders.length > 0 && (
+      {currentItems.length > 0 && (
         <div className="text-xs text-muted-foreground">
-          💡 Puedes agregar múltiples recordatorios para diferentes días y horarios
+          💡 Puedes agregar múltiples horarios para diferentes días y horas
         </div>
       )}
     </div>

@@ -98,7 +98,7 @@ export function HistoryView() {
               <CardHeader>
                 <CardTitle className="flex justify-between items-center">
                   <span>
-                    Entrada del{' '}
+                    Agradecimientos del{' '}
                     {date ? format(date, "d 'de' MMMM, yyyy", { locale: es }) : '...'}{' '}
                     🙏✨️
                   </span>
@@ -178,7 +178,7 @@ export function HistoryView() {
               <CardHeader>
                 <CardTitle className="flex justify-between items-center">
                   <span>
-                    Hábitos del {date ? format(date, "d 'de' MMMM, yyyy", { locale: es }) : '...'}{' '}
+                    Hábitos cumplidos el {date ? format(date, "d 'de' MMMM, yyyy", { locale: es }) : '...'}{' '}
                     🎯
                   </span>
                   <div className="flex items-center gap-2">

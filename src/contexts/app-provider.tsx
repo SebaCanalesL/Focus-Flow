@@ -20,6 +20,7 @@ import {
   FieldValue
 } from 'firebase/firestore';
 import type { Habit, GratitudeEntry, Routine } from '@/lib/types';
+import { migrateRemindersToSchedules } from '@/lib/routine-migration';
 import { format, subDays, differenceInCalendarDays, parseISO, startOfWeek, endOfWeek, isWithinInterval, getWeek } from 'date-fns';
 import { dailyMotivation } from '@/ai/flows/daily-motivation-flow';
 import { ensureUserSeed } from '@/lib/onboard';
@@ -224,7 +225,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
             });
             
             console.log('Loaded routines from Firestore:', cleanedRoutines);
-            setRoutines(cleanedRoutines);
+            
+            // Apply migration from reminders to schedules
+            const migratedRoutines = migrateRemindersToSchedules(cleanedRoutines);
+            console.log('Migrated routines:', migratedRoutines);
+            
+            setRoutines(migratedRoutines);
         });
 
         const unsubscribeUser = onSnapshot(userDocRef, (doc) => {

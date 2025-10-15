@@ -6,11 +6,6 @@ import { HabitCardWithGrid } from './habit-card-with-grid';
 import {
   DndContext,
   closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
   DragEndEvent,
   DragStartEvent,
   DragOverlay,
@@ -18,7 +13,6 @@ import {
 import {
   arrayMove,
   SortableContext,
-  sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
@@ -27,7 +21,7 @@ import type { Habit } from '@/lib/types';
 import { doc, writeBatch } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { format } from 'date-fns';
-import { CheckCircle2 } from 'lucide-react';
+import { useDragSensors } from '@/hooks/use-drag-sensors';
 
 function SortableHabitItem({ habit, section = 'default' }: { habit: Habit; section?: string }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ 
@@ -53,18 +47,11 @@ export function HabitList() {
 
   const todayString = format(new Date(), 'yyyy-MM-dd');
 
-  const [pendingHabits, completedHabits] = useMemo(() => {
-    const sorted = [...appHabits].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    const pending = sorted.filter(h => !h.completedDates.includes(todayString));
-    const completed = sorted.filter(h => h.completedDates.includes(todayString));
-    return [pending, completed];
-  }, [appHabits, todayString]);
+  const sortedHabits = useMemo(() => {
+    return [...appHabits].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  }, [appHabits]);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(TouchSensor),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  );
+  const sensors = useDragSensors();
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -116,27 +103,12 @@ export function HabitList() {
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
-        <SortableContext items={pendingHabits.map((h) => h.id)} strategy={verticalListSortingStrategy}>
-          {pendingHabits.map((habit, index) => (
-            <SortableHabitItem key={`pending-${habit.id}-${index}`} habit={habit} section="pending" />
+        <SortableContext items={sortedHabits.map((h) => h.id)} strategy={verticalListSortingStrategy}>
+          {sortedHabits.map((habit, index) => (
+            <SortableHabitItem key={`habit-${habit.id}-${index}`} habit={habit} section="default" />
           ))}
         </SortableContext>
       </div>
-
-      {completedHabits.length > 0 && (
-        <div className="mt-8">
-            <h2 className="text-xl font-semibold tracking-tight flex items-center gap-2 mb-4">
-                <CheckCircle2 className="h-5 w-5 text-green-600"/>
-                Completados
-            </h2>
-            <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
-                {completedHabits
-                    .map((habit, index) => (
-                        <SortableHabitItem key={`completed-${habit.id}-${index}`} habit={habit} section="completed" />
-                ))}
-            </div>
-        </div>
-      )}
 
       <DragOverlay>
         {activeHabit ? <HabitCardWithGrid key={`drag-${activeHabit.id}`} habit={activeHabit} isDragging section="drag" /> : null}

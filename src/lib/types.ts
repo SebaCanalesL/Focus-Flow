@@ -49,6 +49,14 @@ export interface Reminder {
   enabled: boolean;
 }
 
+export interface RoutineSchedule {
+  id: string;
+  day: string; // 'L', 'M', 'X', 'J', 'V', 'S', 'D'
+  time: string; // 'HH:MM' format
+  notificationEnabled: boolean; // Para notificaciones push
+  executionEnabled: boolean; // Para indicar si se ejecutará en este día/hora
+}
+
 export interface Routine {
   id: string;
   title: string;
@@ -58,7 +66,8 @@ export interface Routine {
   stepIds?: string[];
   stepOrder?: string[]; // Orden de los pasos seleccionados
   customSteps?: CustomStep[];
-  reminders?: Reminder[];
+  reminders?: Reminder[]; // Mantener para compatibilidad con datos existentes
+  schedules?: RoutineSchedule[]; // Nueva estructura para días de ejecución y notificaciones
   frequency?: string;
   days?: string[];
   createdAt?: string;

@@ -17,7 +17,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Pencil, Plus, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Routine, CustomStep, Reminder } from "@/lib/types";
+import { Routine, CustomStep, Reminder, RoutineSchedule } from "@/lib/types";
 import { CustomStepDialog } from "./custom-step-dialog";
 import { RemindersSection } from "./reminders-section";
 import { routineTemplates } from "./routine-template-selector";
@@ -26,6 +26,7 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -298,6 +299,7 @@ function CreateRoutineDialog({
   const [stepOrder, setStepOrder] = useState<string[]>([]);
   const [customSteps, setCustomSteps] = useState<CustomStep[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [schedules, setSchedules] = useState<RoutineSchedule[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [editingStep, setEditingStep] = useState<CustomStep | null>(null);
 
@@ -316,12 +318,19 @@ function CreateRoutineDialog({
     }
   };
 
-  // Configurar sensores para drag and drop con long press
+  // Configurar sensores para drag and drop optimizado para móvil
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 8,
-        delay: 300, // 300ms de delay para long press
+        delay: 150, // Reducido a 150ms para mejor respuesta en móvil
+        tolerance: 5,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        distance: 8,
+        delay: 100, // Touch más rápido que pointer para móvil
         tolerance: 5,
       },
     }),
@@ -378,6 +387,7 @@ function CreateRoutineDialog({
         setCustomSteps(allCustomSteps);
         setSelectedStepIds(new Set(newSelectedIds));
         setReminders(routineToEdit.reminders || []);
+        setSchedules(routineToEdit.schedules || []);
         
         // ✅ FIX: Usar los nuevos IDs únicos para el stepOrder
         const newStepOrder = allCustomSteps.map(step => step.id);
@@ -403,6 +413,7 @@ function CreateRoutineDialog({
           setSelectedStepIds(new Set(templateCustomSteps.map(step => step.id)));
           setStepOrder(templateCustomSteps.map(step => step.id));
           setReminders([]);
+          setSchedules([]);
         }
       } else {
         // Modo creación: rutina personalizada vacía
@@ -412,6 +423,7 @@ function CreateRoutineDialog({
         setSelectedStepIds(new Set()); // Sin pasos seleccionados
         setStepOrder([]); // Sin orden de pasos
         setReminders([]);
+        setSchedules([]);
       }
       
       // ✅ FIX: Desenfocar cualquier input que pueda estar enfocado automáticamente
@@ -572,6 +584,7 @@ function CreateRoutineDialog({
       stepOrder: selectedStepOrder.length > 0 ? selectedStepOrder : Array.from(selectedStepIds), // ✅ Ensure stepOrder matches selectedStepIds
       customSteps: customSteps.length > 0 ? customSteps : undefined,
       reminders: reminders.length > 0 ? reminders : undefined,
+      schedules: schedules, // Always include schedules array, even if empty
     };
 
     console.log('🔍 DEBUG - Datos a guardar:', routineData);
@@ -873,8 +886,8 @@ function CreateRoutineDialog({
           {/* Recordatorios */}
           <div className="pt-6">
             <RemindersSection 
-              reminders={reminders} 
-              onRemindersChange={setReminders} 
+              schedules={schedules} 
+              onSchedulesChange={setSchedules} 
             />
           </div>
         </div>

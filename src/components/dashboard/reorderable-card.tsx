@@ -34,26 +34,32 @@ export function ReorderableCard({ id, children }: ReorderableCardProps) {
         "relative group",
         isDragging && "opacity-50 z-50 shadow-lg"
       )}
+      data-testid="reorderable-card"
     >
-      {/* Drag handle - positioned in bottom-left corner, avoiding card icons and buttons */}
+      {/* Drag handle - positioned in top-left corner, to the left of title icon */}
       <div
         className={cn(
-          "absolute bottom-2 left-2 z-10",
+          "absolute top-2 left-2 z-10",
           "opacity-90 hover:opacity-100 active:opacity-100 transition-opacity duration-200",
           "cursor-grab active:cursor-grabbing",
-          "p-2.5 rounded-lg hover:bg-muted/70 active:bg-muted/80",
+          "p-2 rounded-lg hover:bg-muted/70 active:bg-muted/80", // Reduced padding for top position
           "flex items-center justify-center",
           "border border-muted-foreground/40 hover:border-muted-foreground/60 active:border-primary/50",
           "bg-background/95 backdrop-blur-sm shadow-md",
           "touch-manipulation select-none", // Improves touch interaction on mobile
-          "min-w-[40px] min-h-[40px]", // Ensures adequate touch target size
-          "ring-0 hover:ring-2 hover:ring-primary/20 active:ring-2 active:ring-primary/30" // Visual feedback
+          "min-w-[36px] min-h-[36px]", // Slightly smaller for top position
+          "ring-0 hover:ring-2 hover:ring-primary/20 active:ring-2 active:ring-primary/30", // Visual feedback
+          "transition-all duration-200 ease-in-out", // Smooth transitions
+          "scale-100 hover:scale-105 active:scale-95" // Subtle scale feedback for mobile
         )}
         {...attributes}
         {...listeners}
         title="Arrastra para reordenar"
+        role="button"
+        aria-label="Arrastra para reordenar"
+        tabIndex={0}
       >
-        <GripVertical className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
+        <GripVertical className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
       </div>
       
       {/* Card content */}

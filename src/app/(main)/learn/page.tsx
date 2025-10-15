@@ -6,25 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
-import Image from 'next/image';
-import { CreateRoutineDialogNew as CreateRoutineDialog } from '@/components/routines/create-routine-dialog';
-import { Routine } from '@/lib/types';
-import { useAppData } from '@/contexts/app-provider';
-import { useRouter } from 'next/navigation';
-import { useToast } from '@/hooks/use-toast';
 
 const categories = ['Todos', 'Hábitos', 'Organización', 'TDAH', 'Ansiedad', 'Productividad'];
 
-const defaultRoutines: Routine[] = [
-  {
-    id: 'default-1',
-    title: 'Mañana Energizada',
-    category: 'Partir el día',
-    imageUrl: '/routines/routine-morning-energized.png',
-    description:
-      '🌞 Rutina de Mañana Energizada\n\n¿Te ha pasado que algunos días comienzan con claridad y energía ✨ y otros parecen arrastrarse desde el primer minuto 😩?\n\nLa diferencia, muchas veces, está en cómo decidimos vivir nuestras primeras horas del día.\n\n🌱 La ciencia detrás de una buena mañana\n\nLos hábitos que cultivas en la mañana impactan directamente en tu nivel de energía ⚡, en tu concentración 🎯 y en el ánimo 💛 que te acompaña todo el día.\n\nLo mejor es que no necesitas grandes cambios ni horas extras ⏱️. Con acciones simples y bien diseñadas puedes transformar tu mañana en un motor de bienestar.\n\n💡 ¿Por qué importa una rutina de mañana?\n\nAl despertar, tu cuerpo y tu mente están más receptivos 🌅. Es el momento en que:\n* Se regula tu reloj biológico 🕰️\n* Se activa tu metabolismo 🔥\n* Tu cerebro prepara el tono emocional 🎶 del día\n\nSi aprovechas esa ventana con pequeños hábitos saludables, mejoras tu vitalidad y tu capacidad de enfocarte en lo importante.\n\n🔑 Claves para una mañana energizada\n\n☀️ Luz natural: sincroniza tu cuerpo con el día y mejora tu ánimo\n\n💧 Hidratación: despierta tu metabolismo y tu mente\n\n🤸 Movimiento ligero: activa la circulación y multiplica tu energía\n\n🧘 Mindfulness: calma el estrés y aclara tu mente\n\n🥑 Desayuno balanceado: el mejor combustible para tu cuerpo\n\n📝 Objetivos claros: evitan la dispersión y aumentan tu productividad\n\n✨ El beneficio real\n\nNo se trata solo de sentirte más despierto, sino de crear un hábito que mejore tu vida día a día 🌟.\n\nCon el tiempo notarás que:\n* Estás más presente en tus mañanas 🌄\n* Tienes más control sobre tu tiempo ⏳\n* Tu energía se refleja en todo lo que haces 💪\n\nY lo mejor: esta rutina no es rígida. Es un marco flexible que puedes adaptar según tu estilo de vida.\n\n🚀 ¿Qué sigue?\n\nAhora que sabes la importancia de una mañana energizada, es momento de pasar a la acción.\n\nEn la siguiente pantalla encontrarás una propuesta de pasos simples y prácticos, basados en evidencia científica, que podrás personalizar y transformar en tu propia rutina diaria.\n\nPorque cada mañana es una nueva oportunidad para llenar tu vida de energía, propósito y vitalidad 🌞💛.',
-  },
-];
 
 const articles = [
   {
@@ -135,134 +119,20 @@ function ArticleCard({ article }: { article: typeof articles[0] }) {
   );
 }
 
-function RoutineCard({
-  routine,
-  onSave,
-}: {
-  routine: Routine;
-  onSave: (newRoutine: Partial<Routine>) => void;
-}) {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  const renderDescription = () => {
-    return (routine.description || '').split('\n\n').map((paragraph: string, pIndex: number) => (
-      <div key={pIndex} className="space-y-1">
-        {paragraph.split('\n').map((line: string, lIndex: number) => {
-          if (line.trim() === '') return null;
-          if (line.trim().startsWith('* ')) {
-            return (
-              <div key={lIndex} className="flex items-start pl-4">
-                <span className="mr-2 mt-1">∙</span>
-                <span>{line.trim().substring(2)}</span>
-              </div>
-            );
-          }
-          const isKey = /^[☀️💧🤸🧘🥑📝]/.test(line);
-          if (isKey && line.includes(':')) {
-            const parts = line.split(':');
-            const keyTitle = parts[0] + ':';
-            const keyDescription = parts.slice(1).join(':').trim();
-            return (
-              <p key={lIndex}>
-                <span className="font-bold text-primary">{keyTitle}</span>
-                <span className="text-muted-foreground">{` ${keyDescription}`}</span>
-              </p>
-            );
-          }
-          const isMainTitle = /^[🌞🌱💡🔑✨🚀]/.test(line);
-          if (isMainTitle) {
-            return (
-              <p key={lIndex} className="font-bold text-primary">
-                {line}
-              </p>
-            );
-          }
-          return <p key={lIndex}>{line}</p>;
-        })}
-      </div>
-    ));
-  };
-
-  return (
-    <Card className="overflow-hidden">
-      <div onClick={() => setIsExpanded(!isExpanded)} className="cursor-pointer">
-        <div className="relative w-full h-32">
-          <Image
-            src={routine.imageUrl}
-            alt={routine.title}
-            fill
-            className="object-contain"
-            priority
-          />
-        </div>
-      </div>
-      {isExpanded && (
-        <CardContent className="pt-4">
-          <div className="text-muted-foreground mb-4 space-y-4">
-            {renderDescription()}
-          </div>
-          <CreateRoutineDialog onSave={onSave}>
-            <Button className="w-full">+ Agregar a mi rutina</Button>
-          </CreateRoutineDialog>
-        </CardContent>
-      )}
-    </Card>
-  );
-}
 
 export default function LearnPage() {
-  const { addRoutine, updateRoutine } = useAppData();
-  const router = useRouter();
-  const { toast } = useToast();
   const [selectedCategory, setSelectedCategory] = useState('Todos');
 
   const filteredArticles = selectedCategory === 'Todos' 
     ? articles 
     : articles.filter(article => article.category === selectedCategory);
 
-  const handleSaveRoutine = async (newRoutine: Partial<Routine>) => {
-    try {
-      if (newRoutine.id) {
-        // Update existing routine
-        console.log('Updating routine:', newRoutine);
-        await updateRoutine(newRoutine.id, newRoutine);
-        console.log('Routine updated successfully');
-      } else {
-        // Create new routine
-        console.log('Creating new routine:', newRoutine);
-        // Remove id field if it exists to avoid Firestore error
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { id, ...routineDataWithoutId } = newRoutine;
-        await addRoutine(routineDataWithoutId as Omit<Routine, 'id' | 'createdAt' | 'updatedAt'>);
-        console.log('Routine created successfully');
-        
-        // Show success toast
-        toast({
-          title: "¡Rutina Creada!",
-          description: `La rutina "${routineDataWithoutId.title}" ha sido añadida a tu lista.`,
-        });
-        
-        // Navigate to routines page after successful creation
-        setTimeout(() => {
-          router.push('/routines');
-        }, 1000); // Small delay to show the toast
-      }
-    } catch (error) {
-      console.error('Error saving routine:', error);
-      toast({
-        title: "Error al crear la rutina",
-        description: "Hubo un problema al guardar tu rutina. Por favor, intenta de nuevo.",
-        variant: "destructive",
-      });
-    }
-  };
-
   return (
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold md:text-3xl mb-2">Aprender</h1>
         <p className="text-muted-foreground">
-          Artículos informativos y rutinas predeterminadas para mejorar tu bienestar
+          Artículos informativos para mejorar tu bienestar y productividad
         </p>
       </div>
 
@@ -293,22 +163,6 @@ export default function LearnPage() {
         </div>
       </div>
 
-      {/* Routines Section */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Rutinas Recomendadas</h2>
-        <p className="text-muted-foreground mb-4">
-          Rutinas predeterminadas basadas en evidencia científica que puedes personalizar
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {defaultRoutines.map((routine) => (
-            <RoutineCard
-              key={routine.id}
-              routine={routine}
-              onSave={handleSaveRoutine}
-            />
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

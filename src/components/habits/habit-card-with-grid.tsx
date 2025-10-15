@@ -72,14 +72,25 @@ export function HabitCardWithGrid({
 
   return (
     <Card
-      className={cn('flex flex-col transition-shadow', isDragging && 'shadow-2xl')}
+      className={cn(
+        'flex flex-col transition-shadow',
+        isDragging && 'shadow-2xl',
+        isCompletedToday && 'border-green-500 border-2'
+      )}
       style={style}
+      data-testid="habit-card"
     >
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-start gap-3">
-            <div {...listeners} className="touch-none cursor-grab py-2">
-              <GripVertical className="h-5 w-5 text-muted-foreground" />
+            <div 
+              {...listeners} 
+              className="touch-manipulation cursor-grab active:cursor-grabbing py-2 px-1 rounded-md hover:bg-muted/50 active:bg-muted/70 transition-colors duration-200 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              role="button"
+              aria-label="Arrastra para reordenar"
+              title="Arrastra para reordenar"
+            >
+              <GripVertical className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
             </div>
             <div className={'p-2 rounded-lg bg-primary/20'}>
               <Icon name={habit.icon as IconName} className="h-6 w-6 text-primary" />
