@@ -1,5 +1,5 @@
 import type { Habit, GratitudeEntry, Routine } from './types';
-import { subDays, formatISO, addDays, startOfWeek, endOfWeek, eachDayOfInterval, format } from 'date-fns';
+import { subDays, formatISO, addDays, endOfWeek, eachDayOfInterval } from 'date-fns';
 
 // Usuario de prueba para desarrollo
 export const DEV_USER = {
@@ -171,13 +171,15 @@ export const SEED_ROUTINES: Routine[] = [
     id: 'morning-routine',
     title: 'Rutina Matutina Energética',
     description: 'Una rutina completa para empezar el día con energía y propósito',
+    category: 'morning',
     imageUrl: '/routines/routine-morning-energized.png',
     stepIds: ['hydration', 'movement', 'mindfulness', 'planning'],
     customSteps: [
       {
         id: 'custom-1',
         title: 'Abrir las cortinas y respirar aire fresco',
-        description: 'Permite que la luz natural entre y oxigena tu espacio'
+        description: 'Permite que la luz natural entre y oxigena tu espacio',
+        isCustom: true
       }
     ],
     reminders: [
@@ -219,18 +221,21 @@ export const SEED_ROUTINES: Routine[] = [
     id: 'evening-routine',
     title: 'Rutina Nocturna Relajante',
     description: 'Una rutina para cerrar el día de manera tranquila y preparar el descanso',
+    category: 'evening',
     imageUrl: '/routines/routine-morning-energized.png',
     stepIds: ['gratitude', 'journaling', 'breathing'],
     customSteps: [
       {
         id: 'custom-2',
         title: 'Preparar la ropa del día siguiente',
-        description: 'Organiza todo lo que necesites para el próximo día'
+        description: 'Organiza todo lo que necesites para el próximo día',
+        isCustom: true
       },
       {
         id: 'custom-3',
         title: 'Aplicar crema hidratante',
-        description: 'Cuida tu piel antes de dormir'
+        description: 'Cuida tu piel antes de dormir',
+        isCustom: true
       }
     ],
     reminders: [
@@ -284,23 +289,27 @@ export const SEED_ROUTINES: Routine[] = [
     id: 'workout-routine',
     title: 'Rutina de Ejercicio',
     description: 'Una rutina completa de ejercicio para mantenerte en forma',
+    category: 'exercise',
     imageUrl: '/routines/routine-morning-energized.png',
     stepIds: ['hydration', 'movement'],
     customSteps: [
       {
         id: 'custom-4',
         title: 'Calentamiento de 5 minutos',
-        description: 'Prepara tu cuerpo con estiramientos suaves'
+        description: 'Prepara tu cuerpo con estiramientos suaves',
+        isCustom: true
       },
       {
         id: 'custom-5',
         title: 'Ejercicio principal (30 minutos)',
-        description: 'Realiza tu rutina de ejercicio preferida'
+        description: 'Realiza tu rutina de ejercicio preferida',
+        isCustom: true
       },
       {
         id: 'custom-6',
         title: 'Enfriamiento y estiramientos',
-        description: 'Relaja los músculos y previene lesiones'
+        description: 'Relaja los músculos y previene lesiones',
+        isCustom: true
       }
     ],
     reminders: [

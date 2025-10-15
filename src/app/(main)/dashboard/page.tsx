@@ -73,7 +73,7 @@ export default function Dashboard() {
     setIsReordering(true);
   };
 
-  const handleDragEnd = (event: any) => {
+  const handleDragEnd = (event: { active: { id: string }; over: { id: string } | null }) => {
     const { active, over } = event;
     setIsReordering(false);
 

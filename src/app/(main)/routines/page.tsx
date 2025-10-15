@@ -4,7 +4,7 @@ import { buttonVariants } from '@/components/ui/button';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import {
   CreateRoutineDialog,
@@ -14,7 +14,6 @@ import { RoutineTemplateSelector } from '@/components/routines/routine-template-
 import { PerformRoutineSheet } from '@/components/routines/perform-routine-sheet';
 import { Routine } from '@/lib/types';
 import { useAppData } from '@/contexts/app-provider';
-import { useRouter } from 'next/navigation';
 
 const filters = ['Mis rutinas'];
 
@@ -174,43 +173,9 @@ function RoutineCard({
   );
 }
 
-// Función para limpiar datos antes de enviar a Firestore
-function cleanRoutineData(data: any): any {
-  const cleaned = { ...data };
-  
-  // Eliminar el campo 'id' si existe
-  delete cleaned.id;
-  
-  // Recursivamente limpiar campos undefined
-  function cleanObject(obj: any): any {
-    if (obj === null || obj === undefined) {
-      return undefined;
-    }
-    
-    if (Array.isArray(obj)) {
-      return obj.map(cleanObject).filter(item => item !== undefined);
-    }
-    
-    if (typeof obj === 'object') {
-      const cleanedObj: any = {};
-      for (const [key, value] of Object.entries(obj)) {
-        const cleanedValue = cleanObject(value);
-        if (cleanedValue !== undefined) {
-          cleanedObj[key] = cleanedValue;
-        }
-      }
-      return Object.keys(cleanedObj).length > 0 ? cleanedObj : undefined;
-    }
-    
-    return obj;
-  }
-  
-  return cleanObject(cleaned);
-}
 
 export default function RoutinesPage() {
   const { user, routines, addRoutine, updateRoutine, deleteRoutine, loading } = useAppData();
-  const router = useRouter();
   const [selectedFilter, setSelectedFilter] = useState('Mis rutinas');
 
   const handleSaveRoutine = async (newRoutine: Partial<Routine>) => {
@@ -231,6 +196,7 @@ export default function RoutinesPage() {
         // Create new routine
         console.log('Creating new routine with data:', newRoutine);
         // Remove id field if it exists to avoid Firestore error
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { id, ...routineDataWithoutId } = newRoutine;
         await addRoutine(routineDataWithoutId as Omit<Routine, 'id' | 'createdAt' | 'updatedAt'>);
         console.log('Routine created successfully');
@@ -310,7 +276,7 @@ export default function RoutinesPage() {
               Aún no has creado ninguna rutina. ¡Crea una para empezar!
             </p>
             <p className="text-sm text-muted-foreground">
-              También puedes explorar rutinas recomendadas en la sección "Aprender"
+              También puedes explorar rutinas recomendadas en la sección &quot;Aprender&quot;
             </p>
           </div>
         )}

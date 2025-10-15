@@ -231,6 +231,7 @@ export default function LearnPage() {
         // Create new routine
         console.log('Creating new routine:', newRoutine);
         // Remove id field if it exists to avoid Firestore error
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { id, ...routineDataWithoutId } = newRoutine;
         await addRoutine(routineDataWithoutId as Omit<Routine, 'id' | 'createdAt' | 'updatedAt'>);
         console.log('Routine created successfully');

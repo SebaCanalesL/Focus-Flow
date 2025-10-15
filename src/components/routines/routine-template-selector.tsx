@@ -318,7 +318,7 @@ function RoutineTemplateSelector({
       {/* Create Routine Dialog with Template */}
       <CreateRoutineDialog 
         onSave={handleSaveFromTemplate}
-        templateId={selectedTemplate}
+        templateId={selectedTemplate || undefined}
         forceOpen={showCustomDialog}
       >
         <div style={{ display: 'none' }} />
@@ -327,4 +327,4 @@ function RoutineTemplateSelector({
   );
 }
 
-export { RoutineTemplateSelector, routineTemplates };
+export { RoutineTemplateSelector };

@@ -91,15 +91,11 @@ function SortablePredefinedStepCard({
   step,
   isSelected,
   onToggle,
-  onEdit,
-  onDelete,
   onEditStep,
 }: {
   step: typeof predefinedSteps[0];
   isSelected: boolean;
   onToggle: (stepId: string) => void;
-  onEdit: (step: CustomStep) => void;
-  onDelete?: (stepId: string) => void;
   onEditStep: (step: CustomStep) => void;
 }) {
   const {
@@ -184,15 +180,11 @@ function SortableCustomStepCard({
   step,
   isSelected,
   onToggle,
-  onEdit,
-  onDelete,
   onEditStep,
 }: {
   step: CustomStep;
   isSelected: boolean;
   onToggle: (stepId: string) => void;
-  onEdit: (step: CustomStep) => void;
-  onDelete?: (stepId: string) => void;
   onEditStep: (step: CustomStep) => void;
 }) {
   const {
@@ -389,7 +381,7 @@ function CreateRoutineDialog({
         }
       }, 100);
     }
-  }, [isDialogOpen, isEditMode, routineToEdit?.id, routineToEdit?.title, routineToEdit?.stepIds, routineToEdit?.stepOrder, routineToEdit?.customSteps, routineToEdit?.reminders, templateId]);
+  }, [isDialogOpen, isEditMode, routineToEdit, templateId]);
 
   // Asegurar que stepOrder siempre incluya todos los pasos disponibles
   useEffect(() => {
@@ -593,10 +585,6 @@ function CreateRoutineDialog({
     setEditingStep(null);
   };
 
-  // Manejar cancelación de edición
-  const handleCancelEdit = () => {
-    setEditingStep(null);
-  };
 
   // Guardar rutina
   const handleSave = () => {
@@ -1012,7 +1000,7 @@ function CreateRoutineDialog({
       
       {/* Diálogo de edición de pasos */}
       <CustomStepDialog
-        stepToEdit={editingStep}
+        stepToEdit={editingStep || undefined}
         onSave={handleSaveEdit}
         onDelete={(stepId) => {
           if (stepId.startsWith('custom-')) {
@@ -1032,4 +1020,3 @@ function CreateRoutineDialog({
 
 // Export both the function and with alias for compatibility
 export { CreateRoutineDialog, CreateRoutineDialog as CreateRoutineDialogNew };
-export { predefinedSteps };

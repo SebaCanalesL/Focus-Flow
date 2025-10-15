@@ -27,7 +27,7 @@ import { dayKey, toZoned } from '@/lib/dates';
 import { useFCM } from '@/hooks/use-fcm';
 
 // Utility function to recursively filter out undefined values from objects and arrays
-function filterUndefinedValues(obj: any): any {
+function filterUndefinedValues(obj: unknown): unknown {
   console.log('=== FILTERING UNDEFINED VALUES ===');
   console.log('Input:', obj);
   
@@ -190,7 +190,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 console.log('Original custom steps:', cleanedCustomSteps);
                 
                 // Remove content duplicates first, but keep the first occurrence with its original ID
-                const uniqueContent = cleanedCustomSteps.filter((step: any, index: number, self: any[]) => 
+                const uniqueContent = cleanedCustomSteps.filter((step: CustomStep, index: number, self: CustomStep[]) => 
                   index === self.findIndex(s => s.title === step.title)
                 );
                 
@@ -206,7 +206,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 console.log('Original reminders:', cleanedReminders);
                 
                 // Remove content duplicates first, but keep the first occurrence with its original ID
-                const uniqueContent = cleanedReminders.filter((reminder: any, index: number, self: any[]) => 
+                const uniqueContent = cleanedReminders.filter((reminder: Reminder, index: number, self: Reminder[]) => 
                   index === self.findIndex(r => r.day === reminder.day && r.time === reminder.time)
                 );
                 
