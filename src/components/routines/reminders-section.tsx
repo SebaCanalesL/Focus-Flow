@@ -36,7 +36,6 @@ interface ReminderCardProps {
 }
 
 function ReminderCard({ reminder, onUpdate, onRemove }: ReminderCardProps) {
-  const dayLabel = weekDays.find(d => d.value === reminder.day)?.label || reminder.day;
 
   return (
     <Card className="border-muted-foreground/20">
@@ -122,7 +121,7 @@ export function RemindersSection({ reminders, onRemindersChange }: RemindersSect
       const defaultTime = '08:00';
       
       // First try with default values
-      let newReminder: Reminder = {
+      const newReminder: Reminder = {
         id: `reminder-${Date.now()}`,
         day: defaultDay,
         time: defaultTime,

@@ -26,12 +26,12 @@ async function seedDevelopmentData() {
 
     // Conectar a emuladores
     if (!auth.emulatorConfig) {
-      connectAuthEmulator(auth, 'http://localhost:9099');
+      connectAuthEmulator(auth, 'http://localhost:9098');
     }
     
     // Conectar a Firestore emulator (verificar si ya está conectado)
     try {
-      connectFirestoreEmulator(firestore, 'localhost', 8080);
+      connectFirestoreEmulator(firestore, 'localhost', 8081);
     } catch (error) {
       // Ya está conectado, continuar
       console.log('ℹ️  Firestore emulator ya conectado');
@@ -87,12 +87,21 @@ async function seedDevelopmentData() {
       batch.set(entryRef, entry);
     });
 
+    // Cargar rutinas
+    console.log('🔄 Cargando rutinas...');
+    const routinesRef = collection(firestore, 'users', DEV_USER.uid, 'routines');
+    userData.routines.forEach(routine => {
+      const routineRef = doc(routinesRef, routine.id);
+      batch.set(routineRef, routine);
+    });
+
     // Ejecutar batch
     await batch.commit();
     
     console.log('✅ Datos cargados exitosamente!');
     console.log(`📊 ${userData.habits.length} hábitos cargados`);
     console.log(`🙏 ${userData.gratitudeEntries.length} entradas de gratitud cargadas`);
+    console.log(`🔄 ${userData.routines.length} rutinas cargadas`);
     
     console.log('\n🎉 ¡Datos de desarrollo listos!');
     console.log('📧 Email: dev@focusflow.com');

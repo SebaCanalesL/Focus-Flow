@@ -48,7 +48,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { CustomStepDialog, CustomStep, EditCustomStepButton, EditStepButton, EditableStep } from "./custom-step-dialog";
+import { CustomStepDialog, CustomStep, EditStepButton, EditableStep } from "./custom-step-dialog";
 import { RemindersSection } from "./reminders-section";
 import { Reminder } from "@/lib/types";
 
@@ -524,7 +524,7 @@ export function CreateRoutineDialog({
                   <AlertDialogHeader>
                     <AlertDialogTitle>¿Eliminar rutina?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Esta acción no se puede deshacer. Se eliminará permanentemente la rutina "{routineToEdit?.title}".
+                      Esta acción no se puede deshacer. Se eliminará permanentemente la rutina &quot;{routineToEdit?.title}&quot;.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>

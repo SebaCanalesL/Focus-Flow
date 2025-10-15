@@ -13,19 +13,9 @@ import {
 import { PerformRoutineSheet } from '@/components/routines/perform-routine-sheet';
 import { Routine } from '@/lib/types';
 import { useAppData } from '@/contexts/app-provider';
+import { useRouter } from 'next/navigation';
 
-const filters = ['Mis rutinas', 'Todas', 'Partir el día', 'Terminar el día'];
-
-const defaultRoutines: Routine[] = [
-  {
-    id: 'default-1',
-    title: 'Mañana Energizada',
-    category: 'Partir el día',
-    imageUrl: '/routines/routine-morning-energized.png',
-    description:
-      '🌞 Rutina de Mañana Energizada\n\n¿Te ha pasado que algunos días comienzan con claridad y energía ✨ y otros parecen arrastrarse desde el primer minuto 😩?\n\nLa diferencia, muchas veces, está en cómo decidimos vivir nuestras primeras horas del día.\n\n🌱 La ciencia detrás de una buena mañana\n\nLos hábitos que cultivas en la mañana impactan directamente en tu nivel de energía ⚡, en tu concentración 🎯 y en el ánimo 💛 que te acompaña todo el día.\n\nLo mejor es que no necesitas grandes cambios ni horas extras ⏱️. Con acciones simples y bien diseñadas puedes transformar tu mañana en un motor de bienestar.\n\n💡 ¿Por qué importa una rutina de mañana?\n\nAl despertar, tu cuerpo y tu mente están más receptivos 🌅. Es el momento en que:\n* Se regula tu reloj biológico 🕰️\n* Se activa tu metabolismo 🔥\n* Tu cerebro prepara el tono emocional 🎶 del día\n\nSi aprovechas esa ventana con pequeños hábitos saludables, mejoras tu vitalidad y tu capacidad de enfocarte en lo importante.\n\n🔑 Claves para una mañana energizada\n\n☀️ Luz natural: sincroniza tu cuerpo con el día y mejora tu ánimo\n\n💧 Hidratación: despierta tu metabolismo y tu mente\n\n🤸 Movimiento ligero: activa la circulación y multiplica tu energía\n\n🧘 Mindfulness: calma el estrés y aclara tu mente\n\n🥑 Desayuno balanceado: el mejor combustible para tu cuerpo\n\n📝 Objetivos claros: evitan la dispersión y aumentan tu productividad\n\n✨ El beneficio real\n\nNo se trata solo de sentirte más despierto, sino de crear un hábito que mejore tu vida día a día 🌟.\n\nCon el tiempo notarás que:\n* Estás más presente en tus mañanas 🌄\n* Tienes más control sobre tu tiempo ⏳\n* Tu energía se refleja en todo lo que haces 💪\n\nY lo mejor: esta rutina no es rígida. Es un marco flexible que puedes adaptar según tu estilo de vida.\n\n🚀 ¿Qué sigue?\n\nAhora que sabes la importancia de una mañana energizada, es momento de pasar a la acción.\n\nEn la siguiente pantalla encontrarás una propuesta de pasos simples y prácticos, basados en evidencia científica, que podrás personalizar y transformar en tu propia rutina diaria.\n\nPorque cada mañana es una nueva oportunidad para llenar tu vida de energía, propósito y vitalidad 🌞💛.',
-  },
-];
+const filters = ['Mis rutinas'];
 
 function RoutineCard({
   routine,
@@ -185,45 +175,9 @@ function RoutineCard({
 }
 
 export default function RoutinesPage() {
-  const { user } = useAppData();
-  const [selectedFilter, setSelectedFilter] = useState('Todas');
-  const [userRoutines, setUserRoutines] = useState<Routine[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Load user routines from API on component mount
-  useEffect(() => {
-    const loadUserRoutines = async () => {
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const token = await user.getIdToken();
-        const response = await fetch('/api/user/routines', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-        
-        if (response.ok) {
-          const routines = await response.json();
-          console.log('Loaded user routines:', routines);
-          setUserRoutines(routines);
-        } else {
-          console.error('Failed to load user routines');
-        }
-      } catch (error) {
-        console.error('Error loading user routines:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadUserRoutines();
-  }, [user]);
+  const { user, routines, addRoutine, updateRoutine, deleteRoutine, loading } = useAppData();
+  const router = useRouter();
+  const [selectedFilter, setSelectedFilter] = useState('Mis rutinas');
 
   const handleSaveRoutine = async (newRoutine: Partial<Routine>) => {
     if (!user) {
@@ -232,64 +186,24 @@ export default function RoutinesPage() {
     }
 
     try {
-      const token = await user.getIdToken();
-      
       if (newRoutine.id) {
         // Update existing routine
-        console.log('=== SAVING ROUTINE ===');
+        console.log('=== UPDATING ROUTINE ===');
         console.log('Routine ID:', newRoutine.id);
         console.log('Full routine data:', newRoutine);
-        console.log('Step IDs:', newRoutine.stepIds);
-        console.log('Custom Steps:', newRoutine.customSteps);
-        console.log('Reminders:', newRoutine.reminders);
-        
-        const response = await fetch('/api/user/routines', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify(newRoutine),
-        });
-
-        console.log('Response status:', response.status);
-        console.log('Response ok:', response.ok);
-
-        if (response.ok) {
-          const updatedRoutine = await response.json();
-          console.log('Routine updated successfully:', updatedRoutine);
-          setUserRoutines((prev) =>
-            prev.map((r) => (r.id === newRoutine.id ? updatedRoutine as Routine : r))
-          );
-          console.log('State updated in frontend');
-        } else {
-          const errorText = await response.text();
-          console.error('Failed to update routine:', response.status, errorText);
-        }
+        await updateRoutine(newRoutine.id, newRoutine);
+        console.log('Routine updated successfully');
       } else {
         // Create new routine
         console.log('Creating new routine with data:', newRoutine);
-        const response = await fetch('/api/user/routines', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify(newRoutine),
-        });
+        // Remove id field if it exists to avoid Firestore error
+        const { id, ...routineDataWithoutId } = newRoutine;
+        await addRoutine(routineDataWithoutId as Omit<Routine, 'id' | 'createdAt' | 'updatedAt'>);
+        console.log('Routine created successfully');
+        // Switch to "Mis rutinas" to show the newly created routine
+        setSelectedFilter('Mis rutinas');
         
-        console.log('Create routine response status:', response.status);
-        
-        if (response.ok) {
-          const createdRoutine = await response.json();
-          console.log('Routine created successfully:', createdRoutine);
-          setUserRoutines((prev) => [...prev, createdRoutine]);
-          // Switch to "Mis rutinas" to show the newly created routine
-          setSelectedFilter('Mis rutinas');
-        } else {
-          const errorText = await response.text();
-          console.error('Failed to create routine:', response.status, errorText);
-        }
+        // Note: No need to navigate since we're already on the routines page
       }
     } catch (error) {
       console.error('Error saving routine:', error);
@@ -303,40 +217,14 @@ export default function RoutinesPage() {
     }
 
     try {
-      const token = await user.getIdToken();
-      const response = await fetch(`/api/user/routines?id=${routineId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        setUserRoutines((prev) => prev.filter((r) => r.id !== routineId));
-        // If we're currently viewing the deleted routine's filter, switch to "Mis rutinas"
-        if (selectedFilter === 'Mis rutinas') {
-          setSelectedFilter('Mis rutinas');
-        }
-      } else {
-        console.error('Failed to delete routine');
-      }
+      await deleteRoutine(routineId);
+      console.log('Routine deleted successfully');
     } catch (error) {
       console.error('Error deleting routine:', error);
     }
   };
 
-  const routinesToShow = (() => {
-    if (selectedFilter === 'Mis rutinas') {
-      return userRoutines;
-    }
-    if (selectedFilter === 'Todas') {
-      return defaultRoutines;
-    }
-    return defaultRoutines.filter(
-      (routine) => routine.category === selectedFilter
-    );
-  })();
+  const routinesToShow = routines;
 
   return (
     <div className="flex flex-col gap-4">
@@ -368,7 +256,7 @@ export default function RoutinesPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-        {isLoading && selectedFilter === 'Mis rutinas' ? (
+        {loading ? (
           <p className="text-muted-foreground col-span-full text-center">
             Cargando rutinas...
           </p>
@@ -378,16 +266,19 @@ export default function RoutinesPage() {
               key={routine.id}
               routine={routine}
               onSave={handleSaveRoutine}
-              onDelete={selectedFilter === 'Mis rutinas' ? handleDeleteRoutine : undefined}
-              isUserRoutine={selectedFilter === 'Mis rutinas'}
+              onDelete={handleDeleteRoutine}
+              isUserRoutine={true}
             />
           ))
         ) : (
-          <p className="text-muted-foreground col-span-full text-center">
-            {selectedFilter === 'Mis rutinas'
-              ? "Aún no has creado ninguna rutina. ¡Crea una para empezar!"
-              : "No se encontraron rutinas para este filtro."}
-          </p>
+          <div className="col-span-full text-center space-y-4">
+            <p className="text-muted-foreground">
+              Aún no has creado ninguna rutina. ¡Crea una para empezar!
+            </p>
+            <p className="text-sm text-muted-foreground">
+              También puedes explorar rutinas recomendadas en la sección "Aprender"
+            </p>
+          </div>
         )}
       </div>
     </div>

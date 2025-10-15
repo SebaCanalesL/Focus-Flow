@@ -20,7 +20,6 @@ import { CustomCalendar } from '@/components/ui/custom-calendar';
 import { Button } from '../ui/button';
 import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { EditHabitDialog } from './edit-habit-dialog';
 
 type IconName = keyof typeof LucideIcons;

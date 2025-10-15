@@ -24,12 +24,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAppData } from "@/contexts/app-provider";
-import { WandSparkles, Bell, Clock } from "lucide-react";
+import { WandSparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import type { Habit } from "@/lib/types";
+import type { Habit, Reminder } from "@/lib/types";
 import { suggestHabitIcon } from "@/ai/flows/suggest-habit-icon-flow";
-import { Switch } from "../ui/switch";
 import { RemindersSection } from "../routines/reminders-section";
 
 const formSchema = z

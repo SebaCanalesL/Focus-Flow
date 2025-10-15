@@ -130,8 +130,8 @@ export function CustomStepDialog({
   useEffect(() => {
     if (isOpen) {
       if (isEditMode && stepToEdit) {
-        setTitle(stepToEdit.title);
-        setDescription(stepToEdit.description);
+        setTitle(stepToEdit.title || "");
+        setDescription(stepToEdit.description || "");
         setDuration(stepToEdit.duration || "");
       } else {
         setTitle("");
@@ -255,8 +255,8 @@ export function EditStepDialog({
   useEffect(() => {
     if (isOpen) {
       if (isEditMode && stepToEdit) {
-        setTitle(stepToEdit.title);
-        setDescription(stepToEdit.description);
+        setTitle(stepToEdit.title || "");
+        setDescription(stepToEdit.description || "");
         setDuration(isCustomStep ? (stepToEdit as CustomStep).duration || "" : "");
       } else {
         setTitle("");

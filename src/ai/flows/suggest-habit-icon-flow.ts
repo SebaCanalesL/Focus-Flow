@@ -49,7 +49,20 @@ const VALID_ICONS = [
 ];
 
 export async function suggestHabitIcon(input: SuggestHabitIconInput): Promise<SuggestHabitIconOutput> {
-  return suggestHabitIconFlow(input);
+  // Check if AI is available (has API key)
+  const hasApiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  
+  if (!hasApiKey) {
+    console.warn('AI not available - returning default icon');
+    return { iconName: 'Target' };
+  }
+  
+  try {
+    return await suggestHabitIconFlow(input);
+  } catch (error) {
+    console.warn('AI icon suggestion failed, using default:', error);
+    return { iconName: 'Target' };
+  }
 }
 
 const prompt = ai.definePrompt({

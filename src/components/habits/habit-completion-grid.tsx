@@ -12,7 +12,8 @@ import {
   startOfDay,
   startOfMonth,
   startOfWeek,
-  subDays
+  subDays,
+  getDay
 } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -111,85 +112,77 @@ const HabitCompletionGrid = ({ habit, section = 'default' }: { habit: Habit; sec
             );
           })}
         </div>
-        {/* Continuous grid */}
+        {/* Continuous grid with proper day alignment */}
         <div className="grid grid-flow-col grid-rows-7 gap-[var(--dot-gap)]">
           {allDays.map((day, dayIndex) => {
             const dayString = format(day, 'yyyy-MM-dd');
             const isCompleted = completedDatesSet.has(dayString);
-            const isFuture = day > today;
-            const isPast = isBefore(day, today);
             const isBeforeCreation = isBefore(day, habitCreationDate);
+            const isPast = isBefore(day, today);
 
-            let dayBgClass = 'bg-transparent';
-
-            // Only show days from habit creation date onwards
+            // Solo mostrar días desde la fecha de creación del hábito
             if (isBeforeCreation) {
-                dayBgClass = 'bg-transparent';
-            } else if (isFuture) {
-                dayBgClass = 'bg-muted/50';
-            } else if (isCompleted) {
-                dayBgClass = 'bg-green-500'; // Green for completed
-            } else if (isPast) {
-                if (isWeekly) {
-                    const weekStart = startOfWeek(day, { weekStartsOn: 1 });
-                    const weekEnd = endOfWeek(day, { weekStartsOn: 1 });
-                    const daysInWeek = eachDayOfInterval({ start: weekStart, end: weekEnd });
-                    
-                    const completionsInWeek = daysInWeek.reduce((count, weekDay) => {
-                        return completedDatesSet.has(format(weekDay, 'yyyy-MM-dd')) ? count + 1 : count;
-                    }, 0);
-
-                    const daysLeft = differenceInDays(weekEnd, day) + 1;
-                    const completionsStillNeeded = (daysPerWeek || 1) - completionsInWeek;
-
-                    // Solo el último día posible debe ser rojo (donde se rompe la racha)
-                    if (completionsStillNeeded === daysLeft && daysLeft === 1) {
-                        dayBgClass = 'bg-red-500'; // Último día - rompe la racha si no se completa
-                    } else if (completionsStillNeeded > daysLeft) {
-                        dayBgClass = 'bg-transparent'; // Ya se rompió la racha - sin color
-                    } else {
-                        dayBgClass = 'bg-yellow-500'; // No rompe la racha - aún alcanzable
-                    }
-                } else {
-                    const previousDay = subDays(day, 1);
-                    if (completedDatesSet.has(format(previousDay, 'yyyy-MM-dd')) && !isBefore(previousDay, habitCreationDate)) {
-                        dayBgClass = 'bg-red-500'; // Red for broken daily streaks
-                    } else {
-                        dayBgClass = 'bg-yellow-500'; // Yellow for other missed days
-                    }
-                }
-            } else {
-                // Día actual (hoy) no completado
-                if (isWeekly) {
-                    const weekStart = startOfWeek(day, { weekStartsOn: 1 });
-                    const weekEnd = endOfWeek(day, { weekStartsOn: 1 });
-                    const daysInWeek = eachDayOfInterval({ start: weekStart, end: weekEnd });
-                    
-                    const completionsInWeek = daysInWeek.reduce((count, weekDay) => {
-                        return completedDatesSet.has(format(weekDay, 'yyyy-MM-dd')) ? count + 1 : count;
-                    }, 0);
-
-                    const daysLeft = differenceInDays(weekEnd, day) + 1;
-                    const completionsStillNeeded = (daysPerWeek || 1) - completionsInWeek;
-
-                    // Solo el último día posible debe ser rojo (donde se rompe la racha)
-                    if (completionsStillNeeded === daysLeft && daysLeft === 1) {
-                        dayBgClass = 'bg-red-500'; // Último día - urgencia: rompe la racha si no completa hoy
-                    } else if (completionsStillNeeded > daysLeft) {
-                        dayBgClass = 'bg-transparent'; // Ya se rompió la racha - sin color
-                    } else {
-                        dayBgClass = 'bg-yellow-500'; // No rompe la racha - aún alcanzable
-                    }
-                } else {
-                    dayBgClass = 'bg-muted/50'; // Hábito diario - hoy no completado
-                }
+              return null;
             }
+
+            let dayBgClass = 'bg-gray-200/30'; // Color por defecto: suave
+
+            // Si está completado, verde
+            if (isCompleted) {
+              dayBgClass = 'bg-green-500';
+            } else if (isPast) {
+              // Día pasado no completado - verificar si rompe la racha
+              if (isWeekly) {
+                // Lógica para hábitos semanales
+                const weekStart = startOfWeek(day, { weekStartsOn: 1 });
+                const weekEnd = endOfWeek(day, { weekStartsOn: 1 });
+                const daysInWeek = eachDayOfInterval({ start: weekStart, end: weekEnd });
+                
+                const completionsInWeek = daysInWeek.reduce((count, weekDay) => {
+                  return completedDatesSet.has(format(weekDay, 'yyyy-MM-dd')) ? count + 1 : count;
+                }, 0);
+
+                const daysLeft = differenceInDays(weekEnd, day) + 1;
+                const completionsStillNeeded = (daysPerWeek || 1) - completionsInWeek;
+
+                // Si es el último día posible para cumplir la meta semanal
+                if (completionsStillNeeded === daysLeft) {
+                  dayBgClass = 'bg-red-500'; // Último día posible - si no se completa aquí, rompe la racha
+                }
+              } else {
+                // Lógica para hábitos diarios
+                const previousDay = subDays(day, 1);
+                const previousDayString = format(previousDay, 'yyyy-MM-dd');
+                
+                // Si el día anterior estaba completado (tenía racha) y este día no se completó
+                if (completedDatesSet.has(previousDayString) && !isBefore(previousDay, habitCreationDate)) {
+                  dayBgClass = 'bg-red-500'; // Rompe la racha diaria
+                }
+              }
+            }
+
+            // Calculate the correct grid position based on day of week
+            // getDay() returns 0=Sunday, 1=Monday, ..., 6=Saturday
+            // We want Monday=0, Tuesday=1, ..., Sunday=6 to match our weekDays array
+            const dayOfWeek = getDay(day);
+            const adjustedDayOfWeek = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Convert Sunday=0 to Sunday=6, others shift down by 1
+
+            // Calculate which week column this day belongs to
+            // We need to find how many weeks have passed since the start of the week when the habit was created
+            const habitWeekStart = startOfWeek(habitCreationDate, { weekStartsOn: 1 });
+            const dayWeekStart = startOfWeek(day, { weekStartsOn: 1 });
+            const weeksSinceHabitCreation = Math.floor(differenceInDays(dayWeekStart, habitWeekStart) / 7);
+            const weekColumn = weeksSinceHabitCreation + 1;
 
             return (
               <div
                 key={`${habit.id}-${section}-day-${dayIndex}-${dayString}`}
                 className={cn('w-[var(--dot-size)] h-[var(--dot-size)] rounded-[3px]', dayBgClass)}
-                title={dayString}
+                title={`${dayString} (${weekDays[adjustedDayOfWeek]})`}
+                style={{
+                  gridRow: adjustedDayOfWeek + 1,
+                  gridColumn: weekColumn
+                }}
               />
             );
           })}

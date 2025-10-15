@@ -19,7 +19,7 @@ import {
   serverTimestamp,
   FieldValue
 } from 'firebase/firestore';
-import type { Habit, GratitudeEntry } from '@/lib/types';
+import type { Habit, GratitudeEntry, Routine } from '@/lib/types';
 import { format, subDays, differenceInCalendarDays, parseISO, startOfWeek, endOfWeek, isWithinInterval, getWeek } from 'date-fns';
 import { dailyMotivation } from '@/ai/flows/daily-motivation-flow';
 import { ensureUserSeed } from '@/lib/onboard';
@@ -34,6 +34,8 @@ interface AppContextType {
   habits: Habit[];
   setHabits: React.Dispatch<React.SetStateAction<Habit[]>>;
   gratitudeEntries: GratitudeEntry[];
+  routines: Routine[];
+  setRoutines: React.Dispatch<React.SetStateAction<Routine[]>>;
   addHabit: (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates' | 'order'>) => Promise<void>;
   updateHabit: (habitId: string, habitData: { [key: string]: string | number | boolean | string[] | FieldValue }) => void;
   deleteHabit: (habitId: string) => void;
@@ -42,6 +44,10 @@ interface AppContextType {
   getStreak: (habit: Habit) => number;
   addGratitudeEntry: (content: string, date: Date, note?: string) => void;
   getGratitudeEntry: (date: Date) => GratitudeEntry | undefined;
+  addRoutine: (routineData: Omit<Routine, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateRoutine: (routineId: string, routineData: Partial<Routine>) => void;
+  deleteRoutine: (routineId: string) => void;
+  getRoutineById: (routineId: string) => Routine | undefined;
   isClient: boolean;
   getWeekCompletion: (habit: Habit) => { completed: number; total: number };
   todaysMotivation: string | null;
@@ -65,11 +71,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isClient, setIsClient] = useState(false);
   const [habits, setHabits] = useState<Habit[]>([]);
   const [gratitudeEntries, setGratitudeEntries] = useState<GratitudeEntry[]>([]);
+  const [routines, setRoutines] = useState<Routine[]>([]);
   const [motivationalMessage, setMotivationalMessage] = useState<MotivationalMessage | null>(null);
   const [birthday, setBirthdayState] = useState<string | null>(null);
   
   // Initialize FCM
-  const { token: fcmToken, isSupported: fcmSupported } = useFCM();
+  const { token: fcmToken } = useFCM();
 
   const getTodaysMotivation = useCallback(async (userName: string) => {
     const todayStr = format(new Date(), 'yyyy-MM-dd');
@@ -93,6 +100,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!user) {
         setHabits([]);
         setGratitudeEntries([]);
+        setRoutines([]);
         setMotivationalMessage(null);
         setBirthdayState(null);
       }
@@ -115,6 +123,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
         const habitsQuery = query(collection(db, `users/${user.uid}/habits`), orderBy("order", "asc"));
         const gratitudeQuery = query(collection(db, `users/${user.uid}/gratitudeEntries`), orderBy("createdAt", "desc"));
+        const routinesQuery = query(collection(db, `users/${user.uid}/routines`), orderBy("createdAt", "desc"));
         const userDocRef = doc(db, `users/${user.uid}`);
 
         const unsubscribeHabits = onSnapshot(habitsQuery, (snapshot) => {
@@ -125,6 +134,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const unsubscribeGratitude = onSnapshot(gratitudeQuery, (snapshot) => {
             const serverEntries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as GratitudeEntry));
             setGratitudeEntries(serverEntries);
+        });
+
+        const unsubscribeRoutines = onSnapshot(routinesQuery, (snapshot) => {
+            const serverRoutines = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Routine));
+            setRoutines(serverRoutines);
         });
 
         const unsubscribeUser = onSnapshot(userDocRef, (doc) => {
@@ -146,6 +160,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return () => {
             unsubscribeHabits();
             unsubscribeGratitude();
+            unsubscribeRoutines();
             unsubscribeUser();
         };
     }
@@ -266,7 +281,39 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!user || !user.uid) return;
     const habitDocRef = doc(db, `users/${user.uid}/habits`, habitId);
     await deleteDoc(habitDocRef);
-  }
+  };
+
+  const addRoutine = async (routineData: Omit<Routine, 'id' | 'createdAt' | 'updatedAt'>) => {
+    if (!user || !user.uid) return;
+    const routinesCollectionRef = collection(db, `users/${user.uid}/routines`);
+    
+    const newRoutine = {
+      ...routineData,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    await addDoc(routinesCollectionRef, newRoutine);
+  };
+
+  const updateRoutine = async (routineId: string, routineData: Partial<Routine>) => {
+    if (!user || !user.uid) return;
+    const routineDocRef = doc(db, `users/${user.uid}/routines`, routineId);
+    const updateData = {
+      ...routineData,
+      updatedAt: new Date().toISOString(),
+    };
+    await updateDoc(routineDocRef, updateData);
+  };
+  
+  const deleteRoutine = async (routineId: string) => {
+    if (!user || !user.uid) return;
+    const routineDocRef = doc(db, `users/${user.uid}/routines`, routineId);
+    await deleteDoc(routineDocRef);
+  };
+
+  const getRoutineById = (routineId: string) => {
+    return routines.find(r => r.id === routineId);
+  };
 
   const toggleHabitCompletion = async (habitId: string, date: Date) => {
     if (!user || !user.uid || habitId === 'gratitude-habit') return;
@@ -466,6 +513,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     habits,
     setHabits,
     gratitudeEntries,
+    routines,
+    setRoutines,
     addHabit,
     updateHabit,
     deleteHabit,
@@ -474,6 +523,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     getStreak,
     addGratitudeEntry,
     getGratitudeEntry,
+    addRoutine,
+    updateRoutine,
+    deleteRoutine,
+    getRoutineById,
     isClient,
     getWeekCompletion,
     todaysMotivation: motivationalMessage?.quote || null,

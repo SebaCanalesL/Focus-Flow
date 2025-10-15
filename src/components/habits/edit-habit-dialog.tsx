@@ -39,8 +39,6 @@ import { useAppData } from '@/contexts/app-provider';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { Habit } from '@/lib/types';
-import { Switch } from '../ui/switch';
-import { Bell, Clock } from 'lucide-react';
 import { deleteField, FieldValue } from 'firebase/firestore';
 import { RemindersSection } from '../routines/reminders-section';
 import type { Reminder } from '@/lib/types';
@@ -111,7 +109,7 @@ export function EditHabitDialog({ habit, children }: { habit: Habit; children: R
   }, [frequency, daysPerWeek, form]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const updateData: { [key: string]: string | number | boolean | FieldValue | Reminder[] } = {
+    const updateData: { [key: string]: string | number | boolean | string[] | FieldValue } = {
       name: values.name,
       frequency: values.frequency,
     };
@@ -124,7 +122,7 @@ export function EditHabitDialog({ habit, children }: { habit: Habit; children: R
 
     // Handle reminders
     if (reminders.length > 0) {
-      updateData.reminders = reminders;
+      updateData.reminders = reminders as unknown as string[];
     } else {
       updateData.reminders = deleteField();
     }

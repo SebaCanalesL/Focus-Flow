@@ -10,13 +10,14 @@ try {
       console.log('Initializing Firebase Admin with emulator');
       
       // Set emulator environment variables before initializing
-      process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
-      process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
+      process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8081';
+      process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9098';
       
       admin.initializeApp({
         projectId: 'studio-808864941-b51ba',
         // For emulator, we need to disable token verification or use a mock credential
         credential: admin.credential.applicationDefault(),
+        databaseURL: 'https://studio-808864941-b51ba.firebaseio.com',
       });
       
       console.log('Firebase Admin initialized with emulator');

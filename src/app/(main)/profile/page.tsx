@@ -29,7 +29,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Calendar } from '@/components/ui/calendar'
+import { BirthdayCalendar } from '@/components/ui/birthday-calendar'
 import { sendPasswordResetEmail, updateProfile, deleteUser, AuthError } from "firebase/auth"
 import { auth, db } from "@/lib/firebase"
 import { doc, updateDoc } from 'firebase/firestore'
@@ -293,14 +293,9 @@ export default function ProfilePage() {
                         </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0">
-                            <Calendar
-                                mode="single"
+                            <BirthdayCalendar
                                 selected={birthdayDate}
                                 onSelect={(date) => handleBirthdaySave(date)}
-                                captionLayout="dropdown"
-                                fromYear={1920}
-                                toYear={new Date().getFullYear()}
-                                initialFocus
                             />
                         </PopoverContent>
                   </Popover>
