@@ -15,6 +15,13 @@ import { Textarea } from "@/components/ui/textarea";
 import React, { useState, useEffect } from "react";
 import { Pencil } from "lucide-react";
 
+// Function to generate unique IDs
+function generateUniqueId(): string {
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substr(2, 9);
+  return `custom-${timestamp}-${random}`;
+}
+
 // Function to assign appropriate emoji based on step title
 function assignEmojiToTitle(title: string): string {
   const lowerTitle = title.toLowerCase();
@@ -147,7 +154,7 @@ export function CustomStepDialog({
     }
 
     const customStep: CustomStep = {
-      id: isEditMode ? stepToEdit!.id : `custom-${Date.now()}`,
+      id: isEditMode ? stepToEdit!.id : generateUniqueId(),
       title: assignEmojiToTitle(title.trim()),
       description: description.trim() || undefined,
       duration: duration.trim() || undefined,
@@ -171,7 +178,11 @@ export function CustomStepDialog({
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        {children || (
+        {children ? (
+          <div onClick={(e) => e.stopPropagation()}>
+            {children}
+          </div>
+        ) : (
           <Button variant="outline" className="w-full">
             {triggerText}
           </Button>
@@ -284,7 +295,7 @@ export function EditStepDialog({
     } else {
       // Editing a predefined step - convert to custom step
       const customStep: CustomStep = {
-        id: stepToEdit!.id,
+        id: generateUniqueId(), // Generate new ID when converting predefined to custom
         title: assignEmojiToTitle(title.trim()),
         description: description.trim() || undefined,
         duration: duration.trim() || undefined,
@@ -309,7 +320,11 @@ export function EditStepDialog({
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        {children || (
+        {children ? (
+          <div onClick={(e) => e.stopPropagation()}>
+            {children}
+          </div>
+        ) : (
           <Button variant="outline" className="w-full">
             Editar paso
           </Button>
@@ -398,7 +413,17 @@ export function EditStepButton({
 }) {
   return (
     <EditStepDialog stepToEdit={step} onSave={onSave}>
-      <Button variant="ghost" size="icon" className="h-8 w-8">
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        className="h-8 w-8"
+        onMouseDown={(e) => {
+          e.stopPropagation(); // Prevent drag activation
+        }}
+        onClick={(e) => {
+          e.stopPropagation(); // Prevent triggering the card's onClick
+        }}
+      >
         <Pencil className="h-4 w-4" />
       </Button>
     </EditStepDialog>

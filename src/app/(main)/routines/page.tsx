@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import {
   CreateRoutineDialog,
-  routineSteps,
+  predefinedSteps as routineSteps,
 } from '@/components/routines/create-routine-dialog';
 import { PerformRoutineSheet } from '@/components/routines/perform-routine-sheet';
 import { Routine } from '@/lib/types';
@@ -34,28 +34,27 @@ function RoutineCard({
     if (isUserRoutine) {
       const allSteps: Array<{ id: string; title: string }> = [];
       
-      // Add predefined steps
-      if (routine.stepIds) {
-        routine.stepIds.forEach((stepId: string) => {
-          const predefinedStep = routineSteps.find((s) => s.id === stepId);
-          if (predefinedStep) {
-            allSteps.push({
-              id: predefinedStep.id,
-              title: predefinedStep.title.split(' (')[0]
-            });
-          }
-        });
-      }
+      // Usar stepOrder si está disponible, sino usar stepIds
+      const stepOrder = routine.stepOrder || routine.stepIds || [];
       
-      // Add custom steps
-      if (routine.customSteps) {
-        routine.customSteps.forEach((customStep) => {
+      // ✅ CORRECCIÓN: Solo mostrar pasos SELECCIONADOS en el orden correcto
+      const selectedSteps = stepOrder.filter(stepId => 
+        routine.stepIds?.includes(stepId)
+      );
+      
+      selectedSteps.forEach((stepId: string) => {
+        // Buscar paso (predefinido o personalizado)
+        const predefinedStep = routineSteps.find((s) => s.id === stepId);
+        const customStep = routine.customSteps?.find((cs) => cs.id === stepId);
+        
+        const step = predefinedStep || customStep;
+        if (step) {
           allSteps.push({
-            id: customStep.id,
-            title: customStep.title
+            id: step.id,
+            title: step.title.split(' (')[0] // Remover duración si existe
           });
-        });
-      }
+        }
+      });
 
       // Get active reminders
       const activeReminders = routine.reminders?.filter(r => r.enabled) || [];

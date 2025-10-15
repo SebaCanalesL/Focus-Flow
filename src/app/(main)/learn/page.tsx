@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import Image from 'next/image';
-import { CreateRoutineDialog } from '@/components/routines/create-routine-dialog';
+import { CreateRoutineDialogNew as CreateRoutineDialog } from '@/components/routines/create-routine-dialog';
 import { Routine } from '@/lib/types';
 import { useAppData } from '@/contexts/app-provider';
 import { useRouter } from 'next/navigation';

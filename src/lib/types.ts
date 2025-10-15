@@ -56,6 +56,7 @@ export interface Routine {
   imageUrl: string;
   description?: string;
   stepIds?: string[];
+  stepOrder?: string[]; // Orden de los pasos seleccionados
   customSteps?: CustomStep[];
   reminders?: Reminder[];
   frequency?: string;
