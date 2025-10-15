@@ -35,7 +35,6 @@ export const CustomCalendar = ({
   className,
   highlightedDates = [],
   highlightColor = '#3b82f6',
-  mode = 'multiple',
   fullWidth = false
 }: CustomCalendarProps) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());

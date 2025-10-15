@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/sheet";
 import { Progress } from "@/components/ui/progress";
 import React, { useState, useMemo } from "react";
-import { routineSteps } from "./create-routine-dialog";
+import { predefinedSteps as routineSteps } from "./create-routine-dialog";
 import { Routine, CustomStep } from "@/lib/types";
 
 export function PerformRoutineSheet({
@@ -28,22 +28,23 @@ export function PerformRoutineSheet({
   const stepsInRoutine = useMemo(() => {
     const allSteps: Array<typeof routineSteps[0] | CustomStep> = [];
     
-    // Add predefined steps
-    if (routine.stepIds) {
-      routine.stepIds.forEach((stepId: string) => {
-        const predefinedStep = routineSteps.find((s) => s.id === stepId);
-        if (predefinedStep) {
-          allSteps.push(predefinedStep);
-        }
-      });
-    }
+    // Usar stepOrder si está disponible, sino usar stepIds
+    const stepOrder = routine.stepOrder || routine.stepIds || [];
     
-    // Add custom steps
-    if (routine.customSteps) {
-      routine.customSteps.forEach((customStep: CustomStep) => {
-        allSteps.push(customStep);
-      });
-    }
+    // ✅ CORRECCIÓN: Solo incluir pasos SELECCIONADOS
+    const selectedSteps = stepOrder.filter(stepId => 
+      routine.stepIds?.includes(stepId)
+    );
+    
+    selectedSteps.forEach((stepId: string) => {
+      const predefinedStep = routineSteps.find((s) => s.id === stepId);
+      const customStep = routine.customSteps?.find((cs) => cs.id === stepId);
+      
+      const step = predefinedStep || customStep;
+      if (step) {
+        allSteps.push(step);
+      }
+    });
     
     return allSteps;
   }, [routine]);

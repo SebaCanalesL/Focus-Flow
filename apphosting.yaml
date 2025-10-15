@@ -55,7 +55,7 @@ env:
   
   # Firebase VAPID Key for Push Notifications
   - variable: NEXT_PUBLIC_FIREBASE_VAPID_KEY
-    value: your_vapid_key_here
+    value: BKvzjRLMmoD_Kv_FWlkxBRuWkByZZs9hv6tFfCSKTHfv0D1EFFhhpi8rXC9sr4IN-Jo3_PSQKO9hGMb_CMVcGm4
     availability:
       - BUILD
       - RUNTIME

@@ -10,6 +10,13 @@ import { Reminder } from "@/lib/types";
 import { Plus, Trash2, Clock, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+// Function to generate unique IDs
+function generateUniqueId(): string {
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substr(2, 9);
+  return `reminder-${timestamp}-${random}`;
+}
+
 const weekDays = [
   { value: 'L', label: 'Lunes' },
   { value: 'M', label: 'Martes' },
@@ -36,7 +43,6 @@ interface ReminderCardProps {
 }
 
 function ReminderCard({ reminder, onUpdate, onRemove }: ReminderCardProps) {
-  const dayLabel = weekDays.find(d => d.value === reminder.day)?.label || reminder.day;
 
   return (
     <Card className="border-muted-foreground/20">
@@ -122,8 +128,8 @@ export function RemindersSection({ reminders, onRemindersChange }: RemindersSect
       const defaultTime = '08:00';
       
       // First try with default values
-      let newReminder: Reminder = {
-        id: `reminder-${Date.now()}`,
+      const newReminder: Reminder = {
+        id: generateUniqueId(),
         day: defaultDay,
         time: defaultTime,
         enabled: true,
@@ -149,7 +155,7 @@ export function RemindersSection({ reminders, onRemindersChange }: RemindersSect
           const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
           if (!existingTimesForDay.includes(timeString)) {
             return {
-              id: `reminder-${Date.now()}`,
+              id: generateUniqueId(),
               day: defaultDay,
               time: timeString,
               enabled: true,
@@ -168,7 +174,7 @@ export function RemindersSection({ reminders, onRemindersChange }: RemindersSect
             );
             if (!isDuplicate) {
               return {
-                id: `reminder-${Date.now()}`,
+                id: generateUniqueId(),
                 day: dayOption.value,
                 time: timeString,
                 enabled: true,

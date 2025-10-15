@@ -19,13 +19,54 @@ import {
   serverTimestamp,
   FieldValue
 } from 'firebase/firestore';
-import type { Habit, GratitudeEntry } from '@/lib/types';
+import type { Habit, GratitudeEntry, Routine } from '@/lib/types';
 import { format, subDays, differenceInCalendarDays, parseISO, startOfWeek, endOfWeek, isWithinInterval, getWeek } from 'date-fns';
 import { dailyMotivation } from '@/ai/flows/daily-motivation-flow';
 import { ensureUserSeed } from '@/lib/onboard';
 import { dayKey, toZoned } from '@/lib/dates';
 import { useFCM } from '@/hooks/use-fcm';
 
+// Utility function to recursively filter out undefined values from objects and arrays
+function filterUndefinedValues(obj: any): any {
+  console.log('=== FILTERING UNDEFINED VALUES ===');
+  console.log('Input:', obj);
+  
+  if (obj === undefined || obj === null) {
+    console.log('❌ Null or undefined value, returning null');
+    return null;
+  }
+  
+  if (Array.isArray(obj)) {
+    console.log('Processing array:', obj);
+    const filteredArray = obj
+      .map(item => filterUndefinedValues(item))
+      .filter(item => item !== undefined && item !== null);
+    console.log('Filtered array:', filteredArray);
+    return filteredArray;
+  }
+  
+  if (typeof obj === 'object') {
+    console.log('Processing object:', obj);
+    const filtered = Object.fromEntries(
+      Object.entries(obj).filter(([key, value]) => {
+        console.log(`Checking field "${key}":`, value, typeof value);
+        
+        if (value === undefined) {
+          console.log(`❌ Filtering out undefined field: "${key}"`);
+          return false;
+        }
+        
+        return true;
+      }).map(([key, value]) => [key, filterUndefinedValues(value)])
+    );
+    console.log('Filtered object:', filtered);
+    return filtered;
+  }
+  
+  // Primitive values (string, number, boolean, etc.)
+  console.log('Keeping primitive value:', obj);
+  return obj;
+}
 
 interface AppContextType {
   user: User | null;
@@ -34,14 +75,20 @@ interface AppContextType {
   habits: Habit[];
   setHabits: React.Dispatch<React.SetStateAction<Habit[]>>;
   gratitudeEntries: GratitudeEntry[];
+  routines: Routine[];
+  setRoutines: React.Dispatch<React.SetStateAction<Routine[]>>;
   addHabit: (habitData: Omit<Habit, 'id' | 'createdAt' | 'completedDates' | 'order'>) => Promise<void>;
   updateHabit: (habitId: string, habitData: { [key: string]: string | number | boolean | string[] | FieldValue }) => void;
   deleteHabit: (habitId: string) => void;
   toggleHabitCompletion: (habitId: string, date: Date) => void;
   getHabitById: (habitId: string) => Habit | undefined;
   getStreak: (habit: Habit) => number;
-  addGratitudeEntry: (content: string, date: Date, note?: string) => void;
+  addGratitudeEntry: (content: string, date: Date, note?: string, motivation?: string) => void;
   getGratitudeEntry: (date: Date) => GratitudeEntry | undefined;
+  addRoutine: (routineData: Omit<Routine, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateRoutine: (routineId: string, routineData: Partial<Routine>) => void;
+  deleteRoutine: (routineId: string) => void;
+  getRoutineById: (routineId: string) => Routine | undefined;
   isClient: boolean;
   getWeekCompletion: (habit: Habit) => { completed: number; total: number };
   todaysMotivation: string | null;
@@ -65,11 +112,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isClient, setIsClient] = useState(false);
   const [habits, setHabits] = useState<Habit[]>([]);
   const [gratitudeEntries, setGratitudeEntries] = useState<GratitudeEntry[]>([]);
+  const [routines, setRoutines] = useState<Routine[]>([]);
   const [motivationalMessage, setMotivationalMessage] = useState<MotivationalMessage | null>(null);
   const [birthday, setBirthdayState] = useState<string | null>(null);
   
   // Initialize FCM
-  const { token: fcmToken, isSupported: fcmSupported } = useFCM();
+  const { token: fcmToken } = useFCM();
 
   const getTodaysMotivation = useCallback(async (userName: string) => {
     const todayStr = format(new Date(), 'yyyy-MM-dd');
@@ -93,6 +141,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!user) {
         setHabits([]);
         setGratitudeEntries([]);
+        setRoutines([]);
         setMotivationalMessage(null);
         setBirthdayState(null);
       }
@@ -115,6 +164,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
         const habitsQuery = query(collection(db, `users/${user.uid}/habits`), orderBy("order", "asc"));
         const gratitudeQuery = query(collection(db, `users/${user.uid}/gratitudeEntries`), orderBy("createdAt", "desc"));
+        const routinesQuery = query(collection(db, `users/${user.uid}/routines`), orderBy("createdAt", "desc"));
         const userDocRef = doc(db, `users/${user.uid}`);
 
         const unsubscribeHabits = onSnapshot(habitsQuery, (snapshot) => {
@@ -125,6 +175,56 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const unsubscribeGratitude = onSnapshot(gratitudeQuery, (snapshot) => {
             const serverEntries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as GratitudeEntry));
             setGratitudeEntries(serverEntries);
+        });
+
+        const unsubscribeRoutines = onSnapshot(routinesQuery, (snapshot) => {
+            const serverRoutines = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Routine));
+            
+            // ✅ FIX: Preserve original IDs to maintain consistency with stepIds and stepOrder
+            const cleanedRoutines = serverRoutines.map(routine => {
+              console.log('Loading routine:', routine.title);
+              
+              // Clean custom steps - remove duplicates but PRESERVE IDs
+              let cleanedCustomSteps = routine.customSteps;
+              if (cleanedCustomSteps && cleanedCustomSteps.length > 0) {
+                console.log('Original custom steps:', cleanedCustomSteps);
+                
+                // Remove content duplicates first, but keep the first occurrence with its original ID
+                const uniqueContent = cleanedCustomSteps.filter((step: any, index: number, self: any[]) => 
+                  index === self.findIndex(s => s.title === step.title)
+                );
+                
+                // ✅ PRESERVE original IDs instead of regenerating them
+                cleanedCustomSteps = uniqueContent;
+                
+                console.log('Cleaned custom steps (preserved IDs):', cleanedCustomSteps);
+              }
+              
+              // Clean reminders - remove duplicates but PRESERVE IDs
+              let cleanedReminders = routine.reminders;
+              if (cleanedReminders && cleanedReminders.length > 0) {
+                console.log('Original reminders:', cleanedReminders);
+                
+                // Remove content duplicates first, but keep the first occurrence with its original ID
+                const uniqueContent = cleanedReminders.filter((reminder: any, index: number, self: any[]) => 
+                  index === self.findIndex(r => r.day === reminder.day && r.time === reminder.time)
+                );
+                
+                // ✅ PRESERVE original IDs instead of regenerating them
+                cleanedReminders = uniqueContent;
+                
+                console.log('Cleaned reminders (preserved IDs):', cleanedReminders);
+              }
+              
+              return {
+                ...routine,
+                customSteps: cleanedCustomSteps,
+                reminders: cleanedReminders
+              };
+            });
+            
+            console.log('Loaded routines from Firestore:', cleanedRoutines);
+            setRoutines(cleanedRoutines);
         });
 
         const unsubscribeUser = onSnapshot(userDocRef, (doc) => {
@@ -146,6 +246,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return () => {
             unsubscribeHabits();
             unsubscribeGratitude();
+            unsubscribeRoutines();
             unsubscribeUser();
         };
     }
@@ -266,7 +367,77 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!user || !user.uid) return;
     const habitDocRef = doc(db, `users/${user.uid}/habits`, habitId);
     await deleteDoc(habitDocRef);
-  }
+  };
+
+  const addRoutine = async (routineData: Omit<Routine, 'id' | 'createdAt' | 'updatedAt'>) => {
+    if (!user || !user.uid) return;
+    const routinesCollectionRef = collection(db, `users/${user.uid}/routines`);
+    
+    // Filter out undefined values to avoid Firestore errors
+    const filteredData = filterUndefinedValues(routineData);
+    
+    const newRoutine = {
+      ...filteredData,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    
+    console.log('=== CREATING NEW ROUTINE IN FIRESTORE ===');
+    console.log('Original routineData:', routineData);
+    console.log('Filtered data:', filteredData);
+    console.log('Final newRoutine:', newRoutine);
+    
+    // Final validation to ensure no undefined values
+    const finalValidation = JSON.stringify(newRoutine);
+    if (finalValidation.includes('undefined')) {
+      console.error('❌ ERROR: Still contains undefined values after filtering!');
+      console.error('New routine data:', newRoutine);
+      throw new Error('Cannot create document with undefined values');
+    }
+    
+    console.log('✅ Final validation passed, no undefined values found');
+    await addDoc(routinesCollectionRef, newRoutine);
+  };
+
+  const updateRoutine = async (routineId: string, routineData: Partial<Routine>) => {
+    if (!user || !user.uid) return;
+    const routineDocRef = doc(db, `users/${user.uid}/routines`, routineId);
+    
+    // Filter out undefined values to avoid Firestore errors
+    const filteredData = filterUndefinedValues(routineData);
+    
+    const updateData = {
+      ...filteredData,
+      updatedAt: new Date().toISOString(),
+    };
+    
+    console.log('=== UPDATING ROUTINE IN FIRESTORE ===');
+    console.log('routineId:', routineId);
+    console.log('Original routineData:', routineData);
+    console.log('Filtered data:', filteredData);
+    console.log('Final updateData:', updateData);
+    
+    // Final validation to ensure no undefined values
+    const finalValidation = JSON.stringify(updateData);
+    if (finalValidation.includes('undefined')) {
+      console.error('❌ ERROR: Still contains undefined values after filtering!');
+      console.error('Update data:', updateData);
+      throw new Error('Cannot update document with undefined values');
+    }
+    
+    console.log('✅ Final validation passed, no undefined values found');
+    await updateDoc(routineDocRef, updateData);
+  };
+  
+  const deleteRoutine = async (routineId: string) => {
+    if (!user || !user.uid) return;
+    const routineDocRef = doc(db, `users/${user.uid}/routines`, routineId);
+    await deleteDoc(routineDocRef);
+  };
+
+  const getRoutineById = (routineId: string) => {
+    return routines.find(r => r.id === routineId);
+  };
 
   const toggleHabitCompletion = async (habitId: string, date: Date) => {
     if (!user || !user.uid || habitId === 'gratitude-habit') return;
@@ -412,7 +583,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return { completed: completedThisWeek, total: habit.daysPerWeek };
   };
 
-  const addGratitudeEntry = async (content: string, date: Date, note?: string) => {
+  const addGratitudeEntry = async (content: string, date: Date, note?: string, motivation?: string) => {
     if(!user || !user.uid) return;
     const key = dayKey(toZoned(date));
     const gratitudeCollectionRef = collection(db, `users/${user.uid}/gratitudeEntries`);
@@ -423,6 +594,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const dataToSave = {
       content,
       note,
+      motivation,
       dateKey: key,
       createdAt: serverTimestamp()
     }
@@ -430,8 +602,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!querySnapshot.empty) {
       const docId = querySnapshot.docs[0].id;
       const docRef = doc(db, `users/${user.uid}/gratitudeEntries`, docId);
-      const { content, note, dateKey } = dataToSave;
-      const dataToUpdate = { content, note, dateKey };
+      const { content, note, motivation, dateKey } = dataToSave;
+      const dataToUpdate = { content, note, motivation, dateKey };
       await updateDoc(docRef, dataToUpdate);
     } else {
       await addDoc(gratitudeCollectionRef, dataToSave);
@@ -466,6 +638,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     habits,
     setHabits,
     gratitudeEntries,
+    routines,
+    setRoutines,
     addHabit,
     updateHabit,
     deleteHabit,
@@ -474,6 +648,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     getStreak,
     addGratitudeEntry,
     getGratitudeEntry,
+    addRoutine,
+    updateRoutine,
+    deleteRoutine,
+    getRoutineById,
     isClient,
     getWeekCompletion,
     todaysMotivation: motivationalMessage?.quote || null,

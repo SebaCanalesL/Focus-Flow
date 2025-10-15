@@ -27,7 +27,7 @@ const auth = getAuth(app);
 const storage = getStorage(app);
 
 // Initialize messaging only in browser environment
-let messaging: any = null;
+let messaging: unknown = null;
 if (typeof window !== 'undefined') {
   isSupported().then((supported) => {
     if (supported) {
@@ -40,8 +40,8 @@ if (typeof window !== 'undefined') {
 if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === 'true') {
   console.log('Connecting to Firebase emulators');
   try {
-    connectFirestoreEmulator(db, 'localhost', 8080);
-    connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+    connectFirestoreEmulator(db, 'localhost', 8081);
+    connectAuthEmulator(auth, 'http://127.0.0.1:9098', { disableWarnings: true });
     connectStorageEmulator(storage, 'localhost', 9199);
   } catch (e) {
     console.error("Error connecting to emulators. It's possible they are already connected.", e);

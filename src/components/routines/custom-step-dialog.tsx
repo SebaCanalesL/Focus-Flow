@@ -15,6 +15,13 @@ import { Textarea } from "@/components/ui/textarea";
 import React, { useState, useEffect } from "react";
 import { Pencil } from "lucide-react";
 
+// Function to generate unique IDs
+function generateUniqueId(): string {
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substr(2, 9);
+  return `custom-${timestamp}-${random}`;
+}
+
 // Function to assign appropriate emoji based on step title
 function assignEmojiToTitle(title: string): string {
   const lowerTitle = title.toLowerCase();
@@ -111,11 +118,13 @@ export type EditableStep = CustomStep | PredefinedStep;
 export function CustomStepDialog({
   children,
   onSave,
+  onDelete,
   stepToEdit,
   triggerText = "Agregar paso personalizado",
 }: {
   children?: React.ReactNode;
   onSave: (step: CustomStep) => void;
+  onDelete?: (stepId: string) => void;
   stepToEdit?: CustomStep;
   triggerText?: string;
 }) {
@@ -126,18 +135,33 @@ export function CustomStepDialog({
 
   const isEditMode = stepToEdit != null;
 
+  // Auto-open dialog when stepToEdit is provided
+  useEffect(() => {
+    if (stepToEdit && !isOpen) {
+      setIsOpen(true);
+    }
+  }, [stepToEdit, isOpen]);
+
   // Initialize form when dialog opens or stepToEdit changes
   useEffect(() => {
     if (isOpen) {
       if (isEditMode && stepToEdit) {
-        setTitle(stepToEdit.title);
-        setDescription(stepToEdit.description);
+        setTitle(stepToEdit.title || "");
+        setDescription(stepToEdit.description || "");
         setDuration(stepToEdit.duration || "");
       } else {
         setTitle("");
         setDescription("");
         setDuration("");
       }
+      
+      // ✅ FIX: Desenfocar cualquier input que pueda estar enfocado automáticamente
+      setTimeout(() => {
+        const activeElement = document.activeElement as HTMLElement;
+        if (activeElement && activeElement.tagName === 'INPUT') {
+          activeElement.blur();
+        }
+      }, 100);
     }
   }, [isOpen, isEditMode, stepToEdit]);
 
@@ -147,7 +171,7 @@ export function CustomStepDialog({
     }
 
     const customStep: CustomStep = {
-      id: isEditMode ? stepToEdit!.id : `custom-${Date.now()}`,
+      id: isEditMode ? stepToEdit!.id : generateUniqueId(),
       title: assignEmojiToTitle(title.trim()),
       description: description.trim() || undefined,
       duration: duration.trim() || undefined,
@@ -156,6 +180,13 @@ export function CustomStepDialog({
 
     onSave(customStep);
     setIsOpen(false);
+  };
+
+  const handleDelete = () => {
+    if (isEditMode && stepToEdit?.id && onDelete) {
+      onDelete(stepToEdit.id);
+      setIsOpen(false);
+    }
   };
 
   const handleOpenChange = (open: boolean) => {
@@ -171,7 +202,11 @@ export function CustomStepDialog({
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        {children || (
+        {children ? (
+          <div onMouseDown={(e) => e.stopPropagation()}>
+            {children}
+          </div>
+        ) : (
           <Button variant="outline" className="w-full">
             {triggerText}
           </Button>
@@ -192,6 +227,7 @@ export function CustomStepDialog({
               placeholder="Ej: Meditación matutina"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              autoFocus={false}
             />
           </div>
           
@@ -213,20 +249,30 @@ export function CustomStepDialog({
               placeholder="Ej: 10 min, 5-10 min"
               value={duration}
               onChange={(e) => setDuration(e.target.value)}
+              autoFocus={false}
             />
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => setIsOpen(false)}>
-            Cancelar
-          </Button>
-          <Button 
-            onClick={handleSave}
-            disabled={!title.trim()}
-          >
-            {isEditMode ? "Guardar cambios" : "Agregar paso"}
-          </Button>
+          <div className="flex gap-2 w-full">
+            {isEditMode && onDelete && (
+              <Button variant="destructive" onClick={handleDelete}>
+                Eliminar paso
+              </Button>
+            )}
+            <div className="flex gap-2 ml-auto">
+              <Button variant="outline" onClick={() => setIsOpen(false)}>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleSave}
+                disabled={!title.trim()}
+              >
+                {isEditMode ? "Guardar cambios" : "Agregar paso"}
+              </Button>
+            </div>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -237,10 +283,12 @@ export function CustomStepDialog({
 export function EditStepDialog({
   children,
   onSave,
+  onDelete,
   stepToEdit,
 }: {
   children?: React.ReactNode;
   onSave: (step: EditableStep) => void;
+  onDelete?: (stepId: string) => void;
   stepToEdit?: EditableStep;
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -255,14 +303,22 @@ export function EditStepDialog({
   useEffect(() => {
     if (isOpen) {
       if (isEditMode && stepToEdit) {
-        setTitle(stepToEdit.title);
-        setDescription(stepToEdit.description);
+        setTitle(stepToEdit.title || "");
+        setDescription(stepToEdit.description || "");
         setDuration(isCustomStep ? (stepToEdit as CustomStep).duration || "" : "");
       } else {
         setTitle("");
         setDescription("");
         setDuration("");
       }
+      
+      // ✅ FIX: Desenfocar cualquier input que pueda estar enfocado automáticamente
+      setTimeout(() => {
+        const activeElement = document.activeElement as HTMLElement;
+        if (activeElement && activeElement.tagName === 'INPUT') {
+          activeElement.blur();
+        }
+      }, 100);
     }
   }, [isOpen, isEditMode, stepToEdit, isCustomStep]);
 
@@ -284,7 +340,7 @@ export function EditStepDialog({
     } else {
       // Editing a predefined step - convert to custom step
       const customStep: CustomStep = {
-        id: stepToEdit!.id,
+        id: generateUniqueId(), // Generate new ID when converting predefined to custom
         title: assignEmojiToTitle(title.trim()),
         description: description.trim() || undefined,
         duration: duration.trim() || undefined,
@@ -294,6 +350,13 @@ export function EditStepDialog({
     }
     
     setIsOpen(false);
+  };
+
+  const handleDelete = () => {
+    if (isEditMode && stepToEdit?.id && onDelete) {
+      onDelete(stepToEdit.id);
+      setIsOpen(false);
+    }
   };
 
   const handleOpenChange = (open: boolean) => {
@@ -309,7 +372,11 @@ export function EditStepDialog({
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        {children || (
+        {children ? (
+          <div onClick={(e) => e.stopPropagation()}>
+            {children}
+          </div>
+        ) : (
           <Button variant="outline" className="w-full">
             Editar paso
           </Button>
@@ -330,6 +397,7 @@ export function EditStepDialog({
               placeholder="Ej: Meditación matutina"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              autoFocus={false}
             />
           </div>
           
@@ -351,20 +419,30 @@ export function EditStepDialog({
               placeholder="Ej: 10 min, 5-10 min"
               value={duration}
               onChange={(e) => setDuration(e.target.value)}
+              autoFocus={false}
             />
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => setIsOpen(false)}>
-            Cancelar
-          </Button>
-          <Button 
-            onClick={handleSave}
-            disabled={!title.trim()}
-          >
-            {isEditMode ? "Guardar cambios" : "Agregar paso"}
-          </Button>
+          <div className="flex gap-2 w-full">
+            {isEditMode && onDelete && (
+              <Button variant="destructive" onClick={handleDelete}>
+                Eliminar paso
+              </Button>
+            )}
+            <div className="flex gap-2 ml-auto">
+              <Button variant="outline" onClick={() => setIsOpen(false)}>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleSave}
+                disabled={!title.trim()}
+              >
+                {isEditMode ? "Guardar cambios" : "Agregar paso"}
+              </Button>
+            </div>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -375,12 +453,14 @@ export function EditStepDialog({
 export function EditCustomStepButton({
   step,
   onSave,
+  onDelete,
 }: {
   step: CustomStep;
   onSave: (step: CustomStep) => void;
+  onDelete?: (stepId: string) => void;
 }) {
   return (
-    <CustomStepDialog stepToEdit={step} onSave={onSave}>
+    <CustomStepDialog stepToEdit={step} onSave={onSave} onDelete={onDelete}>
       <Button variant="ghost" size="icon" className="h-8 w-8">
         <Pencil className="h-4 w-4" />
       </Button>
@@ -392,13 +472,25 @@ export function EditCustomStepButton({
 export function EditStepButton({
   step,
   onSave,
+  onDelete,
 }: {
   step: EditableStep;
   onSave: (step: EditableStep) => void;
+  onDelete?: (stepId: string) => void;
 }) {
   return (
-    <EditStepDialog stepToEdit={step} onSave={onSave}>
-      <Button variant="ghost" size="icon" className="h-8 w-8">
+    <EditStepDialog stepToEdit={step} onSave={onSave} onDelete={onDelete}>
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        className="h-8 w-8"
+        onMouseDown={(e) => {
+          e.stopPropagation(); // Prevent drag activation
+        }}
+        onClick={(e) => {
+          e.stopPropagation(); // Prevent triggering the card's onClick
+        }}
+      >
         <Pencil className="h-4 w-4" />
       </Button>
     </EditStepDialog>

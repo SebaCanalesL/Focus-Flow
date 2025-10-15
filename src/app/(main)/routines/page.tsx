@@ -8,26 +8,15 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import {
   CreateRoutineDialog,
-  routineSteps,
+  predefinedSteps as routineSteps,
 } from '@/components/routines/create-routine-dialog';
+import { RoutineTemplateSelector } from '@/components/routines/routine-template-selector';
 import { PerformRoutineSheet } from '@/components/routines/perform-routine-sheet';
 import { Routine } from '@/lib/types';
 import { useAppData } from '@/contexts/app-provider';
-import { collection, addDoc, updateDoc, deleteDoc, getDocs, query, orderBy, onSnapshot, doc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useRouter } from 'next/navigation';
 
-const filters = ['Mis rutinas', 'Todas', 'Partir el día', 'Terminar el día'];
-
-const defaultRoutines: Routine[] = [
-  {
-    id: 'default-1',
-    title: 'Mañana Energizada',
-    category: 'Partir el día',
-    imageUrl: '/routines/routine-morning-energized.png',
-    description:
-      '🌞 Rutina de Mañana Energizada\n\n¿Te ha pasado que algunos días comienzan con claridad y energía ✨ y otros parecen arrastrarse desde el primer minuto 😩?\n\nLa diferencia, muchas veces, está en cómo decidimos vivir nuestras primeras horas del día.\n\n🌱 La ciencia detrás de una buena mañana\n\nLos hábitos que cultivas en la mañana impactan directamente en tu nivel de energía ⚡, en tu concentración 🎯 y en el ánimo 💛 que te acompaña todo el día.\n\nLo mejor es que no necesitas grandes cambios ni horas extras ⏱️. Con acciones simples y bien diseñadas puedes transformar tu mañana en un motor de bienestar.\n\n💡 ¿Por qué importa una rutina de mañana?\n\nAl despertar, tu cuerpo y tu mente están más receptivos 🌅. Es el momento en que:\n* Se regula tu reloj biológico 🕰️\n* Se activa tu metabolismo 🔥\n* Tu cerebro prepara el tono emocional 🎶 del día\n\nSi aprovechas esa ventana con pequeños hábitos saludables, mejoras tu vitalidad y tu capacidad de enfocarte en lo importante.\n\n🔑 Claves para una mañana energizada\n\n☀️ Luz natural: sincroniza tu cuerpo con el día y mejora tu ánimo\n\n💧 Hidratación: despierta tu metabolismo y tu mente\n\n🤸 Movimiento ligero: activa la circulación y multiplica tu energía\n\n🧘 Mindfulness: calma el estrés y aclara tu mente\n\n🥑 Desayuno balanceado: el mejor combustible para tu cuerpo\n\n📝 Objetivos claros: evitan la dispersión y aumentan tu productividad\n\n✨ El beneficio real\n\nNo se trata solo de sentirte más despierto, sino de crear un hábito que mejore tu vida día a día 🌟.\n\nCon el tiempo notarás que:\n* Estás más presente en tus mañanas 🌄\n* Tienes más control sobre tu tiempo ⏳\n* Tu energía se refleja en todo lo que haces 💪\n\nY lo mejor: esta rutina no es rígida. Es un marco flexible que puedes adaptar según tu estilo de vida.\n\n🚀 ¿Qué sigue?\n\nAhora que sabes la importancia de una mañana energizada, es momento de pasar a la acción.\n\nEn la siguiente pantalla encontrarás una propuesta de pasos simples y prácticos, basados en evidencia científica, que podrás personalizar y transformar en tu propia rutina diaria.\n\nPorque cada mañana es una nueva oportunidad para llenar tu vida de energía, propósito y vitalidad 🌞💛.',
-  },
-];
+const filters = ['Mis rutinas'];
 
 function RoutineCard({
   routine,
@@ -46,28 +35,27 @@ function RoutineCard({
     if (isUserRoutine) {
       const allSteps: Array<{ id: string; title: string }> = [];
       
-      // Add predefined steps
-      if (routine.stepIds) {
-        routine.stepIds.forEach((stepId: string) => {
-          const predefinedStep = routineSteps.find((s) => s.id === stepId);
-          if (predefinedStep) {
-            allSteps.push({
-              id: predefinedStep.id,
-              title: predefinedStep.title.split(' (')[0]
-            });
-          }
-        });
-      }
+      // Usar stepOrder si está disponible, sino usar stepIds
+      const stepOrder = routine.stepOrder || routine.stepIds || [];
       
-      // Add custom steps
-      if (routine.customSteps) {
-        routine.customSteps.forEach((customStep) => {
+      // ✅ CORRECCIÓN: Solo mostrar pasos SELECCIONADOS en el orden correcto
+      const selectedSteps = stepOrder.filter(stepId => 
+        routine.stepIds?.includes(stepId)
+      );
+      
+      selectedSteps.forEach((stepId: string) => {
+        // Buscar paso (predefinido o personalizado)
+        const predefinedStep = routineSteps.find((s) => s.id === stepId);
+        const customStep = routine.customSteps?.find((cs) => cs.id === stepId);
+        
+        const step = predefinedStep || customStep;
+        if (step) {
           allSteps.push({
-            id: customStep.id,
-            title: customStep.title
+            id: step.id,
+            title: step.title.split(' (')[0] // Remover duración si existe
           });
-        });
-      }
+        }
+      });
 
       // Get active reminders
       const activeReminders = routine.reminders?.filter(r => r.enabled) || [];
@@ -221,34 +209,9 @@ function cleanRoutineData(data: any): any {
 }
 
 export default function RoutinesPage() {
-  const { user } = useAppData();
-  const [selectedFilter, setSelectedFilter] = useState('Todas');
-  const [userRoutines, setUserRoutines] = useState<Routine[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Load user routines from Firestore using real-time listener
-  useEffect(() => {
-    if (!user || !user.uid) {
-      setUserRoutines([]);
-      setIsLoading(false);
-      return;
-    }
-
-    console.log('🔄 Setting up routines listener for user:', user.uid);
-    const routinesQuery = query(collection(db, `users/${user.uid}/routines`), orderBy("createdAt", "desc"));
-    
-    const unsubscribe = onSnapshot(routinesQuery, (snapshot) => {
-      const serverRoutines = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Routine));
-      console.log('🔄 Routines loaded from Firestore:', serverRoutines);
-      setUserRoutines(serverRoutines);
-      setIsLoading(false);
-    }, (error) => {
-      console.error('Error loading routines:', error);
-      setIsLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [user]);
+  const { user, routines, addRoutine, updateRoutine, deleteRoutine, loading } = useAppData();
+  const router = useRouter();
+  const [selectedFilter, setSelectedFilter] = useState('Mis rutinas');
 
   const handleSaveRoutine = async (newRoutine: Partial<Routine>) => {
     if (!user || !user.uid) {
@@ -259,43 +222,22 @@ export default function RoutinesPage() {
     try {
       if (newRoutine.id) {
         // Update existing routine
-        console.log('✏️ Updating routine:', newRoutine.id, 'with data:', newRoutine);
-        
-        const routineDocRef = doc(db, `users/${user.uid}/routines`, newRoutine.id);
-        
-        // Limpiar datos usando la función robusta
-        const cleanedData = cleanRoutineData(newRoutine);
-        
-        console.log('📝 Cleaned update data:', cleanedData);
-        console.log('🔍 Custom steps in update:', cleanedData.customSteps);
-        console.log('🔔 Reminders in update:', cleanedData.reminders);
-        
-        await updateDoc(routineDocRef, cleanedData);
-        console.log('✅ Routine updated in Firestore');
+        console.log('=== UPDATING ROUTINE ===');
+        console.log('Routine ID:', newRoutine.id);
+        console.log('Full routine data:', newRoutine);
+        await updateRoutine(newRoutine.id, newRoutine);
+        console.log('Routine updated successfully');
       } else {
         // Create new routine
-        console.log('➕ Creating new routine with data:', newRoutine);
-        
-        const routinesCollectionRef = collection(db, `users/${user.uid}/routines`);
-        
-        // Preparar datos para nueva rutina
-        const newRoutineData = {
-          createdAt: new Date().toISOString(),
-          ...newRoutine,
-        };
-        
-        // Limpiar datos usando la función robusta
-        const cleanedData = cleanRoutineData(newRoutineData);
-        
-        console.log('📝 Cleaned routine data:', cleanedData);
-        console.log('🔍 Custom steps:', cleanedData.customSteps);
-        console.log('🔔 Reminders:', cleanedData.reminders);
-        
-        await addDoc(routinesCollectionRef, cleanedData);
-        console.log('✅ Routine added to Firestore');
-        
+        console.log('Creating new routine with data:', newRoutine);
+        // Remove id field if it exists to avoid Firestore error
+        const { id, ...routineDataWithoutId } = newRoutine;
+        await addRoutine(routineDataWithoutId as Omit<Routine, 'id' | 'createdAt' | 'updatedAt'>);
+        console.log('Routine created successfully');
         // Switch to "Mis rutinas" to show the newly created routine
         setSelectedFilter('Mis rutinas');
+        
+        // Note: No need to navigate since we're already on the routines page
       }
     } catch (error) {
       console.error('Error saving routine:', error);
@@ -309,36 +251,24 @@ export default function RoutinesPage() {
     }
 
     try {
-      console.log('🗑️ Deleting routine:', routineId);
-      const routineDocRef = doc(db, `users/${user.uid}/routines`, routineId);
-      await deleteDoc(routineDocRef);
-      console.log('✅ Routine deleted from Firestore');
+      await deleteRoutine(routineId);
+      console.log('Routine deleted successfully');
     } catch (error) {
       console.error('Error deleting routine:', error);
     }
   };
 
-  const routinesToShow = (() => {
-    if (selectedFilter === 'Mis rutinas') {
-      return userRoutines;
-    }
-    if (selectedFilter === 'Todas') {
-      return defaultRoutines;
-    }
-    return defaultRoutines.filter(
-      (routine) => routine.category === selectedFilter
-    );
-  })();
+  const routinesToShow = routines;
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold md:text-3xl">Rutinas</h1>
-        <CreateRoutineDialog onSave={handleSaveRoutine}>
+        <RoutineTemplateSelector onSave={handleSaveRoutine}>
           <div className={cn(buttonVariants({ size: 'sm' }), "cursor-pointer")}>
             Crear Rutina
           </div>
-        </CreateRoutineDialog>
+        </RoutineTemplateSelector>
       </div>
 
       <div className="flex items-center gap-2 overflow-x-auto pb-2">
@@ -360,7 +290,7 @@ export default function RoutinesPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-        {isLoading && selectedFilter === 'Mis rutinas' ? (
+        {loading ? (
           <p className="text-muted-foreground col-span-full text-center">
             Cargando rutinas...
           </p>
@@ -370,16 +300,19 @@ export default function RoutinesPage() {
               key={routine.id}
               routine={routine}
               onSave={handleSaveRoutine}
-              onDelete={selectedFilter === 'Mis rutinas' ? handleDeleteRoutine : undefined}
-              isUserRoutine={selectedFilter === 'Mis rutinas'}
+              onDelete={handleDeleteRoutine}
+              isUserRoutine={true}
             />
           ))
         ) : (
-          <p className="text-muted-foreground col-span-full text-center">
-            {selectedFilter === 'Mis rutinas'
-              ? "Aún no has creado ninguna rutina. ¡Crea una para empezar!"
-              : "No se encontraron rutinas para este filtro."}
-          </p>
+          <div className="col-span-full text-center space-y-4">
+            <p className="text-muted-foreground">
+              Aún no has creado ninguna rutina. ¡Crea una para empezar!
+            </p>
+            <p className="text-sm text-muted-foreground">
+              También puedes explorar rutinas recomendadas en la sección "Aprender"
+            </p>
+          </div>
         )}
       </div>
     </div>
