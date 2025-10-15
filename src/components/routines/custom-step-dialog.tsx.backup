@@ -199,9 +199,9 @@ export function CustomStepDialog({
       setDescription("");
       setDuration("");
       // Call onCancel if provided (for edit mode)
-      // if (onCancel && isEditMode) {
-      //   onCancel();
-      // }
+      if (onCancel && isEditMode) {
+        onCancel();
+      }
     }
   };
 
@@ -270,9 +270,9 @@ export function CustomStepDialog({
             <div className="flex gap-2 ml-auto">
               <Button variant="outline" onClick={() => {
                 setIsOpen(false);
-              // if (onCancel && isEditMode) {
-              //   onCancel();
-              // }
+                if (onCancel && isEditMode) {
+                  onCancel();
+                }
               }}>
                 Cancelar
               </Button>
@@ -378,9 +378,9 @@ export function EditStepDialog({
       setDescription("");
       setDuration("");
       // Call onCancel if provided (for edit mode)
-      // if (onCancel && isEditMode) {
-      //   onCancel();
-      // }
+      if (onCancel && isEditMode) {
+        onCancel();
+      }
     }
   };
 
@@ -449,9 +449,9 @@ export function EditStepDialog({
             <div className="flex gap-2 ml-auto">
               <Button variant="outline" onClick={() => {
                 setIsOpen(false);
-              // if (onCancel && isEditMode) {
-              //   onCancel();
-              // }
+                if (onCancel && isEditMode) {
+                  onCancel();
+                }
               }}>
                 Cancelar
               </Button>

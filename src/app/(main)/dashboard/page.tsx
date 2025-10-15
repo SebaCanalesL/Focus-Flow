@@ -92,11 +92,11 @@ export default function Dashboard() {
     setIsReordering(true);
   };
 
-  const handleDragEnd = (event: { active: { id: string }; over: { id: string } | null }) => {
+  const handleDragEnd = (event: any) => {
     const { active, over } = event;
     setIsReordering(false);
 
-    if (active.id !== over.id) {
+    if (over && active.id !== over.id) {
       setCards((items) => {
         const oldIndex = items.findIndex(item => item.id === active.id);
         const newIndex = items.findIndex(item => item.id === over.id);

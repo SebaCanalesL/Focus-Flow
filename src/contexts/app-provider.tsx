@@ -19,7 +19,7 @@ import {
   serverTimestamp,
   FieldValue
 } from 'firebase/firestore';
-import type { Habit, GratitudeEntry, Routine } from '@/lib/types';
+import type { Habit, GratitudeEntry, Routine, CustomStep, Reminder } from '@/lib/types';
 import { migrateRemindersToSchedules } from '@/lib/routine-migration';
 import { format, subDays, differenceInCalendarDays, parseISO, startOfWeek, endOfWeek, isWithinInterval, getWeek } from 'date-fns';
 import { dailyMotivation } from '@/ai/flows/daily-motivation-flow';
@@ -380,7 +380,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const routinesCollectionRef = collection(db, `users/${user.uid}/routines`);
     
     // Filter out undefined values to avoid Firestore errors
-    const filteredData = filterUndefinedValues(routineData);
+    const filteredData = filterUndefinedValues(routineData) as Record<string, any>;
     
     const newRoutine = {
       ...filteredData,
@@ -410,7 +410,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const routineDocRef = doc(db, `users/${user.uid}/routines`, routineId);
     
     // Filter out undefined values to avoid Firestore errors
-    const filteredData = filterUndefinedValues(routineData);
+    const filteredData = filterUndefinedValues(routineData) as Record<string, any>;
     
     const updateData = {
       ...filteredData,

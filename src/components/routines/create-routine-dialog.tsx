@@ -672,8 +672,6 @@ function CreateRoutineDialog({
                           step={customStep}
                           isSelected={selectedStepIds.has(stepId)}
                           onToggle={toggleStep}
-                          onEdit={handleEditCustomStep}
-                          onDelete={handleDeleteCustomStep}
                           onEditStep={handleEditStep}
                         />
                       );
