@@ -10,6 +10,7 @@ import {
   CreateRoutineDialog,
   predefinedSteps as routineSteps,
 } from '@/components/routines/create-routine-dialog';
+import { RoutineTemplateSelector } from '@/components/routines/routine-template-selector';
 import { PerformRoutineSheet } from '@/components/routines/perform-routine-sheet';
 import { Routine } from '@/lib/types';
 import { useAppData } from '@/contexts/app-provider';
@@ -229,11 +230,11 @@ export default function RoutinesPage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold md:text-3xl">Rutinas</h1>
-        <CreateRoutineDialog onSave={handleSaveRoutine}>
+        <RoutineTemplateSelector onSave={handleSaveRoutine}>
           <div className={cn(buttonVariants({ size: 'sm' }), "cursor-pointer")}>
             Crear Rutina
           </div>
-        </CreateRoutineDialog>
+        </RoutineTemplateSelector>
       </div>
 
       <div className="flex items-center gap-2 overflow-x-auto pb-2">

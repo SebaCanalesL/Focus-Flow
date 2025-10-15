@@ -140,7 +140,7 @@ export function CreateHabitDialog({ open, onOpenChange }: CreateHabitDialogProps
                 <FormItem>
                   <FormLabel>Nombre del Hábito</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ej: Leer por 15 minutos" {...field} />
+                    <Input placeholder="Ej: Leer por 15 minutos" {...field} autoFocus={false} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { Routine, CustomStep, Reminder } from "@/lib/types";
 import { CustomStepDialog } from "./custom-step-dialog";
 import { RemindersSection } from "./reminders-section";
+import { routineTemplates } from "./routine-template-selector";
 import {
   DndContext,
   closestCenter,
@@ -92,12 +93,14 @@ function SortablePredefinedStepCard({
   onToggle,
   onEdit,
   onDelete,
+  onEditStep,
 }: {
   step: typeof predefinedSteps[0];
   isSelected: boolean;
   onToggle: (stepId: string) => void;
   onEdit: (step: CustomStep) => void;
   onDelete?: (stepId: string) => void;
+  onEditStep: (step: CustomStep) => void;
 }) {
   const {
     attributes,
@@ -138,25 +141,23 @@ function SortablePredefinedStepCard({
             </p>
           )}
           <div className="flex items-center gap-2">
-            <CustomStepDialog
-              stepToEdit={{
-                id: step.id,
-                title: step.title,
-                description: step.description,
-                duration: step.duration,
-                isCustom: true,
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEditStep({
+                  id: step.id,
+                  title: step.title,
+                  description: step.description,
+                  duration: step.duration,
+                  isCustom: true,
+                });
               }}
-              onSave={onEdit}
-              onDelete={onDelete}
             >
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-            </CustomStepDialog>
+              <Pencil className="h-4 w-4" />
+            </Button>
             <Checkbox 
               checked={isSelected}
               onClick={(e) => e.stopPropagation()}
@@ -165,6 +166,7 @@ function SortablePredefinedStepCard({
               variant="ghost"
               size="icon"
               className="h-8 w-8 cursor-grab active:cursor-grabbing"
+              onClick={(e) => e.stopPropagation()}
               {...attributes}
               {...listeners}
             >
@@ -184,12 +186,14 @@ function SortableCustomStepCard({
   onToggle,
   onEdit,
   onDelete,
+  onEditStep,
 }: {
   step: CustomStep;
   isSelected: boolean;
   onToggle: (stepId: string) => void;
   onEdit: (step: CustomStep) => void;
   onDelete?: (stepId: string) => void;
+  onEditStep: (step: CustomStep) => void;
 }) {
   const {
     attributes,
@@ -232,19 +236,17 @@ function SortableCustomStepCard({
             </p>
           )}
           <div className="flex items-center gap-2">
-            <CustomStepDialog
-              stepToEdit={step}
-              onSave={onEdit}
-              onDelete={onDelete}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEditStep(step);
+              }}
             >
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-            </CustomStepDialog>
+              <Pencil className="h-4 w-4" />
+            </Button>
             <Checkbox 
               checked={isSelected}
               onClick={(e) => e.stopPropagation()}
@@ -253,6 +255,7 @@ function SortableCustomStepCard({
               variant="ghost"
               size="icon"
               className="h-8 w-8 cursor-grab active:cursor-grabbing"
+              onClick={(e) => e.stopPropagation()}
               {...attributes}
               {...listeners}
             >
@@ -270,11 +273,15 @@ function CreateRoutineDialog({
   onSave,
   onDelete,
   routineToEdit,
+  templateId,
+  forceOpen,
 }: {
   children: React.ReactNode;
   onSave: (newRoutine: Partial<Routine>) => void;
   onDelete?: (routineId: string) => void;
   routineToEdit?: Routine;
+  templateId?: string;
+  forceOpen?: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [routineName, setRoutineName] = useState("");
@@ -283,8 +290,22 @@ function CreateRoutineDialog({
   const [customSteps, setCustomSteps] = useState<CustomStep[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [editingStep, setEditingStep] = useState<CustomStep | null>(null);
 
   const isEditMode = !!routineToEdit;
+
+  // Handle forceOpen prop
+  const isDialogOpen = forceOpen !== undefined ? forceOpen : isOpen;
+  const handleOpenChange = (open: boolean) => {
+    if (forceOpen !== undefined) {
+      // If forceOpen is provided, let the parent handle the state
+      if (!open) {
+        onSave({}); // Call onSave with empty object to trigger close
+      }
+    } else {
+      setIsOpen(open);
+    }
+  };
 
   // Configurar sensores para drag and drop con long press
   const sensors = useSensors(
@@ -302,7 +323,7 @@ function CreateRoutineDialog({
 
   // Inicializar datos cuando se abre el diálogo
   useEffect(() => {
-    if (isOpen) {
+    if (isDialogOpen) {
       if (isEditMode && routineToEdit) {
         console.log('🔍 DEBUG - Cargando rutina para editar:', routineToEdit);
         console.log('🔍 DEBUG - Custom steps en la rutina:', routineToEdit.customSteps);
@@ -331,6 +352,25 @@ function CreateRoutineDialog({
           console.log('🔍 DEBUG - Creando stepOrder desde fallback (todos los pasos):', fallbackStepOrder);
           setStepOrder(fallbackStepOrder);
         }
+      } else if (templateId) {
+        // Modo creación desde plantilla
+        console.log('🔍 DEBUG - Creando rutina desde plantilla:', templateId);
+        const template = routineTemplates.find(t => t.id === templateId);
+        if (template) {
+          setRoutineName(template.title);
+          // Convertir pasos de plantilla a pasos personalizados
+          const templateCustomSteps: CustomStep[] = template.steps.map(step => ({
+            id: step.id,
+            title: step.title,
+            description: step.description,
+            duration: step.duration,
+            isCustom: true,
+          }));
+          setCustomSteps(templateCustomSteps);
+          setSelectedStepIds(new Set(templateCustomSteps.map(step => step.id)));
+          setStepOrder(templateCustomSteps.map(step => step.id));
+          setReminders([]);
+        }
       } else {
         // Modo creación: valores por defecto
         console.log('🔍 DEBUG - Creando nueva rutina');
@@ -349,7 +389,7 @@ function CreateRoutineDialog({
         }
       }, 100);
     }
-  }, [isOpen, isEditMode, routineToEdit?.id, routineToEdit?.title, routineToEdit?.stepIds, routineToEdit?.stepOrder, routineToEdit?.customSteps, routineToEdit?.reminders]);
+  }, [isDialogOpen, isEditMode, routineToEdit?.id, routineToEdit?.title, routineToEdit?.stepIds, routineToEdit?.stepOrder, routineToEdit?.customSteps, routineToEdit?.reminders, templateId]);
 
   // Asegurar que stepOrder siempre incluya todos los pasos disponibles
   useEffect(() => {
@@ -385,8 +425,14 @@ function CreateRoutineDialog({
         // Deseleccionar: solo remover de selectedStepIds
         newSet.delete(stepId);
       } else {
-        // Seleccionar: solo agregar a selectedStepIds
+        // Seleccionar: agregar a selectedStepIds y mover al final de la lista de seleccionados
         newSet.add(stepId);
+        
+        // Mover el paso al final de la lista para que aparezca al final de los seleccionados
+        setStepOrder(currentOrder => {
+          const filteredOrder = currentOrder.filter(id => id !== stepId);
+          return [...filteredOrder, stepId];
+        });
       }
       return newSet;
     });
@@ -459,6 +505,9 @@ function CreateRoutineDialog({
   const handleEditPredefinedStep = (customStep: CustomStep) => {
     console.log('🔍 DEBUG - Editando paso predefinido:', customStep);
     
+    // Obtener la posición original del paso en stepOrder
+    const originalPosition = stepOrder.indexOf(customStep.id);
+    
     // Remover el paso predefinido de la selección
     setSelectedStepIds(prev => {
       const newSet = new Set(prev);
@@ -488,10 +537,15 @@ function CreateRoutineDialog({
       return updated;
     });
     
-    // ✅ FIX: Actualizar stepOrder para incluir el nuevo paso personalizado
+    // ✅ FIX: Mantener la posición original en stepOrder
     setStepOrder(prev => {
-      const updated = [...prev, newCustomStep.id];
-      console.log('🔍 DEBUG - Step order actualizado:', updated);
+      const updated = [...prev];
+      if (originalPosition !== -1) {
+        updated[originalPosition] = newCustomStep.id; // Reemplazar en la misma posición
+      } else {
+        updated.push(newCustomStep.id); // Fallback: agregar al final si no se encuentra
+      }
+      console.log('🔍 DEBUG - Step order actualizado manteniendo posición:', updated);
       return updated;
     });
   };
@@ -520,6 +574,28 @@ function CreateRoutineDialog({
   // Manejar cancelación del drag
   const handleDragCancel = () => {
     setActiveId(null);
+  };
+
+  // Manejar edición de pasos
+  const handleEditStep = (step: CustomStep) => {
+    setEditingStep(step);
+  };
+
+  // Manejar guardado de edición
+  const handleSaveEdit = (updatedStep: CustomStep) => {
+    if (updatedStep.id.startsWith('custom-')) {
+      // Es un paso personalizado existente - solo actualizar sin cambiar posición
+      handleEditCustomStep(updatedStep);
+    } else {
+      // Es un paso predefinido convertido a personalizado
+      handleEditPredefinedStep(updatedStep);
+    }
+    setEditingStep(null);
+  };
+
+  // Manejar cancelación de edición
+  const handleCancelEdit = () => {
+    setEditingStep(null);
   };
 
   // Guardar rutina
@@ -553,14 +629,18 @@ function CreateRoutineDialog({
     }
 
     onSave(routineData);
-    setIsOpen(false);
+    if (forceOpen === undefined) {
+      setIsOpen(false);
+    }
   };
 
   // Eliminar rutina
   const handleDelete = () => {
     if (isEditMode && routineToEdit?.id && onDelete) {
       onDelete(routineToEdit.id);
-      setIsOpen(false);
+      if (forceOpen === undefined) {
+        setIsOpen(false);
+      }
     }
   };
 
@@ -571,7 +651,7 @@ function CreateRoutineDialog({
   ];
 
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+    <Sheet open={isDialogOpen} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild onClick={() => setIsOpen(true)}>
         {children}
       </SheetTrigger>
@@ -607,7 +687,7 @@ function CreateRoutineDialog({
             </Button>
           </div>
 
-          {/* Todos los pasos en el orden correcto con drag and drop */}
+          {/* Pasos seleccionados en el orden correcto con drag and drop */}
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -615,13 +695,16 @@ function CreateRoutineDialog({
             onDragEnd={handleDragEnd}
             onDragCancel={handleDragCancel}
           >
-            <SortableContext items={stepOrder} strategy={verticalListSortingStrategy}>
+            <SortableContext items={stepOrder.filter(stepId => selectedStepIds.has(stepId))} strategy={verticalListSortingStrategy}>
               <div className="space-y-3">
-                {stepOrder.map((stepId) => {
-                  // Buscar si es un paso predefinido
-                  const predefinedStep = predefinedSteps.find(step => step.id === stepId);
-                  if (predefinedStep) {
-                    return (
+                {/* Pasos seleccionados primero */}
+                {stepOrder
+                  .filter(stepId => selectedStepIds.has(stepId))
+                  .map((stepId) => {
+                    // Buscar si es un paso predefinido
+                    const predefinedStep = predefinedSteps.find(step => step.id === stepId);
+                    if (predefinedStep) {
+                      return (
                       <SortablePredefinedStepCard
                         key={stepId}
                         step={predefinedStep}
@@ -629,14 +712,15 @@ function CreateRoutineDialog({
                         onToggle={toggleStep}
                         onEdit={handleEditPredefinedStep}
                         onDelete={handleDeletePredefinedStep}
+                        onEditStep={handleEditStep}
                       />
-                    );
-                  }
-                  
-                  // Buscar si es un paso personalizado
-                  const customStep = customSteps.find(step => step.id === stepId);
-                  if (customStep) {
-                    return (
+                      );
+                    }
+                    
+                    // Buscar si es un paso personalizado
+                    const customStep = customSteps.find(step => step.id === stepId);
+                    if (customStep) {
+                      return (
                       <SortableCustomStepCard
                         key={stepId}
                         step={customStep}
@@ -644,12 +728,13 @@ function CreateRoutineDialog({
                         onToggle={toggleStep}
                         onEdit={handleEditCustomStep}
                         onDelete={handleDeleteCustomStep}
+                        onEditStep={handleEditStep}
                       />
-                    );
-                  }
-                  
-                  return null;
-                })}
+                      );
+                    }
+                    
+                    return null;
+                  })}
               </div>
             </SortableContext>
             
@@ -710,6 +795,122 @@ function CreateRoutineDialog({
               ) : null}
             </DragOverlay>
           </DndContext>
+
+          {/* Pasos deseleccionados al final */}
+          {(() => {
+            const deselectedSteps = stepOrder.filter(stepId => !selectedStepIds.has(stepId));
+            if (deselectedSteps.length > 0) {
+              return (
+                <div className="space-y-3 pt-6">
+                  <div className="text-sm font-medium text-muted-foreground">
+                    Pasos deseleccionados:
+                  </div>
+                  {deselectedSteps.map((stepId) => {
+                    // Buscar si es un paso predefinido
+                    const predefinedStep = predefinedSteps.find(step => step.id === stepId);
+                    if (predefinedStep) {
+                      return (
+                        <Card
+                          key={stepId}
+                          className="transition-colors cursor-pointer opacity-60 hover:opacity-80"
+                          onClick={() => toggleStep(stepId)}
+                        >
+                          <CardContent className="flex items-start justify-between p-4">
+                            <div className="flex items-start gap-4 flex-1">
+                              <div className="grid gap-1.5">
+                                <p className="font-semibold">{predefinedStep.title}</p>
+                                <p className="text-sm text-muted-foreground">{predefinedStep.description}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4 pl-4">
+                              {predefinedStep.duration && (
+                                <p className="text-sm text-muted-foreground whitespace-nowrap">
+                                  {predefinedStep.duration}
+                                </p>
+                              )}
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditStep({
+                                      id: predefinedStep.id,
+                                      title: predefinedStep.title,
+                                      description: predefinedStep.description,
+                                      duration: predefinedStep.duration,
+                                      isCustom: true,
+                                    });
+                                  }}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Checkbox 
+                                  checked={false}
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    }
+                    
+                    // Buscar si es un paso personalizado
+                    const customStep = customSteps.find(step => step.id === stepId);
+                    if (customStep) {
+                      return (
+                        <Card
+                          key={stepId}
+                          className="transition-colors cursor-pointer opacity-60 hover:opacity-80"
+                          onClick={() => toggleStep(stepId)}
+                        >
+                          <CardContent className="flex items-start justify-between p-4">
+                            <div className="flex items-start gap-4 flex-1">
+                              <div className="grid gap-1.5">
+                                <p className="font-semibold">{customStep.title}</p>
+                                {customStep.description && (
+                                  <p className="text-sm text-muted-foreground">{customStep.description}</p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4 pl-4">
+                              {customStep.duration && (
+                                <p className="text-sm text-muted-foreground whitespace-nowrap">
+                                  {customStep.duration}
+                                </p>
+                              )}
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditStep(customStep);
+                                  }}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Checkbox 
+                                  checked={false}
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    }
+                    
+                    return null;
+                  })}
+                </div>
+              );
+            }
+            return null;
+          })()}
 
           {/* Pasos predefinidos disponibles (que no están en la rutina) */}
           {(() => {
@@ -808,6 +1009,23 @@ function CreateRoutineDialog({
           </div>
         </SheetFooter>
       </SheetContent>
+      
+      {/* Diálogo de edición de pasos */}
+      <CustomStepDialog
+        stepToEdit={editingStep}
+        onSave={handleSaveEdit}
+        onDelete={(stepId) => {
+          if (stepId.startsWith('custom-')) {
+            handleDeleteCustomStep(stepId);
+          } else {
+            handleDeletePredefinedStep(stepId);
+          }
+          setEditingStep(null);
+        }}
+        triggerText=""
+      >
+        <div style={{ display: 'none' }} />
+      </CustomStepDialog>
     </Sheet>
   );
 }
