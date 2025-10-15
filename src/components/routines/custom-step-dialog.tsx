@@ -119,12 +119,14 @@ export function CustomStepDialog({
   children,
   onSave,
   onDelete,
+  onCancel,
   stepToEdit,
   triggerText = "Agregar paso personalizado",
 }: {
   children?: React.ReactNode;
   onSave: (step: CustomStep) => void;
   onDelete?: (stepId: string) => void;
+  onCancel?: () => void;
   stepToEdit?: CustomStep;
   triggerText?: string;
 }) {
@@ -196,6 +198,10 @@ export function CustomStepDialog({
       setTitle("");
       setDescription("");
       setDuration("");
+      // Call onCancel if provided (for edit mode)
+      if (onCancel && isEditMode) {
+        onCancel();
+      }
     }
   };
 
@@ -262,7 +268,12 @@ export function CustomStepDialog({
               </Button>
             )}
             <div className="flex gap-2 ml-auto">
-              <Button variant="outline" onClick={() => setIsOpen(false)}>
+              <Button variant="outline" onClick={() => {
+                setIsOpen(false);
+                if (onCancel && isEditMode) {
+                  onCancel();
+                }
+              }}>
                 Cancelar
               </Button>
               <Button 
@@ -366,6 +377,10 @@ export function EditStepDialog({
       setTitle("");
       setDescription("");
       setDuration("");
+      // Call onCancel if provided (for edit mode)
+      if (onCancel && isEditMode) {
+        onCancel();
+      }
     }
   };
 
@@ -432,7 +447,12 @@ export function EditStepDialog({
               </Button>
             )}
             <div className="flex gap-2 ml-auto">
-              <Button variant="outline" onClick={() => setIsOpen(false)}>
+              <Button variant="outline" onClick={() => {
+                setIsOpen(false);
+                if (onCancel && isEditMode) {
+                  onCancel();
+                }
+              }}>
                 Cancelar
               </Button>
               <Button 
