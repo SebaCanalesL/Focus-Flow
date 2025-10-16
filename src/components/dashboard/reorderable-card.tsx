@@ -42,15 +42,16 @@ export function ReorderableCard({ id, children }: ReorderableCardProps) {
           "absolute top-2 left-2 z-10",
           "opacity-90 hover:opacity-100 active:opacity-100 transition-opacity duration-200",
           "cursor-grab active:cursor-grabbing",
-          "p-2 rounded-lg hover:bg-muted/70 active:bg-muted/80", // Reduced padding for top position
+          "p-3 rounded-lg hover:bg-muted/70 active:bg-muted/80", // Increased padding for better touch target
           "flex items-center justify-center",
           "border border-muted-foreground/40 hover:border-muted-foreground/60 active:border-primary/50",
           "bg-background/95 backdrop-blur-sm shadow-md",
           "touch-manipulation select-none", // Improves touch interaction on mobile
-          "min-w-[36px] min-h-[36px]", // Slightly smaller for top position
+          "min-w-[44px] min-h-[44px]", // Increased size for better touch target (44px minimum)
           "ring-0 hover:ring-2 hover:ring-primary/20 active:ring-2 active:ring-primary/30", // Visual feedback
           "transition-all duration-200 ease-in-out", // Smooth transitions
-          "scale-100 hover:scale-105 active:scale-95" // Subtle scale feedback for mobile
+          "scale-100 hover:scale-105 active:scale-95", // Subtle scale feedback for mobile
+          "touch-action-none" // Prevent default touch behaviors
         )}
         {...attributes}
         {...listeners}
@@ -58,8 +59,16 @@ export function ReorderableCard({ id, children }: ReorderableCardProps) {
         role="button"
         aria-label="Arrastra para reordenar"
         tabIndex={0}
+        onTouchStart={(e) => {
+          // Prevent scrolling during drag
+          e.preventDefault();
+        }}
+        onTouchMove={(e) => {
+          // Prevent scrolling during drag
+          e.preventDefault();
+        }}
       >
-        <GripVertical className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+        <GripVertical className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
       </div>
       
       {/* Card content */}

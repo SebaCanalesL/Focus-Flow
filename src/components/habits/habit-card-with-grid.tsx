@@ -85,12 +85,20 @@ export function HabitCardWithGrid({
           <div className="flex items-start gap-3 min-w-0 flex-1">
             <div 
               {...listeners} 
-              className="touch-manipulation cursor-grab active:cursor-grabbing py-2 px-2 rounded-md hover:bg-muted/50 active:bg-muted/70 transition-colors duration-200 min-w-[32px] min-h-[32px] flex items-center justify-center shrink-0"
+              className="touch-manipulation cursor-grab active:cursor-grabbing py-3 px-3 rounded-md hover:bg-muted/50 active:bg-muted/70 transition-colors duration-200 min-w-[44px] min-h-[44px] flex items-center justify-center shrink-0 touch-action-none"
               role="button"
               aria-label="Arrastra para reordenar"
               title="Arrastra para reordenar"
+              onTouchStart={(e) => {
+                // Prevent scrolling during drag
+                e.preventDefault();
+              }}
+              onTouchMove={(e) => {
+                // Prevent scrolling during drag
+                e.preventDefault();
+              }}
             >
-              <GripVertical className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+              <GripVertical className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
             </div>
             <div className={'p-2 rounded-lg bg-primary/20 shrink-0'}>
               <Icon name={habit.icon as IconName} className="h-5 w-5 text-primary" />

@@ -21,7 +21,9 @@ import type { Habit } from '@/lib/types';
 import { doc, writeBatch } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { format } from 'date-fns';
-import { useDragSensors } from '@/hooks/use-drag-sensors';
+import { useDragSensors, useMobileDragSensors } from '@/hooks/use-drag-sensors';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { DragOverlayMobile } from '@/components/ui/drag-overlay-mobile';
 
 function SortableHabitItem({ habit, section = 'default' }: { habit: Habit; section?: string }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ 
@@ -44,6 +46,7 @@ function SortableHabitItem({ habit, section = 'default' }: { habit: Habit; secti
 export function HabitList() {
   const { user, habits: appHabits, setHabits, isClient } = useAppData();
   const [activeHabit, setActiveHabit] = useState<Habit | null>(null);
+  const isMobile = useIsMobile();
 
   const todayString = format(new Date(), 'yyyy-MM-dd');
 
@@ -51,7 +54,7 @@ export function HabitList() {
     return [...appHabits].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   }, [appHabits]);
 
-  const sensors = useDragSensors();
+  const sensors = isMobile ? useMobileDragSensors() : useDragSensors();
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -111,7 +114,11 @@ export function HabitList() {
       </div>
 
       <DragOverlay>
-        {activeHabit ? <HabitCardWithGrid key={`drag-${activeHabit.id}`} habit={activeHabit} isDragging section="drag" /> : null}
+        {activeHabit ? (
+          <DragOverlayMobile>
+            <HabitCardWithGrid key={`drag-${activeHabit.id}`} habit={activeHabit} isDragging section="drag" />
+          </DragOverlayMobile>
+        ) : null}
       </DragOverlay>
     </DndContext>
   );

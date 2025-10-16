@@ -25,11 +25,6 @@ import { routineTemplates } from "./routine-template-selector";
 import {
   DndContext,
   closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
   DragEndEvent,
   DragStartEvent,
   DragOverlay,
@@ -37,13 +32,15 @@ import {
 import {
   arrayMove,
   SortableContext,
-  sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useDragSensors, useMobileDragSensors } from '@/hooks/use-drag-sensors';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { DragOverlayMobile } from '@/components/ui/drag-overlay-mobile';
 
 // Función para obtener todos los pasos únicos de todas las plantillas
 const getAllTemplateSteps = () => {
@@ -175,12 +172,20 @@ function SortablePredefinedStepCard({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 cursor-grab active:cursor-grabbing"
+              className="h-10 w-10 cursor-grab active:cursor-grabbing touch-action-none"
               onClick={(e) => e.stopPropagation()}
               {...attributes}
               {...listeners}
+              onTouchStart={(e) => {
+                // Prevent scrolling during drag
+                e.preventDefault();
+              }}
+              onTouchMove={(e) => {
+                // Prevent scrolling during drag
+                e.preventDefault();
+              }}
             >
-              <GripVertical className="h-4 w-4" />
+              <GripVertical className="h-5 w-5" />
             </Button>
           </div>
         </div>
@@ -256,12 +261,20 @@ function SortableCustomStepCard({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 cursor-grab active:cursor-grabbing"
+              className="h-10 w-10 cursor-grab active:cursor-grabbing touch-action-none"
               onClick={(e) => e.stopPropagation()}
               {...attributes}
               {...listeners}
+              onTouchStart={(e) => {
+                // Prevent scrolling during drag
+                e.preventDefault();
+              }}
+              onTouchMove={(e) => {
+                // Prevent scrolling during drag
+                e.preventDefault();
+              }}
             >
-              <GripVertical className="h-4 w-4" />
+              <GripVertical className="h-5 w-5" />
             </Button>
           </div>
         </div>
@@ -299,6 +312,7 @@ function CreateRoutineDialog({
   const [schedules, setSchedules] = useState<RoutineSchedule[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [editingStep, setEditingStep] = useState<CustomStep | null>(null);
+  const isMobile = useIsMobile();
 
   const isEditMode = !!routineToEdit;
 
@@ -316,25 +330,7 @@ function CreateRoutineDialog({
   };
 
   // Configurar sensores para drag and drop optimizado para móvil
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-        delay: 150, // Reducido a 150ms para mejor respuesta en móvil
-        tolerance: 5,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        distance: 8,
-        delay: 100, // Touch más rápido que pointer para móvil
-        tolerance: 5,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
+  const sensors = isMobile ? useMobileDragSensors() : useDragSensors();
 
   // Inicializar datos cuando se abre el diálogo
   useEffect(() => {
@@ -680,35 +676,37 @@ function CreateRoutineDialog({
             
             <DragOverlay>
               {activeId ? (
-                (() => {
-                  const customStep = customSteps.find(step => step.id === activeId);
-                  
-                  if (customStep) {
-                    return (
-                      <Card className="opacity-90 shadow-lg">
-                        <CardContent className="flex items-start justify-between p-4">
-                          <div className="flex items-start gap-4 flex-1">
-                            <div className="grid gap-1.5">
-                              <p className="font-semibold">{customStep.title}</p>
-                              {customStep.description && (
-                                <p className="text-sm text-muted-foreground">{customStep.description}</p>
+                <DragOverlayMobile>
+                  {(() => {
+                    const customStep = customSteps.find(step => step.id === activeId);
+                    
+                    if (customStep) {
+                      return (
+                        <Card className="opacity-90 shadow-lg">
+                          <CardContent className="flex items-start justify-between p-4">
+                            <div className="flex items-start gap-4 flex-1">
+                              <div className="grid gap-1.5">
+                                <p className="font-semibold">{customStep.title}</p>
+                                {customStep.description && (
+                                  <p className="text-sm text-muted-foreground">{customStep.description}</p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4 pl-4">
+                              {customStep.duration && (
+                                <p className="text-sm text-muted-foreground whitespace-nowrap">
+                                  {customStep.duration}
+                                </p>
                               )}
                             </div>
-                          </div>
-                          <div className="flex items-center gap-4 pl-4">
-                            {customStep.duration && (
-                              <p className="text-sm text-muted-foreground whitespace-nowrap">
-                                {customStep.duration}
-                              </p>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  }
-                  
-                  return null;
-                })()
+                          </CardContent>
+                        </Card>
+                      );
+                    }
+                    
+                    return null;
+                  })()}
+                </DragOverlayMobile>
               ) : null}
             </DragOverlay>
           </DndContext>

@@ -1,14 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { DndContext, closestCenter } from '@dnd-kit/core';
+import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { HabitTracker } from '@/components/dashboard/habit-tracker';
 import { GratitudeTracker } from '@/components/dashboard/gratitude-journal';
 import { RoutineScheduler } from '@/components/dashboard/routine-scheduler';
 import { ReorderableCard } from '@/components/dashboard/reorderable-card';
 import { useAppData } from '@/contexts/app-provider';
+import { useDragSensors, useMobileDragSensors } from '@/hooks/use-drag-sensors';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
 type DashboardCardType = 'gratitude' | 'habits' | 'routines';
@@ -23,26 +25,9 @@ export default function Dashboard() {
   const { user } = useAppData();
   const [cards, setCards] = useState<DashboardCard[]>([]);
   const [isReordering, setIsReordering] = useState(false);
+  const isMobile = useIsMobile();
   
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-        delay: 100, // Respuesta rápida para móvil
-        tolerance: 5,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        distance: 8,
-        delay: 80, // Touch aún más rápido
-        tolerance: 5,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
+  const sensors = isMobile ? useMobileDragSensors() : useDragSensors();
 
   // Initialize cards with default order or user preference
   useEffect(() => {
