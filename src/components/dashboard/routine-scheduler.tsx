@@ -6,6 +6,7 @@ import { Clock, Calendar } from "lucide-react";
 import { Routine, RoutineSchedule } from "@/lib/types";
 import { useAppData } from "@/contexts/app-provider";
 import { PerformRoutineSheet } from "@/components/routines/perform-routine-sheet";
+import { format } from "date-fns";
 
 interface UpcomingRoutine {
   routine: Routine;
@@ -15,14 +16,16 @@ interface UpcomingRoutine {
   };
   isToday: boolean;
   isNow: boolean;
+  isCompleted: boolean;
 }
 
 export function RoutineScheduler() {
-  const { routines } = useAppData();
+  const { routines, toggleRoutineCompletion } = useAppData();
   
   // Función para obtener rutinas programadas para hoy
   const getTodayScheduledRoutines = (): UpcomingRoutine[] => {
     const today = new Date();
+    const todayString = format(today, 'yyyy-MM-dd');
     const todayDay = ['D', 'L', 'M', 'X', 'J', 'V', 'S'][today.getDay()];
     const currentTime = today.toTimeString().slice(0, 5); // 'HH:MM'
     
@@ -32,6 +35,8 @@ export function RoutineScheduler() {
       // Check both schedules (new) and reminders (legacy) for execution
       const schedules = routine.schedules || [];
       const reminders = routine.reminders || [];
+      const completedDates = routine.completedDates || [];
+      const isCompleted = completedDates.includes(todayString);
       
       // Process new schedules
       schedules.forEach(schedule => {
@@ -41,7 +46,8 @@ export function RoutineScheduler() {
             routine,
             schedule,
             isToday: true,
-            isNow
+            isNow,
+            isCompleted
           });
         }
       });
@@ -57,7 +63,8 @@ export function RoutineScheduler() {
               time: reminder.time
             },
             isToday: true,
-            isNow
+            isNow,
+            isCompleted
           });
         }
       });
@@ -99,13 +106,15 @@ export function RoutineScheduler() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {todayRoutines.map(({ routine, schedule, isNow }) => (
+        {todayRoutines.map(({ routine, schedule, isNow, isCompleted }) => (
           <div 
             key={`${routine.id}-${schedule.time}`}
             className={`p-4 rounded-lg border ${
-              isNow 
-                ? 'border-primary bg-primary/5' 
-                : 'border-muted-foreground/20'
+              isCompleted 
+                ? 'border-green-500 bg-green-50 dark:border-green-400 dark:bg-green-950/30' 
+                : isNow 
+                  ? 'border-primary bg-primary/5' 
+                  : 'border-muted-foreground/20'
             }`}
           >
             <div className="flex items-center justify-between">
@@ -114,6 +123,16 @@ export function RoutineScheduler() {
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                   <Clock className="h-3 w-3" />
                   {schedule.time}
+                  {isCompleted && (
+                    <span className="text-green-600 dark:text-green-400 text-xs font-medium">
+                      ✓ Completada
+                      {routine.lastCompletedAt && (
+                        <span className="ml-1 text-xs opacity-75">
+                          ({format(new Date(routine.lastCompletedAt), 'HH:mm')})
+                        </span>
+                      )}
+                    </span>
+                  )}
                 </div>
                 {routine.description && (
                   <p className="text-xs text-muted-foreground mt-1">
@@ -121,12 +140,15 @@ export function RoutineScheduler() {
                   </p>
                 )}
               </div>
-              <PerformRoutineSheet routine={routine}>
+              <PerformRoutineSheet 
+                routine={routine}
+                onComplete={() => toggleRoutineCompletion(routine.id)}
+              >
                 <Button 
-                  variant={isNow ? "default" : "outline"}
+                  variant={isCompleted ? "outline" : isNow ? "default" : "outline"}
                   size="sm"
                 >
-                  {isNow ? "Comenzar Ahora" : "Iniciar"}
+                  {isCompleted ? "Iniciar nuevamente" : isNow ? "Comenzar Ahora" : "Iniciar"}
                 </Button>
               </PerformRoutineSheet>
             </div>

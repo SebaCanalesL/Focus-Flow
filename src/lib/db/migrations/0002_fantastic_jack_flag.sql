@@ -1,0 +1,1 @@
+ALTER TABLE `routines` ADD `last_completed_at` text;

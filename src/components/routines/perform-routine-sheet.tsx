@@ -18,9 +18,11 @@ import { Routine, CustomStep } from "@/lib/types";
 export function PerformRoutineSheet({
   children,
   routine,
+  onComplete,
 }: {
   children: React.ReactNode;
   routine: Routine;
+  onComplete?: () => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -57,14 +59,16 @@ export function PerformRoutineSheet({
     if (currentStepIndex < totalSteps - 1) {
       setCurrentStepIndex(currentStepIndex + 1);
     } else {
-      // Last step completed, close the sheet
+      // Last step completed, mark as completed and close
+      onComplete?.();
       setIsOpen(false);
     }
   };
 
-  // Reset the step index when the sheet is closed
+  // Reset the step index when the sheet is opened or closed
   const handleOpenChange = (open: boolean) => {
-    if (!open) {
+    if (open) {
+      // Siempre reiniciar desde el principio cuando se abre
       setCurrentStepIndex(0);
     }
     setIsOpen(open);

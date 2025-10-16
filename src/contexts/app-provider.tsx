@@ -90,6 +90,7 @@ interface AppContextType {
   updateRoutine: (routineId: string, routineData: Partial<Routine>) => void;
   deleteRoutine: (routineId: string) => void;
   getRoutineById: (routineId: string) => Routine | undefined;
+  toggleRoutineCompletion: (routineId: string) => Promise<void>;
   isClient: boolean;
   getWeekCompletion: (habit: Habit) => { completed: number; total: number };
   todaysMotivation: string | null;
@@ -480,6 +481,56 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setHabits(originalHabits);
     }
   };
+
+  const toggleRoutineCompletion = async (routineId: string) => {
+    if (!user || !user.uid) return;
+  
+    const now = new Date();
+    const todayString = format(now, 'yyyy-MM-dd');
+    const nowISO = now.toISOString();
+    const originalRoutines = routines;
+    let updatedRoutine: Routine | undefined;
+  
+    // Optimistic UI update
+    setRoutines(prevRoutines => {
+      return prevRoutines.map(r => {
+        if (r.id === routineId) {
+          const completedDates = r.completedDates || [];
+          const isCompleted = completedDates.includes(todayString);
+          
+          // Si ya está completada, no hacer toggle, solo actualizar lastCompletedAt
+          // Si no está completada, agregar a completedDates
+          const newCompletedDates = isCompleted 
+            ? completedDates // Mantener como está
+            : [...completedDates, todayString].sort(); // Agregar si no está completada
+          
+          updatedRoutine = { 
+            ...r, 
+            completedDates: newCompletedDates,
+            lastCompletedAt: nowISO // Siempre actualizar la última vez completada
+          };
+          return updatedRoutine;
+        }
+        return r;
+      });
+    });
+  
+    // Firestore update
+    try {
+      if (updatedRoutine) {
+        const routineDocRef = doc(db, `users/${user.uid}/routines`, routineId);
+        await updateDoc(routineDocRef, { 
+          completedDates: updatedRoutine.completedDates,
+          lastCompletedAt: updatedRoutine.lastCompletedAt,
+          updatedAt: serverTimestamp()
+        });
+      }
+    } catch (error) {
+      console.error("Failed to toggle routine completion:", error);
+      // Revert on error
+      setRoutines(originalRoutines);
+    }
+  };
   
   const getHabitById = (habitId: string) => {
     return habits.find(h => h.id === habitId);
@@ -658,6 +709,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     updateRoutine,
     deleteRoutine,
     getRoutineById,
+    toggleRoutineCompletion,
     isClient,
     getWeekCompletion,
     todaysMotivation: motivationalMessage?.quote || null,

@@ -70,6 +70,8 @@ export interface Routine {
   schedules?: RoutineSchedule[]; // Nueva estructura para días de ejecución y notificaciones
   frequency?: string;
   days?: string[];
+  completedDates?: string[]; // Fechas cuando la rutina fue completada (formato 'YYYY-MM-DD')
+  lastCompletedAt?: string; // Fecha y hora de la última vez que se completó (formato ISO)
   createdAt?: string;
   updatedAt?: string;
 }

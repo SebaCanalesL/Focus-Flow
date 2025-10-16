@@ -577,7 +577,6 @@ function CreateRoutineDialog({
       title: routineName.trim(),
       category: "Partir el día",
       imageUrl: "/routines/routine-morning-energized.png",
-      description: "Rutina personalizada creada por el usuario",
       stepIds: Array.from(selectedStepIds),
       stepOrder: selectedStepOrder.length > 0 ? selectedStepOrder : Array.from(selectedStepIds), // ✅ Ensure stepOrder matches selectedStepIds
       customSteps: customSteps.length > 0 ? customSteps : undefined,

@@ -42,6 +42,8 @@ export const routines = sqliteTable("routines", {
   stepIds: text("stepIds", { mode: "json" }).$type<string[]>(),
   reminders: text("reminders", { mode: "json" }).$type<any[]>(),
   schedules: text("schedules", { mode: "json" }).$type<any[]>(),
+  completedDates: text("completed_dates", { mode: "json" }).$type<string[]>(),
+  lastCompletedAt: text("last_completed_at"),
 });
 
 export type Habit = typeof habits.$inferSelect;
