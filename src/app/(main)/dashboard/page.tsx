@@ -27,7 +27,9 @@ export default function Dashboard() {
   const [isReordering, setIsReordering] = useState(false);
   const isMobile = useIsMobile();
   
-  const sensors = isMobile ? useMobileDragSensors() : useDragSensors();
+  const mobileSensors = useMobileDragSensors();
+  const desktopSensors = useDragSensors();
+  const sensors = isMobile ? mobileSensors : desktopSensors;
 
   // Initialize cards with default order or user preference
   useEffect(() => {
@@ -77,7 +79,7 @@ export default function Dashboard() {
     setIsReordering(true);
   };
 
-  const handleDragEnd = (event: any) => {
+  const handleDragEnd = (event: { active: { id: string }; over: { id: string } | null }) => {
     const { active, over } = event;
     setIsReordering(false);
 

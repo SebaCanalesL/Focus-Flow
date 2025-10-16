@@ -64,7 +64,7 @@ export function useDragSensorsWithDelay(pointerDelay: number = 50, touchDelay: n
  * Con feedback visual mejorado y detección de gestos
  */
 export function useMobileDragSensors() {
-  const isMobile = useIsMobile();
+  // const isMobile = useIsMobile();
   
   return useSensors(
     // PointerSensor optimizado para móvil

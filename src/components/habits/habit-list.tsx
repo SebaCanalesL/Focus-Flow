@@ -20,7 +20,7 @@ import { CSS } from '@dnd-kit/utilities';
 import type { Habit } from '@/lib/types';
 import { doc, writeBatch } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { format } from 'date-fns';
+// import { format } from 'date-fns';
 import { useDragSensors, useMobileDragSensors } from '@/hooks/use-drag-sensors';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { DragOverlayMobile } from '@/components/ui/drag-overlay-mobile';
@@ -48,13 +48,15 @@ export function HabitList() {
   const [activeHabit, setActiveHabit] = useState<Habit | null>(null);
   const isMobile = useIsMobile();
 
-  const todayString = format(new Date(), 'yyyy-MM-dd');
+  // const todayString = format(new Date(), 'yyyy-MM-dd');
 
   const sortedHabits = useMemo(() => {
     return [...appHabits].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   }, [appHabits]);
 
-  const sensors = isMobile ? useMobileDragSensors() : useDragSensors();
+  const mobileSensors = useMobileDragSensors();
+  const desktopSensors = useDragSensors();
+  const sensors = isMobile ? mobileSensors : desktopSensors;
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;

@@ -330,7 +330,9 @@ function CreateRoutineDialog({
   };
 
   // Configurar sensores para drag and drop optimizado para móvil
-  const sensors = isMobile ? useMobileDragSensors() : useDragSensors();
+  const mobileSensors = useMobileDragSensors();
+  const desktopSensors = useDragSensors();
+  const sensors = isMobile ? mobileSensors : desktopSensors;
 
   // Inicializar datos cuando se abre el diálogo
   useEffect(() => {
