@@ -81,27 +81,27 @@ export function HabitCardWithGrid({
       data-testid="habit-card"
     >
       <CardHeader>
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-start gap-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3 min-w-0 flex-1">
             <div 
               {...listeners} 
-              className="touch-manipulation cursor-grab active:cursor-grabbing py-2 px-1 rounded-md hover:bg-muted/50 active:bg-muted/70 transition-colors duration-200 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="touch-manipulation cursor-grab active:cursor-grabbing py-2 px-2 rounded-md hover:bg-muted/50 active:bg-muted/70 transition-colors duration-200 min-w-[32px] min-h-[32px] flex items-center justify-center shrink-0"
               role="button"
               aria-label="Arrastra para reordenar"
               title="Arrastra para reordenar"
             >
-              <GripVertical className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
+              <GripVertical className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
             </div>
-            <div className={'p-2 rounded-lg bg-primary/20'}>
-              <Icon name={habit.icon as IconName} className="h-6 w-6 text-primary" />
+            <div className={'p-2 rounded-lg bg-primary/20 shrink-0'}>
+              <Icon name={habit.icon as IconName} className="h-5 w-5 text-primary" />
             </div>
-            <div>
-              <CardTitle className="text-lg font-semibold">{habit.name}</CardTitle>
+            <div className="min-w-0 flex-1">
+              <CardTitle className="text-base font-semibold leading-tight break-words">{habit.name}</CardTitle>
             </div>
           </div>
-          <div className="flex items-center gap-1 sm:gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <EditHabitDialog habit={habit}>
-              <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9">
+              <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 shrink-0">
                 <Pencil className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="sr-only">Editar</span>
               </Button>
@@ -109,7 +109,7 @@ export function HabitCardWithGrid({
 
             <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="icon" className="h-8 w-8">
+                <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 shrink-0">
                   <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5" />
                   <span className="sr-only">Ver</span>
                 </Button>
@@ -124,7 +124,7 @@ export function HabitCardWithGrid({
             </Popover>
             <Button
               size="icon"
-              className={cn('h-8 w-8 sm:h-9 sm:w-9', isCompletedToday && 'bg-green-600 text-white hover:bg-green-600/90')}
+              className={cn('h-8 w-8 sm:h-9 sm:w-9 shrink-0', isCompletedToday && 'bg-green-600 text-white hover:bg-green-600/90')}
               variant={isCompletedToday ? 'default' : 'outline'}
               onClick={(e) => {
                 e.stopPropagation();

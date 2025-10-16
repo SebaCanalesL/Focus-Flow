@@ -24,11 +24,14 @@ export async function dailyMotivation(input: DailyMotivationInput): Promise<Dail
   return dailyMotivationFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'dailyMotivationPrompt',
-  input: {schema: DailyMotivationInputSchema},
-  output: {schema: DailyMotivationOutputSchema},
-  prompt: `You are an expert in creating short and practical motivational content.  
+// Only define prompt if AI is available
+const prompt = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY 
+  ? ai.definePrompt({
+      name: 'dailyMotivationPrompt',
+      input: {schema: DailyMotivationInputSchema},
+      output: {schema: DailyMotivationOutputSchema},
+      model: 'gemini-1.5-flash',
+      prompt: `You are an expert in creating short and practical motivational content.  
 Your task is to generate a unique and inspiring sentence in Spanish for a user named {{{userName}}}. It's not neccessary to always use the user name in the phrase. 
 
 Guidelines:
@@ -43,13 +46,14 @@ Output:
 A single practical and motivational sentence in Spanish (Chile).
 
 Example:
-“Cada vez que agradeces, entrenas tu mente para enfocarse en lo que suma.”
-“Tu avance está en los pequeños hábitos que repites cada día.”
-“Lo que mides y celebras, se vuelve más fácil de mantener.”
-“Un recordatorio simple: lo constante pesa más que lo perfecto.”
+"Cada vez que agradeces, entrenas tu mente para enfocarse en lo que suma."
+"Tu avance está en los pequeños hábitos que repites cada día."
+"Lo que mides y celebras, se vuelve más fácil de mantener."
+"Un recordatorio simple: lo constante pesa más que lo perfecto."
 "El trabajo constante supera cualquier talento"
 `,
-});
+    })
+  : null;
 
 const dailyMotivationFlow = ai.defineFlow(
   {
@@ -58,6 +62,20 @@ const dailyMotivationFlow = ai.defineFlow(
     outputSchema: DailyMotivationOutputSchema,
   },
   async (input) => {
+    // Return a fallback response if AI is not available
+    if (!prompt || !process.env.GEMINI_API_KEY && !process.env.GOOGLE_API_KEY) {
+      const fallbackQuotes = [
+        "Cada vez que agradeces, entrenas tu mente para enfocarse en lo que suma.",
+        "Tu avance está en los pequeños hábitos que repites cada día.",
+        "Lo que mides y celebras, se vuelve más fácil de mantener.",
+        "Un recordatorio simple: lo constante pesa más que lo perfecto.",
+        "El trabajo constante supera cualquier talento"
+      ];
+      return {
+        quote: fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)]
+      };
+    }
+    
     const {output} = await prompt(input);
     return output!;
   }

@@ -36,16 +36,25 @@ if (typeof window !== 'undefined') {
   });
 }
 
-// Connect to emulators if in development and emulators are enabled
-if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === 'true') {
+// Connect to emulators if emulators are enabled
+console.log('Firebase config check:', {
+  NODE_ENV: process.env.NODE_ENV,
+  USE_EMULATORS: process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS,
+  shouldConnect: process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === 'true'
+});
+
+if (process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === 'true') {
   console.log('Connecting to Firebase emulators');
   try {
     connectFirestoreEmulator(db, 'localhost', 8081);
     connectAuthEmulator(auth, 'http://127.0.0.1:9098', { disableWarnings: true });
     connectStorageEmulator(storage, 'localhost', 9199);
+    console.log('Successfully connected to Firebase emulators');
   } catch (e) {
     console.error("Error connecting to emulators. It's possible they are already connected.", e);
   }
+} else {
+  console.log('Not connecting to emulators - using production Firebase');
 }
 
 export {app, db, auth, storage, messaging};

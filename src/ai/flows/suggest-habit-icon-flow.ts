@@ -65,11 +65,14 @@ export async function suggestHabitIcon(input: SuggestHabitIconInput): Promise<Su
   }
 }
 
-const prompt = ai.definePrompt({
-  name: 'suggestHabitIconPrompt',
-  input: {schema: SuggestHabitIconInputSchema},
-  output: {schema: SuggestHabitIconOutputSchema},
-  prompt: `You are an icon suggestion expert. Your task is to suggest a relevant icon for a given habit name.
+// Only define prompt if AI is available
+const prompt = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY 
+  ? ai.definePrompt({
+      name: 'suggestHabitIconPrompt',
+      input: {schema: SuggestHabitIconInputSchema},
+      output: {schema: SuggestHabitIconOutputSchema},
+      model: 'gemini-1.5-flash',
+      prompt: `You are an icon suggestion expert. Your task is to suggest a relevant icon for a given habit name.
 The icon must be a valid name from the lucide-react library.
 
 Habit Name: {{{habitName}}}
@@ -80,7 +83,8 @@ Return only the exact name of the icon. If no icon is a good fit, return "Target
 Valid Icons:
 ${VALID_ICONS.join(", ")}
 `,
-});
+    })
+  : null;
 
 const suggestHabitIconFlow = ai.defineFlow(
   {
@@ -89,6 +93,11 @@ const suggestHabitIconFlow = ai.defineFlow(
     outputSchema: SuggestHabitIconOutputSchema,
   },
   async (input) => {
+    // Return a fallback response if AI is not available
+    if (!prompt || !process.env.GEMINI_API_KEY && !process.env.GOOGLE_API_KEY) {
+      return { iconName: 'Target' };
+    }
+    
     const {output} = await prompt(input);
     if (!output || !VALID_ICONS.includes(output.iconName)) {
         return { iconName: 'Target' };

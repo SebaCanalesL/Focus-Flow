@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { Routine, CustomStep, Reminder, RoutineSchedule } from "@/lib/types";
 import { CustomStepDialog } from "./custom-step-dialog";
 import { RemindersSection } from "./reminders-section";
+import { FrequencySelector } from "./frequency-selector";
 import { routineTemplates } from "./routine-template-selector";
 import {
   DndContext,
@@ -141,20 +142,15 @@ function SortablePredefinedStepCard({
       )}
       onClick={() => onToggle(step.id)}
     >
-      <CardContent className="flex items-start justify-between p-4">
-        <div className="flex items-start gap-4 flex-1">
-          <div className="grid gap-1.5">
-            <p className="font-semibold">{step.title}</p>
-            <p className="text-sm text-muted-foreground">{step.description}</p>
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-base">{step.title}</p>
+            {step.duration && (
+              <p className="text-xs text-muted-foreground mt-1">{step.duration}</p>
+            )}
           </div>
-        </div>
-        <div className="flex items-center gap-4 pl-4">
-          {step.duration && (
-            <p className="text-sm text-muted-foreground whitespace-nowrap">
-              {step.duration}
-            </p>
-          )}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <Button
               variant="ghost"
               size="icon"
@@ -187,6 +183,9 @@ function SortablePredefinedStepCard({
               <GripVertical className="h-4 w-4" />
             </Button>
           </div>
+        </div>
+        <div className="w-full">
+          <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
         </div>
       </CardContent>
     </Card>
@@ -230,22 +229,15 @@ function SortableCustomStepCard({
       )}
       onClick={() => onToggle(step.id)}
     >
-      <CardContent className="flex items-start justify-between p-4">
-        <div className="flex items-start gap-4 flex-1">
-          <div className="grid gap-1.5">
-            <p className="font-semibold">{step.title}</p>
-            {step.description && (
-              <p className="text-sm text-muted-foreground">{step.description}</p>
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-base">{step.title}</p>
+            {step.duration && (
+              <p className="text-xs text-muted-foreground mt-1">{step.duration}</p>
             )}
           </div>
-        </div>
-        <div className="flex items-center gap-4 pl-4">
-          {step.duration && (
-            <p className="text-sm text-muted-foreground whitespace-nowrap">
-              {step.duration}
-            </p>
-          )}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <Button
               variant="ghost"
               size="icon"
@@ -273,6 +265,11 @@ function SortableCustomStepCard({
             </Button>
           </div>
         </div>
+        {step.description && (
+          <div className="w-full">
+            <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -571,6 +568,7 @@ function CreateRoutineDialog({
     console.log('- selectedStepIds:', Array.from(selectedStepIds));
     console.log('- stepOrder:', stepOrder);
     console.log('- customSteps:', customSteps);
+    console.log('- schedules:', schedules);
 
     // ✅ FIX: Ensure stepOrder only includes selected steps and maintains correct order
     const selectedStepOrder = stepOrder.filter(stepId => selectedStepIds.has(stepId));
@@ -584,7 +582,7 @@ function CreateRoutineDialog({
       stepOrder: selectedStepOrder.length > 0 ? selectedStepOrder : Array.from(selectedStepIds), // ✅ Ensure stepOrder matches selectedStepIds
       customSteps: customSteps.length > 0 ? customSteps : undefined,
       reminders: reminders.length > 0 ? reminders : undefined,
-      schedules: schedules, // Always include schedules array, even if empty
+      schedules: schedules.length > 0 ? schedules : undefined, // Only include schedules if there are any
     };
 
     console.log('🔍 DEBUG - Datos a guardar:', routineData);
@@ -881,9 +879,9 @@ function CreateRoutineDialog({
             </CardContent>
           </Card>
 
-          {/* Recordatorios */}
+          {/* Selector de frecuencia y recordatorios */}
           <div className="pt-6">
-            <RemindersSection 
+            <FrequencySelector 
               schedules={schedules} 
               onSchedulesChange={setSchedules} 
             />

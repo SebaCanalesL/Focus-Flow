@@ -13,6 +13,7 @@ import { RoutineTemplateSelector } from '@/components/routines/routine-template-
 import { PerformRoutineSheet } from '@/components/routines/perform-routine-sheet';
 import { Routine } from '@/lib/types';
 import { useAppData } from '@/contexts/app-provider';
+import { groupSchedules } from '@/lib/schedule-utils';
 
 const filters = ['Mis rutinas'];
 
@@ -79,27 +80,36 @@ function RoutineCard({
                 <span className="text-xs font-medium text-muted-foreground">⏰ Horarios programados:</span>
               </div>
               <div className="space-y-1">
-                {/* Show schedules first (new format) */}
-                {activeSchedules.map((schedule) => {
-                  const dayIndex = weekDays.indexOf(schedule.day);
-                  const dayName = dayIndex !== -1 ? dayNames[dayIndex] : schedule.day;
-                  const notificationStatus = schedule.notificationEnabled ? '🔔' : '🔕';
-                  return (
-                    <p key={schedule.id} className="text-xs text-muted-foreground">
-                      {dayName} a las {schedule.time} {notificationStatus}
-                    </p>
-                  );
-                })}
-                {/* Show legacy reminders */}
-                {activeReminders.map((reminder) => {
-                  const dayIndex = weekDays.indexOf(reminder.day);
-                  const dayName = dayIndex !== -1 ? dayNames[dayIndex] : reminder.day;
-                  return (
-                    <p key={reminder.id} className="text-xs text-muted-foreground">
-                      {dayName} a las {reminder.time} 🔔
-                    </p>
-                  );
-                })}
+                {/* Show grouped schedules */}
+                {(() => {
+                  // Convertir reminders legacy a formato de schedules para agrupar
+                  const allSchedules = [
+                    ...activeSchedules,
+                    ...activeReminders.map(reminder => ({
+                      id: reminder.id,
+                      day: reminder.day,
+                      time: reminder.time,
+                      notificationEnabled: true,
+                      executionEnabled: true
+                    }))
+                  ];
+                  
+                  const groupedSchedules = groupSchedules(allSchedules);
+                  
+                  return groupedSchedules.map((group, index) => {
+                    // Verificar si algún schedule del grupo tiene recordatorios activados
+                    const hasActiveReminders = group.days.some(day => {
+                      const schedule = allSchedules.find(s => s.day === day);
+                      return schedule?.notificationEnabled;
+                    });
+                    
+                    return (
+                      <p key={index} className="text-xs text-muted-foreground">
+                        {group.label} {hasActiveReminders ? '🔔' : '🔕'}
+                      </p>
+                    );
+                  });
+                })()}
               </div>
             </div>
           )}
