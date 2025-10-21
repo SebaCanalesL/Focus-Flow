@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -69,6 +69,7 @@ export function EditHabitDialog({ habit, children }: { habit: Habit; children: R
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const { updateHabit, deleteHabit } = useAppData();
   const { toast } = useToast();
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -91,6 +92,14 @@ export function EditHabitDialog({ habit, children }: { habit: Habit; children: R
       });
       // Initialize reminders from habit data only when opening
       setReminders(habit.reminders || []);
+      
+      // ✅ FIX: Desenfocar cualquier input que pueda estar enfocado automáticamente
+      setTimeout(() => {
+        const activeElement = document.activeElement as HTMLElement;
+        if (activeElement && activeElement.tagName === 'INPUT') {
+          activeElement.blur();
+        }
+      }, 100);
     }
   }, [habit, form, isOpen]);
 
@@ -168,7 +177,12 @@ export function EditHabitDialog({ habit, children }: { habit: Habit; children: R
                 <FormItem>
                   <FormLabel>Nombre del Hábito</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ej: Leer por 15 minutos" {...field} autoFocus={false} />
+                    <Input 
+                      ref={nameInputRef}
+                      placeholder="Ej: Leer por 15 minutos" 
+                      {...field} 
+                      autoFocus={false}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

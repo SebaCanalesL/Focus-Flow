@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -205,6 +205,7 @@ function RoutineTemplateSelector({
   children: React.ReactNode;
   onSave: (newRoutine: Partial<Routine>) => void;
 }) {
+  console.log('RoutineTemplateSelector rendered');
   const [isOpen, setIsOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [showCustomDialog, setShowCustomDialog] = useState(false);

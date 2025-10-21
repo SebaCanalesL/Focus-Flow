@@ -147,7 +147,7 @@ export function TodaysHabitsCard({ habits }: { habits: Habit[]}) {
                 return (
                     <div
                     key={habit.id}
-                    className="flex items-center justify-between rounded-lg border p-3 bg-muted/20"
+                    className="flex items-center justify-between rounded-lg border-2 border-green-500 p-3 bg-muted/20"
                     >
                     <div className="flex items-center gap-3">
                         <button onClick={() => toggleHabitCompletion(habit.id, today)} aria-label={`Marcar ${habit.name} como pendiente`}>

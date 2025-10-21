@@ -4,7 +4,10 @@ import { buttonVariants } from '@/components/ui/button';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { FloatingActionButton } from '@/components/ui/floating-action-button';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { CreateHabitDialog } from '@/components/habits/create-habit-dialog';
 import {
   CreateRoutineDialog,
   predefinedSteps as routineSteps,
@@ -240,6 +243,20 @@ function RoutineCard({
 export default function RoutinesPage() {
   const { user, routines, addRoutine, updateRoutine, deleteRoutine, loading } = useAppData();
   const [selectedFilter, setSelectedFilter] = useState('Mis rutinas');
+  const [isHabitDialogOpen, setIsHabitDialogOpen] = useState(false);
+  const [isRoutineDialogOpen, setIsRoutineDialogOpen] = useState(false);
+  const isMobile = useIsMobile();
+  const routineTriggerRef = useRef<HTMLButtonElement>(null);
+
+  // Effect para hacer click automático en el trigger cuando se abre el diálogo
+  useEffect(() => {
+    if (isRoutineDialogOpen && routineTriggerRef.current) {
+      console.log('Routine dialog opened, clicking trigger');
+      setTimeout(() => {
+        routineTriggerRef.current?.click();
+      }, 50);
+    }
+  }, [isRoutineDialogOpen]);
 
   const handleSaveRoutine = async (newRoutine: Partial<Routine>) => {
     if (!user || !user.uid) {
@@ -293,13 +310,15 @@ export default function RoutinesPage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between w-full">
         <h1 className="text-2xl font-bold md:text-3xl">Rutinas</h1>
-        <div className="flex-shrink-0">
-          <RoutineTemplateSelector onSave={handleSaveRoutine}>
-            <div className={cn(buttonVariants({ size: 'sm' }), "cursor-pointer")}>
-              Crear Rutina
-            </div>
-          </RoutineTemplateSelector>
-        </div>
+        {!isMobile && (
+          <div className="flex-shrink-0">
+            <RoutineTemplateSelector onSave={handleSaveRoutine}>
+              <div className={cn(buttonVariants({ size: 'sm' }), "cursor-pointer")}>
+                Crear Rutina
+              </div>
+            </RoutineTemplateSelector>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-2 overflow-x-auto pb-2">
@@ -346,6 +365,23 @@ export default function RoutinesPage() {
           </div>
         )}
       </div>
+      
+      {isMobile && (
+        <FloatingActionButton
+          onCreateHabit={() => setIsHabitDialogOpen(true)}
+          onCreateRoutine={() => setIsRoutineDialogOpen(true)}
+        />
+      )}
+      
+      <CreateHabitDialog open={isHabitDialogOpen} onOpenChange={setIsHabitDialogOpen} />
+      
+      {isRoutineDialogOpen && (
+        <RoutineTemplateSelector onSave={handleSaveRoutine}>
+          <Button ref={routineTriggerRef} className="hidden" style={{ display: 'none' }}>
+            Crear Rutina
+          </Button>
+        </RoutineTemplateSelector>
+      )}
     </div>
   );
 }

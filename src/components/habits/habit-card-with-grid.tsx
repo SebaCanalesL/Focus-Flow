@@ -40,9 +40,11 @@ const Icon = ({ name, className }: { name: IconName; className?: string }) => {
 export function HabitCardWithGrid({
   habit,
   section = 'default',
+  isReordering = false,
 }: {
   habit: Habit;
   section?: string;
+  isReordering?: boolean;
 }) {
   const { toggleHabitCompletion, getStreak, getWeekCompletion } = useAppData();
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -81,6 +83,18 @@ export function HabitCardWithGrid({
     ? 'día'
     : 'días';
 
+  // Render compact version for reordering
+  if (isReordering) {
+    return (
+      <div className="flex items-center gap-3 w-full" data-testid="habit-card-compact">
+        <div className="p-2 rounded-lg bg-primary/20 shrink-0">
+          <Icon name={habit.icon as IconName} className="h-4 w-4 text-primary" />
+        </div>
+        <CardTitle className="text-sm font-semibold truncate">{habit.name}</CardTitle>
+      </div>
+    );
+  }
+
   return (
     <Card
       className={cn(
@@ -102,30 +116,31 @@ export function HabitCardWithGrid({
           </div>
           
           {/* Botones de acción */}
-          <div className="flex items-center gap-0.5 shrink-0">
-          <Button
-            size="icon"
-            className={cn('h-8 w-8 sm:h-9 sm:w-9 shrink-0', isCompletedToday && 'bg-green-600 text-white hover:bg-green-600/90')}
-            variant={isCompletedToday ? 'default' : 'outline'}
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleHabitCompletion(habit.id, new Date());
-            }}
-          >
-            {isCompletedToday ? (
-              <CheckCheck className="h-4 w-4 sm:h-5 sm:w-5" />
-            ) : (
-              <Check className="h-4 w-4 sm:h-5 sm:w-5" />
-            )}
-          </Button>
-          
-          <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 shrink-0">
-                <MoreVertical className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="sr-only">Más opciones</span>
+          {!isReordering && (
+            <div className="flex items-center gap-0.5 shrink-0">
+              <Button
+                size="icon"
+                className={cn('h-8 w-8 sm:h-9 sm:w-9 shrink-0', isCompletedToday && 'bg-green-600 text-white hover:bg-green-600/90')}
+                variant={isCompletedToday ? 'default' : 'outline'}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleHabitCompletion(habit.id, new Date());
+                }}
+              >
+                {isCompletedToday ? (
+                  <CheckCheck className="h-4 w-4 sm:h-5 sm:w-5" />
+                ) : (
+                  <Check className="h-4 w-4 sm:h-5 sm:w-5" />
+                )}
               </Button>
-            </DropdownMenuTrigger>
+              
+              <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 shrink-0">
+                    <MoreVertical className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="sr-only">Más opciones</span>
+                  </Button>
+                </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onSelect={(e) => {
                 e.preventDefault();
@@ -166,6 +181,7 @@ export function HabitCardWithGrid({
             <button className="sr-only" ref={editTriggerRef} />
           </EditHabitDialog>
           </div>
+          )}
         </div>
       </CardHeader>
       <CardContent className="flex-grow flex items-end justify-between gap-4">

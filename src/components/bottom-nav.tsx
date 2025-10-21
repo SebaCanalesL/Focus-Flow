@@ -10,7 +10,6 @@ const userLinks = [
   { name: "Hábitos", href: "/habits", icon: Target },
   { name: "Rutinas", href: "/routines", icon: Repeat },
   { name: "Aprender", href: "/learn", icon: BookOpen },
-  { name: "Historial", href: "/history", icon: CalendarDays },
 ];
 
 export function BottomNav() {
