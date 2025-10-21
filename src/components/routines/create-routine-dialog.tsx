@@ -15,32 +15,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Pencil, Plus, GripVertical } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Routine, CustomStep, Reminder, RoutineSchedule } from "@/lib/types";
 import { CustomStepDialog } from "./custom-step-dialog";
 import { RemindersSection } from "./reminders-section";
 import { FrequencySelector } from "./frequency-selector";
 import { routineTemplates } from "./routine-template-selector";
-import {
-  DndContext,
-  closestCenter,
-  DragEndEvent,
-  DragStartEvent,
-  DragOverlay,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import {
-  useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { useDragSensors, useMobileDragSensors } from '@/hooks/use-drag-sensors';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { DragOverlayMobile } from '@/components/ui/drag-overlay-mobile';
 
 // Función para obtener todos los pasos únicos de todas las plantillas
 const getAllTemplateSteps = () => {
@@ -102,8 +83,8 @@ function generateCustomStepId(): string {
   return `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
-// Componente sortable para mostrar un paso predefinido
-function SortablePredefinedStepCard({
+// Componente para mostrar un paso predefinido
+function PredefinedStepCard({
   step,
   isSelected,
   onToggle,
@@ -114,28 +95,11 @@ function SortablePredefinedStepCard({
   onToggle: (stepId: string) => void;
   onEditStep: (step: CustomStep) => void;
 }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: step.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
   return (
     <Card
-      ref={setNodeRef}
-      style={style}
       className={cn(
         "transition-colors cursor-pointer",
-        isSelected && "border-primary bg-muted/50",
-        isDragging && "opacity-50 z-50"
+        isSelected && "border-primary bg-muted/50"
       )}
       onClick={() => onToggle(step.id)}
     >
@@ -169,24 +133,6 @@ function SortablePredefinedStepCard({
               checked={isSelected}
               onClick={(e) => e.stopPropagation()}
             />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10 cursor-grab active:cursor-grabbing touch-action-none"
-              onClick={(e) => e.stopPropagation()}
-              {...attributes}
-              {...listeners}
-              onTouchStart={(e) => {
-                // Prevent scrolling during drag
-                e.preventDefault();
-              }}
-              onTouchMove={(e) => {
-                // Prevent scrolling during drag
-                e.preventDefault();
-              }}
-            >
-              <GripVertical className="h-5 w-5" />
-            </Button>
           </div>
         </div>
         <div className="w-full">
@@ -197,8 +143,8 @@ function SortablePredefinedStepCard({
   );
 }
 
-// Componente sortable para mostrar un paso personalizado
-function SortableCustomStepCard({
+// Componente para mostrar un paso personalizado
+function CustomStepCard({
   step,
   isSelected,
   onToggle,
@@ -209,28 +155,11 @@ function SortableCustomStepCard({
   onToggle: (stepId: string) => void;
   onEditStep: (step: CustomStep) => void;
 }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: step.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
   return (
     <Card
-      ref={setNodeRef}
-      style={style}
       className={cn(
         "transition-colors cursor-pointer",
-        isSelected && "border-primary bg-muted/50",
-        isDragging && "opacity-50 z-50"
+        isSelected && "border-primary bg-muted/50"
       )}
       onClick={() => onToggle(step.id)}
     >
@@ -258,24 +187,6 @@ function SortableCustomStepCard({
               checked={isSelected}
               onClick={(e) => e.stopPropagation()}
             />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10 cursor-grab active:cursor-grabbing touch-action-none"
-              onClick={(e) => e.stopPropagation()}
-              {...attributes}
-              {...listeners}
-              onTouchStart={(e) => {
-                // Prevent scrolling during drag
-                e.preventDefault();
-              }}
-              onTouchMove={(e) => {
-                // Prevent scrolling during drag
-                e.preventDefault();
-              }}
-            >
-              <GripVertical className="h-5 w-5" />
-            </Button>
           </div>
         </div>
         {step.description && (
@@ -310,9 +221,7 @@ function CreateRoutineDialog({
   const [customSteps, setCustomSteps] = useState<CustomStep[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [schedules, setSchedules] = useState<RoutineSchedule[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(null);
   const [editingStep, setEditingStep] = useState<CustomStep | null>(null);
-  const isMobile = useIsMobile();
 
   const isEditMode = !!routineToEdit;
 
@@ -328,11 +237,6 @@ function CreateRoutineDialog({
       setIsOpen(open);
     }
   };
-
-  // Configurar sensores para drag and drop optimizado para móvil
-  const mobileSensors = useMobileDragSensors();
-  const desktopSensors = useDragSensors();
-  const sensors = isMobile ? mobileSensors : desktopSensors;
 
   // Inicializar datos cuando se abre el diálogo
   useEffect(() => {
@@ -514,31 +418,6 @@ function CreateRoutineDialog({
   };
 
 
-  // Manejar inicio del drag
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
-  };
-
-  // Manejar fin del drag
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    
-    if (active.id !== over?.id) {
-      setStepOrder((items) => {
-        const oldIndex = items.indexOf(active.id as string);
-        const newIndex = items.indexOf(over?.id as string);
-        
-        return arrayMove(items, oldIndex, newIndex);
-      });
-    }
-    
-    setActiveId(null);
-  };
-
-  // Manejar cancelación del drag
-  const handleDragCancel = () => {
-    setActiveId(null);
-  };
 
   // Manejar edición de pasos
   const handleEditStep = (step: CustomStep) => {
@@ -645,73 +524,27 @@ function CreateRoutineDialog({
             </Button>
           </div>
 
-          {/* Pasos seleccionados en el orden correcto con drag and drop */}
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDragCancel={handleDragCancel}
-          >
-            <SortableContext items={stepOrder.filter(stepId => selectedStepIds.has(stepId))} strategy={verticalListSortingStrategy}>
-              <div className="space-y-3">
-                {/* Pasos seleccionados - solo pasos personalizados */}
-                {stepOrder
-                  .filter(stepId => selectedStepIds.has(stepId))
-                  .map((stepId) => {
-                    const customStep = customSteps.find(step => step.id === stepId);
-                    if (customStep) {
-                      return (
-                        <SortableCustomStepCard
-                          key={stepId}
-                          step={customStep}
-                          isSelected={selectedStepIds.has(stepId)}
-                          onToggle={toggleStep}
-                          onEditStep={handleEditStep}
-                        />
-                      );
-                    }
-                    return null;
-                  })}
-              </div>
-            </SortableContext>
-            
-            <DragOverlay>
-              {activeId ? (
-                <DragOverlayMobile>
-                  {(() => {
-                    const customStep = customSteps.find(step => step.id === activeId);
-                    
-                    if (customStep) {
-                      return (
-                        <Card className="opacity-90 shadow-lg">
-                          <CardContent className="flex items-start justify-between p-4">
-                            <div className="flex items-start gap-4 flex-1">
-                              <div className="grid gap-1.5">
-                                <p className="font-semibold">{customStep.title}</p>
-                                {customStep.description && (
-                                  <p className="text-sm text-muted-foreground">{customStep.description}</p>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-4 pl-4">
-                              {customStep.duration && (
-                                <p className="text-sm text-muted-foreground whitespace-nowrap">
-                                  {customStep.duration}
-                                </p>
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    }
-                    
-                    return null;
-                  })()}
-                </DragOverlayMobile>
-              ) : null}
-            </DragOverlay>
-          </DndContext>
+          {/* Pasos seleccionados */}
+          <div className="space-y-3">
+            {/* Pasos seleccionados - solo pasos personalizados */}
+            {stepOrder
+              .filter(stepId => selectedStepIds.has(stepId))
+              .map((stepId) => {
+                const customStep = customSteps.find(step => step.id === stepId);
+                if (customStep) {
+                  return (
+                    <CustomStepCard
+                      key={stepId}
+                      step={customStep}
+                      isSelected={selectedStepIds.has(stepId)}
+                      onToggle={toggleStep}
+                      onEditStep={handleEditStep}
+                    />
+                  );
+                }
+                return null;
+              })}
+          </div>
 
           {/* Pasos deseleccionados al final */}
           {(() => {

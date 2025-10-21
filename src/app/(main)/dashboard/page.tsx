@@ -1,17 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { DndContext, closestCenter } from '@dnd-kit/core';
-import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { HabitTracker } from '@/components/dashboard/habit-tracker';
 import { GratitudeTracker } from '@/components/dashboard/gratitude-journal';
 import { RoutineScheduler } from '@/components/dashboard/routine-scheduler';
-import { ReorderableCard } from '@/components/dashboard/reorderable-card';
 import { useAppData } from '@/contexts/app-provider';
-import { useDragSensors, useMobileDragSensors } from '@/hooks/use-drag-sensors';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { cn } from '@/lib/utils';
 
 type DashboardCardType = 'gratitude' | 'habits' | 'routines';
 
@@ -24,12 +17,6 @@ interface DashboardCard {
 export default function Dashboard() {
   const { user } = useAppData();
   const [cards, setCards] = useState<DashboardCard[]>([]);
-  const [isReordering, setIsReordering] = useState(false);
-  const isMobile = useIsMobile();
-  
-  const mobileSensors = useMobileDragSensors();
-  const desktopSensors = useDragSensors();
-  const sensors = isMobile ? mobileSensors : desktopSensors;
 
   // Initialize cards with default order or user preference
   useEffect(() => {
@@ -75,47 +62,13 @@ export default function Dashboard() {
     }
   }, [user?.uid]);
 
-  const handleDragStart = () => {
-    setIsReordering(true);
-  };
-
-  const handleDragEnd = (event: { active: { id: string }; over: { id: string } | null }) => {
-    const { active, over } = event;
-    setIsReordering(false);
-
-    if (over && active.id !== over.id) {
-      setCards((items) => {
-        const oldIndex = items.findIndex(item => item.id === active.id);
-        const newIndex = items.findIndex(item => item.id === over.id);
-        
-        const newCards = arrayMove(items, oldIndex, newIndex);
-        
-        // Save new order to localStorage
-        const order = newCards.map(card => card.id);
-        localStorage.setItem(`dashboard-order-${user?.uid || 'default'}`, JSON.stringify(order));
-        
-        return newCards;
-      });
-    }
-  };
-
   return (
-    <DndContext 
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      modifiers={[restrictToVerticalAxis]}
-    >
-      <SortableContext items={cards.map(card => card.id)} strategy={verticalListSortingStrategy}>
-        <div className={cn("space-y-8", isReordering && "pointer-events-none")}>
-          {cards.map((card) => (
-            <ReorderableCard key={card.id} id={card.id}>
-              {card.component}
-            </ReorderableCard>
-          ))}
+    <div className="space-y-8">
+      {cards.map((card) => (
+        <div key={card.id}>
+          {card.component}
         </div>
-      </SortableContext>
-    </DndContext>
+      ))}
+    </div>
   );
 }

@@ -11,7 +11,7 @@ test.describe('Gratitude Submission Flow', () => {
     // 1. Navigate to the gratitude section.
     // Assuming there's a button or link to access the gratitude journal.
     // For this example, we'll click on the gratitude habit.
-    await page.locator('div', { hasText: 'Agradecer 3 aspectos de mi vida' }).click();
+    await page.locator('div', { hasText: 'Agradecer' }).click();
 
     // 2. Find the textarea and enter a gratitude message.
     const gratitudeText = `Agradecido por las pruebas E2E que funcionan - ${new Date().toISOString()}`;

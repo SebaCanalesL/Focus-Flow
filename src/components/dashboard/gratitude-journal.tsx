@@ -221,7 +221,7 @@ export function GratitudeJournal() {
     <Card>
       <CardHeader>
         <div className="flex justify-between items-center">
-            <CardTitle className="flex items-center gap-2 pl-10">
+            <CardTitle className="flex items-center gap-2">
             <BookHeart className="text-primary" />
             Gratitud diaria
             </CardTitle>

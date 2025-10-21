@@ -3,7 +3,7 @@ import type { Habit, GratitudeEntry } from './types';
 export const INITIAL_HABITS: Habit[] = [
   {
     id: 'gratitude-habit',
-    name: 'Agradecer 3 aspectos de mi vida',
+    name: 'Agradecer',
     icon: 'BookHeart',
     frequency: 'daily',
     createdAt: new Date().toISOString(),
@@ -12,7 +12,7 @@ export const INITIAL_HABITS: Habit[] = [
   },
   {
     id: '1',
-    name: 'Revisión de gastos semanal',
+    name: 'Revisión de gastos',
     icon: 'PiggyBank',
     frequency: 'weekly',
     daysPerWeek: 1,
@@ -22,7 +22,7 @@ export const INITIAL_HABITS: Habit[] = [
   },
   {
     id: '2',
-    name: 'Leer 10 páginas',
+    name: 'Leer',
     icon: 'BookOpen',
     frequency: 'weekly',
     daysPerWeek: 4,

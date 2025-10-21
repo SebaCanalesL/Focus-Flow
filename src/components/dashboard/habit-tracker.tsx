@@ -49,7 +49,7 @@ export function TodaysHabitsCard({ habits }: { habits: Habit[]}) {
     return (
        <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 pl-10">
+          <CardTitle className="flex items-center gap-2">
             <Target className="text-primary" />
             Tus hábitos de hoy
           </CardTitle>
@@ -75,7 +75,7 @@ export function TodaysHabitsCard({ habits }: { habits: Habit[]}) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 pl-10">
+        <CardTitle className="flex items-center gap-2">
           <Target className="text-primary" />
           Tus hábitos de hoy
         </CardTitle>
@@ -200,7 +200,7 @@ export function CompletedWeeklyHabitsCard({ habits }: { habits: Habit[] }) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg pl-10">
+                <CardTitle className="flex items-center gap-2 text-lg">
                     <CheckCircle className="text-green-500" />
                     ¡Metas semanales cumplidas!
                 </CardTitle>

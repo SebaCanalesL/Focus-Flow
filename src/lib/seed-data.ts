@@ -13,7 +13,7 @@ export const DEV_USER = {
 export const SEED_HABITS: Habit[] = [
   {
     id: 'gratitude-habit',
-    name: 'Agradecer 3 aspectos de mi vida',
+    name: 'Agradecer',
     icon: 'BookHeart',
     frequency: 'daily',
     createdAt: subDays(new Date(), 30).toISOString(),
@@ -36,7 +36,7 @@ export const SEED_HABITS: Habit[] = [
   },
   {
     id: 'reading-habit',
-    name: 'Leer 10 páginas',
+    name: 'Leer',
     icon: 'BookOpen',
     frequency: 'weekly',
     daysPerWeek: 5,
@@ -69,7 +69,7 @@ export const SEED_HABITS: Habit[] = [
   },
   {
     id: 'finance-habit',
-    name: 'Revisión de gastos semanal',
+    name: 'Revisión de gastos',
     icon: 'PiggyBank',
     frequency: 'weekly',
     daysPerWeek: 1,

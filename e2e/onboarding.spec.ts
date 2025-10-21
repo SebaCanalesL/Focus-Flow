@@ -12,8 +12,8 @@ test.describe('Onboarding Flow', () => {
 
     // Check for the presence of the three default habits.
     // These texts should match the `name` property in `INITIAL_HABITS`.
-    await expect(page.locator('div', { hasText: 'Agradecer 3 aspectos de mi vida' })).toBeVisible();
-    await expect(page.locator('div', { hasText: 'Revisión de gastos semanal' })).toBeVisible();
-    await expect(page.locator('div', { hasText: 'Leer 10 páginas' })).toBeVisible();
+    await expect(page.locator('div', { hasText: 'Agradecer' })).toBeVisible();
+    await expect(page.locator('div', { hasText: 'Revisión de gastos' })).toBeVisible();
+    await expect(page.locator('div', { hasText: 'Leer' })).toBeVisible();
   });
 });

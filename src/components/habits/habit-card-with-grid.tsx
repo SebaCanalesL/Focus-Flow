@@ -10,7 +10,7 @@ import {
   CalendarDays,
   CheckCheck,
   Pencil,
-  GripVertical,
+  MoreVertical,
 } from 'lucide-react';
 import { useAppData } from '@/contexts/app-provider';
 import { cn } from '@/lib/utils';
@@ -18,7 +18,13 @@ import { HabitCompletionGrid } from './habit-completion-grid';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CustomCalendar } from '@/components/ui/custom-calendar';
 import { Button } from '../ui/button';
-import { useState } from 'react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useState, useEffect, useRef } from 'react';
 import { format, parseISO } from 'date-fns';
 import { EditHabitDialog } from './edit-habit-dialog';
 
@@ -33,19 +39,24 @@ const Icon = ({ name, className }: { name: IconName; className?: string }) => {
 
 export function HabitCardWithGrid({
   habit,
-  isDragging,
-  style,
-  listeners,
   section = 'default',
 }: {
   habit: Habit;
-  isDragging?: boolean;
-  style?: React.CSSProperties;
-  listeners?: React.HTMLAttributes<HTMLDivElement>;
   section?: string;
 }) {
   const { toggleHabitCompletion, getStreak, getWeekCompletion } = useAppData();
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const editTriggerRef = useRef<HTMLButtonElement>(null);
+
+  // Efecto para abrir el diálogo de editar cuando se solicite desde el menú
+  useEffect(() => {
+    if (editDialogOpen && editTriggerRef.current) {
+      editTriggerRef.current.click();
+      setEditDialogOpen(false);
+    }
+  }, [editDialogOpen]);
 
   const today = new Date();
   const todayString = format(today, 'yyyy-MM-dd');
@@ -74,32 +85,14 @@ export function HabitCardWithGrid({
     <Card
       className={cn(
         'flex flex-col transition-shadow',
-        isDragging && 'shadow-2xl',
         isCompletedToday && 'border-green-500 border-2'
       )}
-      style={style}
       data-testid="habit-card"
     >
       <CardHeader>
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-start gap-3 min-w-0 flex-1">
-            <div 
-              {...listeners} 
-              className="touch-manipulation cursor-grab active:cursor-grabbing py-3 px-3 rounded-md hover:bg-muted/50 active:bg-muted/70 transition-colors duration-200 min-w-[44px] min-h-[44px] flex items-center justify-center shrink-0 touch-action-none"
-              role="button"
-              aria-label="Arrastra para reordenar"
-              title="Arrastra para reordenar"
-              onTouchStart={(e) => {
-                // Prevent scrolling during drag
-                e.preventDefault();
-              }}
-              onTouchMove={(e) => {
-                // Prevent scrolling during drag
-                e.preventDefault();
-              }}
-            >
-              <GripVertical className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
-            </div>
+        {/* Título del hábito y botones de acción */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className={'p-2 rounded-lg bg-primary/20 shrink-0'}>
               <Icon name={habit.icon as IconName} className="h-5 w-5 text-primary" />
             </div>
@@ -107,44 +100,71 @@ export function HabitCardWithGrid({
               <CardTitle className="text-base font-semibold leading-tight break-words">{habit.name}</CardTitle>
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <EditHabitDialog habit={habit}>
-              <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 shrink-0">
-                <Pencil className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="sr-only">Editar</span>
+          
+          {/* Botones de acción */}
+          <div className="flex items-center gap-0.5 shrink-0">
+          <Button
+            size="icon"
+            className={cn('h-8 w-8 sm:h-9 sm:w-9 shrink-0', isCompletedToday && 'bg-green-600 text-white hover:bg-green-600/90')}
+            variant={isCompletedToday ? 'default' : 'outline'}
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleHabitCompletion(habit.id, new Date());
+            }}
+          >
+            {isCompletedToday ? (
+              <CheckCheck className="h-4 w-4 sm:h-5 sm:w-5" />
+            ) : (
+              <Check className="h-4 w-4 sm:h-5 sm:w-5" />
+            )}
+          </Button>
+          
+          <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 shrink-0">
+                <MoreVertical className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="sr-only">Más opciones</span>
               </Button>
-            </EditHabitDialog>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={(e) => {
+                e.preventDefault();
+                setMenuOpen(false);
+                setCalendarOpen(true);
+              }}>
+                <CalendarDays className="h-4 w-4 mr-2" />
+                Ver calendario
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem onSelect={(e) => {
+                e.preventDefault();
+                setMenuOpen(false);
+                setEditDialogOpen(true);
+              }}>
+                <Pencil className="h-4 w-4 mr-2" />
+                Editar
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 shrink-0">
-                  <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span className="sr-only">Ver</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <CustomCalendar
-                  selectedDates={completedDatesAsDates}
-                  onDateClick={handleDayClick}
-                  habitColor={habit.color || '#10b981'}
-                />
-              </PopoverContent>
-            </Popover>
-            <Button
-              size="icon"
-              className={cn('h-8 w-8 sm:h-9 sm:w-9 shrink-0', isCompletedToday && 'bg-green-600 text-white hover:bg-green-600/90')}
-              variant={isCompletedToday ? 'default' : 'outline'}
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleHabitCompletion(habit.id, new Date());
-              }}
-            >
-              {isCompletedToday ? (
-                <CheckCheck className="h-4 w-4 sm:h-5 sm:w-5" />
-              ) : (
-                <Check className="h-4 w-4 sm:h-5 sm:w-5" />
-              )}
-            </Button>
+          {/* Popover del calendario separado para mantener la funcionalidad */}
+          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+            <PopoverTrigger asChild className="sr-only">
+              <button />
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <CustomCalendar
+                selectedDates={completedDatesAsDates}
+                onDateClick={handleDayClick}
+                habitColor={habit.color || '#10b981'}
+              />
+            </PopoverContent>
+          </Popover>
+
+          {/* Dialog de editar controlado externamente */}
+          <EditHabitDialog habit={habit}>
+            <button className="sr-only" ref={editTriggerRef} />
+          </EditHabitDialog>
           </div>
         </div>
       </CardHeader>

@@ -17,7 +17,7 @@ export default function HabitsPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Hábitos</h1>
           <p className="text-muted-foreground">
-            El progreso se construye a la velocidad de tu constancia.
+            Tu constancia está construyendo la mejor versión de ti.
           </p>
         </div>
         {!isMobile && (

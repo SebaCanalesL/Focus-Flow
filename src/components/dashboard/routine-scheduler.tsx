@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Clock, Calendar } from "lucide-react";
+import { Clock, Calendar, Play, RotateCcw } from "lucide-react";
 import { Routine, RoutineSchedule } from "@/lib/types";
 import { useAppData } from "@/contexts/app-provider";
 import { PerformRoutineSheet } from "@/components/routines/perform-routine-sheet";
@@ -117,40 +117,35 @@ export function RoutineScheduler() {
                   : 'border-muted-foreground/20'
             }`}
           >
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
                 <h4 className="font-medium">{routine.title}</h4>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                   <Clock className="h-3 w-3" />
                   {schedule.time}
-                  {isCompleted && (
-                    <span className="text-green-600 dark:text-green-400 text-xs font-medium">
-                      ✓ Completada
-                      {routine.lastCompletedAt && (
-                        <span className="ml-1 text-xs opacity-75">
-                          ({format(new Date(routine.lastCompletedAt), 'HH:mm')})
-                        </span>
-                      )}
-                    </span>
-                  )}
                 </div>
-                {routine.description && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {routine.description}
-                  </p>
-                )}
               </div>
-              <PerformRoutineSheet 
-                routine={routine}
-                onComplete={() => toggleRoutineCompletion(routine.id)}
-              >
-                <Button 
-                  variant={isCompleted ? "outline" : isNow ? "default" : "outline"}
-                  size="sm"
+              <div className="flex-shrink-0">
+                <PerformRoutineSheet 
+                  routine={routine}
+                  onComplete={() => toggleRoutineCompletion(routine.id)}
                 >
-                  {isCompleted ? "Iniciar nuevamente" : isNow ? "Comenzar Ahora" : "Iniciar"}
-                </Button>
-              </PerformRoutineSheet>
+                  <Button 
+                    variant={isCompleted ? "outline" : isNow ? "default" : "outline"}
+                    size={isCompleted || !isNow ? "icon" : "sm"}
+                    className={isNow ? "whitespace-nowrap" : ""}
+                    title={isCompleted ? "Iniciar nuevamente" : isNow ? "Comenzar Ahora" : "Iniciar"}
+                  >
+                    {isCompleted ? (
+                      <RotateCcw className="h-4 w-4" />
+                    ) : isNow ? (
+                      "Comenzar Ahora"
+                    ) : (
+                      <Play className="h-4 w-4" />
+                    )}
+                  </Button>
+                </PerformRoutineSheet>
+              </div>
             </div>
           </div>
         ))}
