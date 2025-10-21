@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { HabitList, HabitListRef } from "@/components/habits/habit-list";
 import { CreateHabitDialog } from "@/components/habits/create-habit-dialog";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Plus, GripVertical, X, Check, Info } from "lucide-react";
+import { PlusCircle, GripVertical, X, Check, Info } from "lucide-react";
 import { FloatingActionButton } from "@/components/ui/floating-action-button";
 import { RoutineTemplateSelector } from "@/components/routines/routine-template-selector";
 import { useAppData } from "@/contexts/app-provider";
@@ -15,7 +15,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useToast } from "@/hooks/use-toast";
+// import { useToast } from "@/hooks/use-toast";
 
 export default function HabitsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -23,8 +23,7 @@ export default function HabitsPage() {
   const [isTooltipOpen, setIsTooltipOpen] = useState(false);
   const [isRoutineDialogOpen, setIsRoutineDialogOpen] = useState(false);
   const isMobile = useIsMobile();
-  const { habits, updateHabit } = useAppData();
-  const { toast } = useToast();
+  const { } = useAppData();
   const habitListRef = useRef<HabitListRef>(null);
   const routineTriggerRef = useRef<HTMLButtonElement>(null);
 
@@ -54,7 +53,7 @@ export default function HabitsPage() {
     }
   }, [isRoutineDialogOpen]);
 
-  const handleSaveRoutine = async (newRoutine: any) => {
+  const handleSaveRoutine = async (newRoutine: Partial<Record<string, unknown>>) => {
     try {
       if (newRoutine.id) {
         // Update existing routine
@@ -62,6 +61,7 @@ export default function HabitsPage() {
         console.log('Routine updated successfully');
       } else {
         // Create new routine
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { id, ...routineDataWithoutId } = newRoutine;
         await addRoutine(routineDataWithoutId);
         console.log('Routine created successfully');

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Target, CalendarDays, Repeat, BookOpen } from "lucide-react";
+import { LayoutDashboard, Target, Repeat, BookOpen } from "lucide-react";
 
 const userLinks = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },

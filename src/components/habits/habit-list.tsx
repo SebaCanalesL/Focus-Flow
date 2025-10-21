@@ -3,8 +3,8 @@
 import React, { useMemo, useState, useCallback, useImperativeHandle, forwardRef } from 'react';
 import { useAppData } from '@/contexts/app-provider';
 import { HabitCardWithGrid } from './habit-card-with-grid';
-import { Button } from '@/components/ui/button';
-import { Check, X, GripVertical, Target } from 'lucide-react';
+// import { Button } from '@/components/ui/button';
+import { GripVertical, Target } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Habit } from '@/lib/types';
