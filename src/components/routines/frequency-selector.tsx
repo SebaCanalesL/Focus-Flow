@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -96,6 +96,7 @@ export function FrequencySelector({ schedules = [], onSchedulesChange, initialCo
     ...initialConfig
   });
 
+  const isInitializingRef = useRef(true);
 
   // Initialize config from existing schedules only once
   useEffect(() => {
@@ -133,12 +134,13 @@ export function FrequencySelector({ schedules = [], onSchedulesChange, initialCo
         notificationsEnabled,
         notificationAdvance: 10,
       });
+      isInitializingRef.current = false;
     }
-  }, []); // Only run on mount
+  }, [schedules]); // Initialize from schedules when they change externally
 
-  // Update schedules when config changes
+  // Update schedules when config changes (but not during initialization)
   useEffect(() => {
-    if (config.selectedDays.length === 0) return;
+    if (isInitializingRef.current || config.selectedDays.length === 0) return;
 
     const newSchedules: RoutineSchedule[] = config.selectedDays.map(day => ({
       id: generateUniqueId(),
@@ -149,7 +151,7 @@ export function FrequencySelector({ schedules = [], onSchedulesChange, initialCo
     }));
 
     onSchedulesChange(newSchedules);
-  }, [config.selectedDays, config.time, config.sameTimeForAllDays, config.customTimes, config.notificationsEnabled, onSchedulesChange]);
+  }, [config.selectedDays, config.time, config.sameTimeForAllDays, config.customTimes, config.notificationsEnabled, onSchedulesChange, schedules]);
 
   const handleFrequencyChange = (type: FrequencyType) => {
     const option = frequencyOptions.find(opt => opt.value === type);
@@ -189,22 +191,7 @@ export function FrequencySelector({ schedules = [], onSchedulesChange, initialCo
     });
   };
 
-  const formatSelectedDays = (days: string[]) => {
-    if (days.length === 0) return 'Ningún día';
-    if (days.length === 7) return 'Todos los días';
-    
-    const dayLabels = days.map(day => {
-      const dayInfo = weekDays.find(d => d.value === day);
-      return dayInfo?.fullLabel;
-    }).filter(Boolean);
 
-    if (days.length <= 2) {
-      return dayLabels.join(' y ');
-    } else {
-      const lastDay = dayLabels.pop();
-      return `${dayLabels.join(', ')} y ${lastDay}`;
-    }
-  };
 
   return (
     <div className="space-y-6">

@@ -238,7 +238,11 @@ export function RemindersSection({ reminders = [], schedules = [], onRemindersCh
     console.log('Adding new item:', newItem);
     console.log('Current items:', currentItems);
     if (onChangeHandler) {
-      onChangeHandler([...currentItems, newItem] as any);
+      if (isUsingSchedules) {
+        (onChangeHandler as (schedules: RoutineSchedule[]) => void)([...currentItems, newItem] as RoutineSchedule[]);
+      } else {
+        (onChangeHandler as (reminders: Reminder[]) => void)([...currentItems, newItem] as Reminder[]);
+      }
     }
   };
 
@@ -265,13 +269,21 @@ export function RemindersSection({ reminders = [], schedules = [], onRemindersCh
     const newItems = currentItems.map(item => item.id === updatedItem.id ? updatedItem : item);
     console.log('New items after update:', newItems);
     if (onChangeHandler) {
-      onChangeHandler(newItems as any);
+      if (isUsingSchedules) {
+        (onChangeHandler as (schedules: RoutineSchedule[]) => void)(newItems as RoutineSchedule[]);
+      } else {
+        (onChangeHandler as (reminders: Reminder[]) => void)(newItems as Reminder[]);
+      }
     }
   };
 
   const removeReminder = (itemId: string) => {
     if (onChangeHandler) {
-      onChangeHandler(currentItems.filter(item => item.id !== itemId) as any);
+      if (isUsingSchedules) {
+        (onChangeHandler as (schedules: RoutineSchedule[]) => void)(currentItems.filter(item => item.id !== itemId) as RoutineSchedule[]);
+      } else {
+        (onChangeHandler as (reminders: Reminder[]) => void)(currentItems.filter(item => item.id !== itemId) as Reminder[]);
+      }
     }
   };
 

@@ -119,14 +119,12 @@ export function CustomStepDialog({
   children,
   onSave,
   onDelete,
-  onCancel,
   stepToEdit,
   triggerText = "Agregar paso personalizado",
 }: {
   children?: React.ReactNode;
   onSave: (step: CustomStep) => void;
   onDelete?: (stepId: string) => void;
-  onCancel?: () => void;
   stepToEdit?: CustomStep;
   triggerText?: string;
 }) {

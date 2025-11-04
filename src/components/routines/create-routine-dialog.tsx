@@ -19,7 +19,7 @@ import { Pencil, Plus, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Routine, CustomStep, Reminder, RoutineSchedule } from "@/lib/types";
 import { CustomStepDialog } from "./custom-step-dialog";
-import { RemindersSection } from "./reminders-section";
+
 import { FrequencySelector } from "./frequency-selector";
 import { routineTemplates } from "./routine-template-selector";
 import {
@@ -101,6 +101,7 @@ function generateCustomStepId(): string {
 }
 
 // Componente para mostrar un paso predefinido
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function PredefinedStepCard({
   step,
   isSelected,
@@ -161,6 +162,7 @@ function PredefinedStepCard({
 }
 
 // Componente para mostrar un paso personalizado
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function CustomStepCard({
   step,
   isSelected,
@@ -388,7 +390,7 @@ function CreateRoutineDialog({
         
         existingStepIds.forEach(stepId => {
           // Buscar si ya es un paso personalizado
-          let existingCustomStep = existingCustomSteps.find(step => step.id === stepId);
+          const existingCustomStep = existingCustomSteps.find(step => step.id === stepId);
           
           if (existingCustomStep) {
             // Ya es un paso personalizado, mantenerlo

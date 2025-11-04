@@ -263,22 +263,7 @@ export function HabitRemindersSection({ reminders = [], onRemindersChange, initi
     });
   };
 
-  const formatSelectedDays = (days: string[]) => {
-    if (days.length === 0) return 'Ningún día';
-    if (days.length === 7) return 'Todos los días';
-    
-    const dayLabels = days.map(day => {
-      const dayInfo = weekDays.find(d => d.value === day);
-      return dayInfo?.fullLabel;
-    }).filter(Boolean);
 
-    if (days.length <= 2) {
-      return dayLabels.join(' y ');
-    } else {
-      const lastDay = dayLabels.pop();
-      return `${dayLabels.join(', ')} y ${lastDay}`;
-    }
-  };
 
   return (
     <div className="space-y-6">

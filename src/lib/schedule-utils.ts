@@ -108,40 +108,7 @@ function detectDayPattern(days: string[]): { label: string } | null {
   return null;
 }
 
-/**
- * Agrupa días consecutivos de manera inteligente
- */
-function groupConsecutiveDays(days: string[]): string[][] {
-  const dayOrder = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
-  const sortedDays = [...days].sort((a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
-  
-  // Si son pocos días (3 o menos), no agrupar para evitar confusión
-  if (sortedDays.length <= 3) {
-    return sortedDays.map(day => [day]);
-  }
-  
-  const groups: string[][] = [];
-  let currentGroup: string[] = [sortedDays[0]];
-  
-  for (let i = 1; i < sortedDays.length; i++) {
-    const currentDayIndex = dayOrder.indexOf(sortedDays[i]);
-    const previousDayIndex = dayOrder.indexOf(sortedDays[i - 1]);
-    
-    // Si es el siguiente día consecutivo
-    if (currentDayIndex === previousDayIndex + 1) {
-      currentGroup.push(sortedDays[i]);
-    } else {
-      // Si no es consecutivo, cerrar el grupo actual y empezar uno nuevo
-      groups.push([...currentGroup]);
-      currentGroup = [sortedDays[i]];
-    }
-  }
-  
-  // Agregar el último grupo
-  groups.push(currentGroup);
-  
-  return groups;
-}
+
 
 /**
  * Obtiene el nombre completo del día

@@ -1,4 +1,5 @@
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import type { Reminder, RoutineSchedule } from "@/lib/types";
 
 export const habits = sqliteTable("habits", {
   id: text("id").primaryKey(),
@@ -40,8 +41,8 @@ export const routines = sqliteTable("routines", {
   frequency: text("frequency"),
   days: text("days", { mode: "json" }).$type<string[]>(),
   stepIds: text("stepIds", { mode: "json" }).$type<string[]>(),
-  reminders: text("reminders", { mode: "json" }).$type<any[]>(),
-  schedules: text("schedules", { mode: "json" }).$type<any[]>(),
+  reminders: text("reminders", { mode: "json" }).$type<Reminder[]>(),
+  schedules: text("schedules", { mode: "json" }).$type<RoutineSchedule[]>(),
   completedDates: text("completed_dates", { mode: "json" }).$type<string[]>(),
   lastCompletedAt: text("last_completed_at"),
 });

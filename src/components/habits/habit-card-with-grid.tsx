@@ -63,13 +63,14 @@ export function HabitCardWithGrid({
 
   // Efecto para mantener el Popover abierto cuando el hábito se actualiza
   // Esto previene que se cierre durante re-renders causados por toggleHabitCompletion
+  const completedDatesString = habit.completedDates.join(',');
   useEffect(() => {
     if (calendarOpenRef.current && !calendarOpen) {
       // Si el ref dice que debería estar abierto pero el estado no, sincronizar
       // Esto puede pasar cuando el componente se re-renderiza debido a cambios en el hábito
       setCalendarOpen(true);
     }
-  }, [habit.completedDates.join(','), calendarOpen]);
+  }, [completedDatesString, calendarOpen]);
 
 
 
@@ -81,7 +82,7 @@ export function HabitCardWithGrid({
   // Memoizar las fechas completadas para evitar re-renders innecesarios
   const completedDatesAsDates = useMemo(() => {
     return habit.completedDates.map(isoString => parseISO(isoString));
-  }, [habit.completedDates.join(',')]); // Usar join para comparación estable
+  }, [habit.completedDates]); // Depender directamente de completedDates
 
   const handleDayClick = useCallback((day: Date | undefined) => {
     if (day) {

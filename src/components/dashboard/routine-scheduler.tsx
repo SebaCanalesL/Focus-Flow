@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Clock, Calendar, Play, RotateCcw } from "lucide-react";
-import { Routine, RoutineSchedule } from "@/lib/types";
+import { Routine } from "@/lib/types";
 import { useAppData } from "@/contexts/app-provider";
 import { PerformRoutineSheet } from "@/components/routines/perform-routine-sheet";
 import { format } from "date-fns";

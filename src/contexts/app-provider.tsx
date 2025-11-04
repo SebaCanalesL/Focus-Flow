@@ -381,7 +381,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const routinesCollectionRef = collection(db, `users/${user.uid}/routines`);
     
     // Filter out undefined values to avoid Firestore errors
-    const filteredData = filterUndefinedValues(routineData) as Record<string, any>;
+    const filteredData = filterUndefinedValues(routineData) as Record<string, unknown>;
     
     const newRoutine = {
       ...filteredData,
@@ -411,7 +411,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const routineDocRef = doc(db, `users/${user.uid}/routines`, routineId);
     
     // Filter out undefined values to avoid Firestore errors
-    const filteredData = filterUndefinedValues(routineData) as Record<string, any>;
+    const filteredData = filterUndefinedValues(routineData) as Record<string, unknown>;
     
     const updateData = {
       ...filteredData,
