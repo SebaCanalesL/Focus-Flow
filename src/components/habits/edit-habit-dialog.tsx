@@ -40,7 +40,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { Habit } from '@/lib/types';
 import { deleteField, FieldValue } from 'firebase/firestore';
-import { RemindersSection } from '../routines/reminders-section';
+import { HabitRemindersSection } from './habit-reminders-section';
 import type { Reminder } from '@/lib/types';
 
 const formSchema = z
@@ -178,10 +178,17 @@ export function EditHabitDialog({ habit, children }: { habit: Habit; children: R
                   <FormLabel>Nombre del Hábito</FormLabel>
                   <FormControl>
                     <Input 
-                      ref={nameInputRef}
                       placeholder="Ej: Leer por 15 minutos" 
                       {...field} 
                       autoFocus={false}
+                      ref={(e) => {
+                        if (nameInputRef && 'current' in nameInputRef) {
+                          (nameInputRef as React.MutableRefObject<HTMLInputElement | null>).current = e;
+                        }
+                        if (field.ref) {
+                          field.ref(e);
+                        }
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -258,7 +265,8 @@ export function EditHabitDialog({ habit, children }: { habit: Habit; children: R
 
             {/* Reminders Section */}
             <div className="pt-6">
-              <RemindersSection 
+              <HabitRemindersSection 
+                key={`habit-reminders-${habit.id}-${isOpen}`}
                 reminders={reminders} 
                 onRemindersChange={setReminders} 
               />

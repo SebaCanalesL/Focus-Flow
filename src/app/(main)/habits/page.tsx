@@ -55,15 +55,16 @@ export default function HabitsPage() {
 
   const handleSaveRoutine = async (newRoutine: Partial<Record<string, unknown>>) => {
     try {
-      if (newRoutine.id) {
+      if (newRoutine.id && typeof newRoutine.id === 'string') {
         // Update existing routine
-        await updateRoutine(newRoutine.id, newRoutine);
+        const { id, ...routineDataWithoutId } = newRoutine;
+        await updateRoutine(newRoutine.id, routineDataWithoutId as Partial<import('@/lib/types').Routine>);
         console.log('Routine updated successfully');
       } else {
         // Create new routine
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { id, ...routineDataWithoutId } = newRoutine;
-        await addRoutine(routineDataWithoutId);
+        await addRoutine(routineDataWithoutId as Omit<import('@/lib/types').Routine, 'id' | 'createdAt' | 'updatedAt'>);
         console.log('Routine created successfully');
       }
       setIsRoutineDialogOpen(false);

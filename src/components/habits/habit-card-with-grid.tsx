@@ -221,50 +221,16 @@ export function HabitCardWithGrid({
               align="end"
               sideOffset={8}
               onInteractOutside={(e) => {
-                // Prevenir que se cierre cuando se interactúa con elementos dentro del calendario
+                // Prevenir que se cierre solo cuando se interactúa con el DropdownMenu
                 const target = e.target as HTMLElement;
-                const popoverContent = e.currentTarget;
-                
-                // Si el clic es dentro del contenido del Popover, no cerrar
-                if (popoverContent.contains(target)) {
-                  e.preventDefault();
-                  return;
-                }
-                
-                // Si el clic es en un botón dentro del calendario, no cerrar
-                if (target.tagName === 'BUTTON' || target.closest('button')) {
-                  e.preventDefault();
-                  return;
-                }
                 
                 // Si el clic es en el DropdownMenu que se está cerrando, no cerrar el Popover
                 if (target.closest('[role="menu"]') || target.closest('[data-radix-dropdown-menu-content]')) {
                   e.preventDefault();
                   return;
                 }
-              }}
-              onPointerDownOutside={(e) => {
-                // Prevenir que se cierre cuando se hace clic fuera, pero solo si no es en el dropdown
-                const target = e.target as HTMLElement;
-                const popoverContent = e.currentTarget;
                 
-                // Si el clic es dentro del contenido del Popover, no cerrar
-                if (popoverContent.contains(target)) {
-                  e.preventDefault();
-                  return;
-                }
-                
-                // Si el clic es en un botón, no cerrar (los botones del calendario)
-                if (target.tagName === 'BUTTON' || target.closest('button')) {
-                  e.preventDefault();
-                  return;
-                }
-                
-                // Si el clic es en el DropdownMenu, no cerrar el Popover
-                if (target.closest('[role="menu"]') || target.closest('[data-radix-dropdown-menu-content]')) {
-                  e.preventDefault();
-                  return;
-                }
+                // Permitir que se cierre normalmente cuando se hace clic fuera
               }}
             >
               <CustomCalendar

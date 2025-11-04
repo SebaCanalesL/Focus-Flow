@@ -29,7 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import type { Habit, Reminder } from "@/lib/types";
 import { suggestHabitIcon } from "@/ai/flows/suggest-habit-icon-flow";
-import { RemindersSection } from "../routines/reminders-section";
+import { HabitRemindersSection } from "./habit-reminders-section";
 
 const formSchema = z
   .object({
@@ -215,7 +215,8 @@ export function CreateHabitDialog({ open, onOpenChange }: CreateHabitDialogProps
             
             {/* Reminders Section */}
             <div className="pt-6">
-              <RemindersSection 
+              <HabitRemindersSection 
+                key={`habit-reminders-create-${open}`}
                 reminders={reminders} 
                 onRemindersChange={setReminders} 
               />
