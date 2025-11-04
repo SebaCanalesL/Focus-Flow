@@ -57,6 +57,7 @@ export default function HabitsPage() {
     try {
       if (newRoutine.id && typeof newRoutine.id === 'string') {
         // Update existing routine
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { id, ...routineDataWithoutId } = newRoutine;
         await updateRoutine(newRoutine.id, routineDataWithoutId as Partial<import('@/lib/types').Routine>);
         console.log('Routine updated successfully');

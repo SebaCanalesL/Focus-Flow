@@ -62,8 +62,6 @@ function RoutineCard({
       // Get active reminders and schedules
       const activeReminders = routine.reminders?.filter(r => r.enabled) || [];
       const activeSchedules = routine.schedules?.filter(s => s.executionEnabled) || [];
-      const weekDays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
-      const dayNames = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
       if (allSteps.length === 0) {
         return <p>Esta rutina no tiene pasos. ¡Edítala para agregarle!</p>;
@@ -187,7 +185,7 @@ function RoutineCard({
           {/* Quick preview when collapsed */}
           {!isOpen && (
             <div className="space-y-2">
-              {routine.stepOrder?.slice(0, 3).map((stepId: string, index: number) => {
+              {routine.stepOrder?.slice(0, 3).map((stepId: string) => {
                 const predefinedStep = routineSteps.find((s) => s.id === stepId);
                 const customStep = routine.customSteps?.find((cs) => cs.id === stepId);
                 const step = predefinedStep || customStep;
