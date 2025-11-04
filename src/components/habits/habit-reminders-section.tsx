@@ -9,15 +9,14 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar, Clock, Bell, BellOff } from "lucide-react";
-import { RoutineSchedule } from "@/lib/types";
+import { Reminder } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { generateScheduleSummary } from "@/lib/schedule-utils";
 
 // Function to generate unique IDs
 function generateUniqueId(): string {
   const timestamp = Date.now();
   const random = Math.random().toString(36).substr(2, 9);
-  return `schedule-${timestamp}-${random}`;
+  return `reminder-${timestamp}-${random}`;
 }
 
 export type FrequencyType = 'daily' | 'weekdays' | 'weekends';
@@ -78,39 +77,106 @@ const timeOptions = Array.from({ length: 96 }, (_, i) => {
   return { value: timeString, label: displayTime };
 });
 
-interface FrequencySelectorProps {
-  schedules?: RoutineSchedule[];
-  onSchedulesChange: (schedules: RoutineSchedule[]) => void;
+// Normalize reminders to compare them without IDs
+const normalizeReminders = (reminders: Reminder[]) => {
+  return reminders
+    .map(r => ({ day: r.day, time: r.time, enabled: r.enabled }))
+    .sort((a, b) => {
+      if (a.day !== b.day) return a.day.localeCompare(b.day);
+      return a.time.localeCompare(b.time);
+    });
+};
+
+interface HabitRemindersSectionProps {
+  reminders?: Reminder[];
+  onRemindersChange: (reminders: Reminder[]) => void;
   initialConfig?: Partial<FrequencyConfig>;
 }
 
-export function FrequencySelector({ schedules = [], onSchedulesChange, initialConfig }: FrequencySelectorProps) {
-  const [config, setConfig] = useState<FrequencyConfig>({
-    type: 'weekdays',
-    selectedDays: ['L', 'M', 'X', 'J', 'V'],
-    time: '08:00',
-    sameTimeForAllDays: true,
-    customTimes: {},
-    notificationsEnabled: true,
-    notificationAdvance: 10,
-    ...initialConfig
-  });
+export function HabitRemindersSection({ reminders = [], onRemindersChange, initialConfig }: HabitRemindersSectionProps) {
+  const [config, setConfig] = useState<FrequencyConfig>(() => {
+    // Initialize from existing reminders if available
+    if (reminders.length > 0) {
+      const enabledReminders = reminders.filter(r => r.enabled);
+      const days = enabledReminders.map(r => r.day);
+      const times = enabledReminders.map(r => r.time);
+      const notificationsEnabled = enabledReminders.length > 0;
 
-
-  // Initialize config from existing schedules only once
-  useEffect(() => {
-    if (schedules.length > 0) {
-      const days = schedules.map(s => s.day);
-      const times = schedules.map(s => s.time);
-      const notificationsEnabled = schedules[0]?.notificationEnabled || false;
-
-      // Check if all schedules have the same time
-      const allSameTime = times.every(time => time === times[0]);
+      // Check if all reminders have the same time
+      const allSameTime = times.length > 0 && times.every(time => time === times[0]);
       const customTimes: Record<string, string> = {};
       
-      if (!allSameTime) {
-        schedules.forEach(schedule => {
-          customTimes[schedule.day] = schedule.time;
+      if (!allSameTime && times.length > 0) {
+        enabledReminders.forEach(reminder => {
+          customTimes[reminder.day] = reminder.time;
+        });
+      }
+
+      // Determine frequency type based on selected days
+      let type: FrequencyType | null = null;
+      if (days.length === 7) {
+        type = 'daily';
+      } else if (days.length === 5 && !days.includes('S') && !days.includes('D')) {
+        type = 'weekdays';
+      } else if (days.length === 2 && days.includes('S') && days.includes('D')) {
+        type = 'weekends';
+      }
+
+      return {
+        type,
+        selectedDays: days,
+        time: times[0] || '08:00',
+        sameTimeForAllDays: allSameTime,
+        customTimes,
+        notificationsEnabled,
+        notificationAdvance: 10,
+        ...initialConfig
+      };
+    }
+    
+    // Default config
+    return {
+      type: null,
+      selectedDays: [],
+      time: '08:00',
+      sameTimeForAllDays: true,
+      customTimes: {},
+      notificationsEnabled: false,
+      notificationAdvance: 10,
+      ...initialConfig
+    };
+  });
+
+  // Track the last reminders we generated to avoid re-initializing from our own updates
+  const lastGeneratedReminders = React.useRef<string>('');
+  
+  // Track if we've initialized from external reminders
+  const initializedFromProps = React.useRef(false);
+  
+  // Initialize config from existing reminders when component first mounts
+  useEffect(() => {
+    // Check if reminders match what we last generated (ignoring IDs)
+    const normalizedReminders = normalizeReminders(reminders);
+    const currentRemindersStr = JSON.stringify(normalizedReminders);
+    if (currentRemindersStr === lastGeneratedReminders.current) {
+      return; // These reminders came from our own updates, ignore
+    }
+    
+    if (initializedFromProps.current) return; // Already initialized from props
+    
+    if (reminders.length > 0) {
+      const enabledReminders = reminders.filter(r => r.enabled);
+      const days = enabledReminders.map(r => r.day);
+      const times = enabledReminders.map(r => r.time);
+      const notificationsEnabled = enabledReminders.length > 0;
+
+      // Check if all reminders have the same time
+      const allSameTime = times.length > 0 && times.every(time => time === times[0]);
+      const customTimes: Record<string, string> = {};
+      
+      if (!allSameTime && times.length > 0) {
+        enabledReminders.forEach(reminder => {
+          customTimes[reminder.day] = reminder.time;
         });
       }
 
@@ -132,24 +198,32 @@ export function FrequencySelector({ schedules = [], onSchedulesChange, initialCo
         customTimes,
         notificationsEnabled,
         notificationAdvance: 10,
+        ...initialConfig
       });
     }
-  }, []); // Only run on mount
+    
+    initializedFromProps.current = true;
+  }, [reminders, initialConfig]);
 
-  // Update schedules when config changes
+  // Update reminders when config changes
   useEffect(() => {
-    if (config.selectedDays.length === 0) return;
+    if (config.selectedDays.length === 0 || !config.notificationsEnabled) {
+      const emptyReminders: Reminder[] = [];
+      lastGeneratedReminders.current = JSON.stringify(normalizeReminders(emptyReminders));
+      onRemindersChange(emptyReminders);
+      return;
+    }
 
-    const newSchedules: RoutineSchedule[] = config.selectedDays.map(day => ({
+    const newReminders: Reminder[] = config.selectedDays.map(day => ({
       id: generateUniqueId(),
       day,
       time: config.sameTimeForAllDays ? config.time : (config.customTimes[day] || config.time),
-      notificationEnabled: config.notificationsEnabled,
-      executionEnabled: true,
+      enabled: config.notificationsEnabled,
     }));
 
-    onSchedulesChange(newSchedules);
-  }, [config.selectedDays, config.time, config.sameTimeForAllDays, config.customTimes, config.notificationsEnabled, onSchedulesChange]);
+    lastGeneratedReminders.current = JSON.stringify(normalizeReminders(newReminders));
+    onRemindersChange(newReminders);
+  }, [config.selectedDays, config.time, config.sameTimeForAllDays, config.customTimes, config.notificationsEnabled, onRemindersChange]);
 
   const handleFrequencyChange = (type: FrequencyType) => {
     const option = frequencyOptions.find(opt => opt.value === type);
@@ -210,11 +284,12 @@ export function FrequencySelector({ schedules = [], onSchedulesChange, initialCo
     <div className="space-y-6">
       {/* Selector de frecuencia predefinida */}
       <div className="space-y-3">
-        <Label className="text-base font-medium">¿Con qué frecuencia quieres hacer esta rutina?</Label>
+        <Label className="text-base font-medium">¿Con qué frecuencia quieres hacer este hábito?</Label>
         <div className="grid grid-cols-3 gap-2">
           {frequencyOptions.map((option) => (
             <Button
               key={option.value}
+              type="button"
               variant={config.type === option.value ? "default" : "outline"}
               className={cn(
                 "h-auto p-3 flex flex-col items-center gap-1 text-center",
@@ -235,6 +310,7 @@ export function FrequencySelector({ schedules = [], onSchedulesChange, initialCo
           {weekDays.map((day) => (
             <Button
               key={day.value}
+              type="button"
               variant={config.selectedDays.includes(day.value) ? "default" : "outline"}
               size="sm"
               className={cn(
@@ -251,7 +327,7 @@ export function FrequencySelector({ schedules = [], onSchedulesChange, initialCo
         </div>
         {config.selectedDays.length === 0 && (
           <p className="text-sm text-muted-foreground">
-            ⚠️ Selecciona al menos un día para tu rutina
+            ⚠️ Selecciona al menos un día para tu hábito
           </p>
         )}
       </div>
@@ -271,7 +347,7 @@ export function FrequencySelector({ schedules = [], onSchedulesChange, initialCo
               customTimes: checked ? {} : prev.customTimes // Clear custom times when enabling same time
             }))}
           />
-          <Label htmlFor="same-time" className="text-sm font-normal">
+          <Label htmlFor="same-time" className="text-sm font-normal cursor-pointer">
             Todos los días a la misma hora
           </Label>
         </div>
@@ -342,7 +418,7 @@ export function FrequencySelector({ schedules = [], onSchedulesChange, initialCo
             <div className="space-y-1">
               <Label className="text-sm font-medium">¿Quieres recibir recordatorios?</Label>
               <p className="text-xs text-muted-foreground">
-                Te notificaremos antes de que sea hora de hacer tu rutina
+                Te notificaremos antes de que sea hora de hacer tu hábito
               </p>
             </div>
             <Switch
@@ -357,6 +433,7 @@ export function FrequencySelector({ schedules = [], onSchedulesChange, initialCo
               <Select 
                 value={config.notificationAdvance.toString()} 
                 onValueChange={(value) => setConfig(prev => ({ ...prev, notificationAdvance: parseInt(value) }))}
+                disabled={!config.notificationsEnabled}
               >
                 <SelectTrigger className="w-32">
                   <SelectValue />
@@ -375,64 +452,58 @@ export function FrequencySelector({ schedules = [], onSchedulesChange, initialCo
       </Card>
 
       {/* Resumen visual */}
-      <Card className={cn(
-        "border-2 transition-all",
-        config.selectedDays.length > 0 
-          ? "bg-primary/5 border-primary/30 shadow-sm" 
-          : "bg-muted/30 border-muted-foreground/20"
-      )}>
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <div className={cn(
-              "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
-              config.selectedDays.length > 0 
-                ? "bg-primary/10" 
-                : "bg-muted"
-            )}>
-              {config.selectedDays.length > 0 ? (
-                <Calendar className="h-5 w-5 text-primary" />
-              ) : (
-                <BellOff className="h-5 w-5 text-muted-foreground" />
-              )}
-            </div>
-            <div className="flex-1">
-              {config.selectedDays.length > 0 ? (
-                <>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Badge variant="secondary" className="text-xs">
-                      🕗 {(() => {
-                        // Generar schedules temporales para el resumen
-                        const tempSchedules = config.selectedDays.map(day => ({
-                          id: `temp-${day}`,
-                          day,
-                          time: config.sameTimeForAllDays ? config.time : (config.customTimes[day] || config.time),
-                          notificationEnabled: config.notificationsEnabled,
-                          executionEnabled: true
-                        }));
-                        return generateScheduleSummary(tempSchedules);
-                      })()}
-                    </Badge>
-                    {config.notificationsEnabled && (
+      {config.selectedDays.length > 0 && (
+        <Card className={cn(
+          "border-2 transition-all",
+          config.selectedDays.length > 0 
+            ? "bg-primary/5 border-primary/30 shadow-sm" 
+            : "bg-muted/30 border-muted-foreground/20"
+        )}>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className={cn(
+                "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
+                config.selectedDays.length > 0 
+                  ? "bg-primary/10" 
+                  : "bg-muted"
+              )}>
+                {config.selectedDays.length > 0 ? (
+                  <Calendar className="h-5 w-5 text-primary" />
+                ) : (
+                  <BellOff className="h-5 w-5 text-muted-foreground" />
+                )}
+              </div>
+              <div className="flex-1">
+                {config.selectedDays.length > 0 ? (
+                  <>
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Badge variant="secondary" className="text-xs">
-                        🔔 {config.notificationAdvance} min antes
+                        🕗 {config.sameTimeForAllDays 
+                          ? config.time 
+                          : `${Object.keys(config.customTimes).length} horarios`}
                       </Badge>
+                      {config.notificationsEnabled && (
+                        <Badge variant="secondary" className="text-xs">
+                          🔔 {config.notificationAdvance} min antes
+                        </Badge>
+                      )}
+                    </div>
+                    {!config.notificationsEnabled && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Sin recordatorios
+                      </p>
                     )}
-                  </div>
-                  {!config.notificationsEnabled && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Sin recordatorios
-                    </p>
-                  )}
-                </>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Selecciona los días para ver el resumen de tu rutina
-                </p>
-              )}
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Selecciona los días para ver el resumen de tu hábito
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

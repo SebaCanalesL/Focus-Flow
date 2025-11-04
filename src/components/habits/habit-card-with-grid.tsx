@@ -167,7 +167,25 @@ export function HabitCardWithGrid({
             <PopoverTrigger asChild className="sr-only">
               <button />
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent 
+              className="w-auto p-0"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              side="bottom"
+              align="end"
+              sideOffset={8}
+              onInteractOutside={(e) => {
+                // Prevenir que se cierre solo cuando se interactúa con el DropdownMenu
+                const target = e.target as HTMLElement;
+                
+                // Si el clic es en el DropdownMenu que se está cerrando, no cerrar el Popover
+                if (target.closest('[role="menu"]') || target.closest('[data-radix-dropdown-menu-content]')) {
+                  e.preventDefault();
+                  return;
+                }
+                
+                // Permitir que se cierre normalmente cuando se hace clic fuera
+              }}
+            >
               <CustomCalendar
                 selectedDates={completedDatesAsDates}
                 onDateClick={handleDayClick}
