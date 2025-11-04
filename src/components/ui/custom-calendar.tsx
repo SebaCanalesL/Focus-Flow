@@ -81,7 +81,13 @@ export const CustomCalendar = ({
       {/* Header */}
       <div className={cn("flex items-center justify-between", fullWidth ? "p-4 pb-2" : "mb-4")}>
         <button 
-          onClick={handlePreviousMonth}
+          onClick={(e) => {
+            e.stopPropagation();
+            handlePreviousMonth();
+          }}
+          onMouseDown={(e) => {
+            e.stopPropagation();
+          }}
           className="p-1 hover:bg-accent rounded transition-colors"
         >
           <ChevronLeft className="h-4 w-4" />
@@ -90,7 +96,13 @@ export const CustomCalendar = ({
           {format(currentMonth, 'MMMM yyyy', { locale: es })}
         </h3>
         <button 
-          onClick={handleNextMonth}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleNextMonth();
+          }}
+          onMouseDown={(e) => {
+            e.stopPropagation();
+          }}
           className="p-1 hover:bg-accent rounded transition-colors"
         >
           <ChevronRight className="h-4 w-4" />
@@ -125,7 +137,13 @@ export const CustomCalendar = ({
           return (
             <button
               key={index}
-              onClick={() => onDateClick(day)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDateClick(day);
+              }}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+              }}
               className={cn(
                 "h-9 w-9 text-sm rounded-md transition-colors font-medium",
                 !currentMonth && "text-muted-foreground opacity-50",

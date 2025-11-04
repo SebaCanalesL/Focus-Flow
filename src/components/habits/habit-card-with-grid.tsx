@@ -24,7 +24,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { format, parseISO } from 'date-fns';
 import { EditHabitDialog } from './edit-habit-dialog';
 
@@ -51,6 +51,7 @@ export function HabitCardWithGrid({
   const [menuOpen, setMenuOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const editTriggerRef = useRef<HTMLButtonElement>(null);
+  const calendarOpenRef = useRef(false);
 
   // Efecto para abrir el diálogo de editar cuando se solicite desde el menú
   useEffect(() => {
@@ -60,18 +61,49 @@ export function HabitCardWithGrid({
     }
   }, [editDialogOpen]);
 
+  // Efecto para mantener el Popover abierto cuando el hábito se actualiza
+  // Esto previene que se cierre durante re-renders causados por toggleHabitCompletion
+  useEffect(() => {
+    if (calendarOpenRef.current && !calendarOpen) {
+      // Si el ref dice que debería estar abierto pero el estado no, sincronizar
+      // Esto puede pasar cuando el componente se re-renderiza debido a cambios en el hábito
+      setCalendarOpen(true);
+    }
+  }, [habit.completedDates.join(','), calendarOpen]);
+
+
+
   const today = new Date();
   const todayString = format(today, 'yyyy-MM-dd');
   const isCompletedToday = habit.completedDates.includes(todayString);
   const streak = getStreak(habit);
 
-  const completedDatesAsDates = habit.completedDates.map(isoString => parseISO(isoString));
+  // Memoizar las fechas completadas para evitar re-renders innecesarios
+  const completedDatesAsDates = useMemo(() => {
+    return habit.completedDates.map(isoString => parseISO(isoString));
+  }, [habit.completedDates.join(',')]); // Usar join para comparación estable
 
-  const handleDayClick = (day: Date | undefined) => {
+  const handleDayClick = useCallback((day: Date | undefined) => {
     if (day) {
+      // Marcar que el Popover debe permanecer abierto durante la actualización
+      calendarOpenRef.current = true;
+      // Actualizar el hábito - esto causará un re-render
       toggleHabitCompletion(habit.id, day);
+      // Usar múltiples intentos para asegurar que el Popover permanezca abierto
+      // después del re-render causado por toggleHabitCompletion
+      requestAnimationFrame(() => {
+        if (calendarOpenRef.current) {
+          setCalendarOpen(true);
+        }
+      });
+      // Segundo intento después de un pequeño delay para asegurar que se mantenga abierto
+      setTimeout(() => {
+        if (calendarOpenRef.current && !calendarOpen) {
+          setCalendarOpen(true);
+        }
+      }, 10);
     }
-  };
+  }, [habit.id, toggleHabitCompletion, calendarOpen]);
 
   const weekCompletion = getWeekCompletion(habit);
   const isWeekly = habit.frequency === 'weekly';
@@ -141,11 +173,20 @@ export function HabitCardWithGrid({
                     <span className="sr-only">Más opciones</span>
                   </Button>
                 </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" onCloseAutoFocus={(e) => {
+              // Prevenir que el foco vuelva al trigger después de cerrar el menú
+              e.preventDefault();
+            }}>
               <DropdownMenuItem onSelect={(e) => {
                 e.preventDefault();
+                // Cerrar el menú primero
                 setMenuOpen(false);
-                setCalendarOpen(true);
+                // Abrir el calendario inmediatamente después
+                calendarOpenRef.current = true;
+                // Usar requestAnimationFrame para asegurar que se abre después de que el DOM se actualiza
+                requestAnimationFrame(() => {
+                  setCalendarOpen(true);
+                });
               }}>
                 <CalendarDays className="h-4 w-4 mr-2" />
                 Ver calendario
@@ -163,11 +204,69 @@ export function HabitCardWithGrid({
           </DropdownMenu>
 
           {/* Popover del calendario separado para mantener la funcionalidad */}
-          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+          <Popover 
+            open={calendarOpen} 
+            onOpenChange={(open) => {
+              calendarOpenRef.current = open;
+              setCalendarOpen(open);
+            }}
+          >
             <PopoverTrigger asChild className="sr-only">
               <button />
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent 
+              className="w-auto p-0"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              side="bottom"
+              align="end"
+              sideOffset={8}
+              onInteractOutside={(e) => {
+                // Prevenir que se cierre cuando se interactúa con elementos dentro del calendario
+                const target = e.target as HTMLElement;
+                const popoverContent = e.currentTarget;
+                
+                // Si el clic es dentro del contenido del Popover, no cerrar
+                if (popoverContent.contains(target)) {
+                  e.preventDefault();
+                  return;
+                }
+                
+                // Si el clic es en un botón dentro del calendario, no cerrar
+                if (target.tagName === 'BUTTON' || target.closest('button')) {
+                  e.preventDefault();
+                  return;
+                }
+                
+                // Si el clic es en el DropdownMenu que se está cerrando, no cerrar el Popover
+                if (target.closest('[role="menu"]') || target.closest('[data-radix-dropdown-menu-content]')) {
+                  e.preventDefault();
+                  return;
+                }
+              }}
+              onPointerDownOutside={(e) => {
+                // Prevenir que se cierre cuando se hace clic fuera, pero solo si no es en el dropdown
+                const target = e.target as HTMLElement;
+                const popoverContent = e.currentTarget;
+                
+                // Si el clic es dentro del contenido del Popover, no cerrar
+                if (popoverContent.contains(target)) {
+                  e.preventDefault();
+                  return;
+                }
+                
+                // Si el clic es en un botón, no cerrar (los botones del calendario)
+                if (target.tagName === 'BUTTON' || target.closest('button')) {
+                  e.preventDefault();
+                  return;
+                }
+                
+                // Si el clic es en el DropdownMenu, no cerrar el Popover
+                if (target.closest('[role="menu"]') || target.closest('[data-radix-dropdown-menu-content]')) {
+                  e.preventDefault();
+                  return;
+                }
+              }}
+            >
               <CustomCalendar
                 selectedDates={completedDatesAsDates}
                 onDateClick={handleDayClick}
